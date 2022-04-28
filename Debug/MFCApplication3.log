@@ -1,6 +1,16 @@
 ﻿  Matrix.cpp
-d:\vs_project\mfcapplication3\mfcapplication3\matrix.cpp(31): warning C4172: 지역 변수 또는 임시: sampleMatrix의 주소를 반환하고 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\matrix.cpp(45): warning C4172: 지역 변수 또는 임시: sampleMatrix의 주소를 반환하고 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\matrix.cpp(64): warning C4172: 지역 변수 또는 임시: sampleMatrix의 주소를 반환하고 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\matrix.cpp(112): warning C4838: 'double'에서 'float'(으)로의 변환에는 축소 변환이 필요합니다.
+d:\vs_project\mfcapplication3\mfcapplication3\matrix.cpp(112): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\matrix.cpp(113): warning C4838: 'double'에서 'float'(으)로의 변환에는 축소 변환이 필요합니다.
+d:\vs_project\mfcapplication3\mfcapplication3\matrix.cpp(113): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\matrix.cpp(114): warning C4838: 'double'에서 'float'(으)로의 변환에는 축소 변환이 필요합니다.
+d:\vs_project\mfcapplication3\mfcapplication3\matrix.cpp(114): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\matrix.cpp(48): warning C4172: 지역 변수 또는 임시: sampleMatrix의 주소를 반환하고 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\matrix.cpp(34): warning C4172: 지역 변수 또는 임시: sampleMatrix의 주소를 반환하고 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\matrix.cpp(67): warning C4172: 지역 변수 또는 임시: sampleMatrix의 주소를 반환하고 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\matrix.cpp(83): warning C4172: 지역 변수 또는 임시: sampleMatrix의 주소를 반환하고 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\matrix.cpp(100): warning C4172: 지역 변수 또는 임시: resultMatrix의 주소를 반환하고 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\matrix.cpp(156): warning C4172: 지역 변수 또는 임시: resultMatrix의 주소를 반환하고 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\matrix.cpp(139): warning C4172: 지역 변수 또는 임시: myArray의 주소를 반환하고 있습니다.
   MFCApplication3.vcxproj -> D:\VS_Project\MFCApplication3\Debug\MFCApplication3.exe
   MFCApplication3.vcxproj -> D:\VS_Project\MFCApplication3\Debug\MFCApplication3.pdb (Partial PDB)

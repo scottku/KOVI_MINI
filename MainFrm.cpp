@@ -165,21 +165,57 @@ void CMainFrame::OnButtonTri()
 void CMainFrame::OnButtonCube()
 {
 	// TODO: 여기에 명령 처리기 코드를 추가합니다.
-	AfxMessageBox(_T("정육면체!"));
+	float a[4][1] = { {2}, {4}, {6}, {0} };
+	float* scaleA = MatrixScale(a, 2, 3, 4);
+	int count = 0;
+	for (int i = 0; i < 4; i++)
+	{
+		a[i][0] = *(scaleA + count);
+		count++;
+	}
+
+	CString strTmp = _T("");
+	strTmp.Format(_T("%f - %f - %f - %f"), a[0][0], a[1][0], a[2][0], a[3][0]);
+	AfxMessageBox(strTmp);
+	//AfxMessageBox(_T("정육면체!"));
 }
 
 
 void CMainFrame::OnButtonSphe()
 {
 	// TODO: 여기에 명령 처리기 코드를 추가합니다.
-	AfxMessageBox(_T("구!"));
+	float a[4][1] = { { 1 },{ 1 },{ 1 },{ 0 } };
+	float* rotateA = MatrixRotate(a, 90, 90, 90);
+	int count = 0;
+	for (int i = 0; i < 4; i++)
+	{
+		a[i][0] = *(rotateA + count);
+		count++;
+	}
+
+	CString strTmp = _T("");
+	strTmp.Format(_T("(%f) - (%f) - (%f) - (%f)"), a[0][0], a[1][0], a[2][0], a[3][0]);
+	AfxMessageBox(strTmp);
+	//AfxMessageBox(_T("구!"));
 }
 
 
 void CMainFrame::OnButtonToroid()
 {
 	// TODO: 여기에 명령 처리기 코드를 추가합니다.
-	AfxMessageBox(_T("원환체!"));
+	float a[4][1] = { {0}, {0}, {0}, {1} };
+	float* transA = MatrixTranslate(a, 5, 10, 15);
+	int count = 0;
+	for (int i = 0; i < 4; i++)
+	{
+		a[i][0] = *(transA + count);
+		count++;
+	}
+
+	CString strTmp = _T("");
+	strTmp.Format(_T("(%f) - (%f) - (%f) - (%f)"), a[0][0], a[1][0], a[2][0], a[3][0]);
+	AfxMessageBox(strTmp);
+	//AfxMessageBox(_T("원환체!"));
 }
 
 
