@@ -1,0 +1,6 @@
+﻿  Matrix.cpp
+d:\vs_project\mfcapplication3\mfcapplication3\matrix.cpp(31): warning C4172: 지역 변수 또는 임시: sampleMatrix의 주소를 반환하고 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\matrix.cpp(45): warning C4172: 지역 변수 또는 임시: sampleMatrix의 주소를 반환하고 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\matrix.cpp(64): warning C4172: 지역 변수 또는 임시: sampleMatrix의 주소를 반환하고 있습니다.
+  MFCApplication3.vcxproj -> D:\VS_Project\MFCApplication3\Debug\MFCApplication3.exe
+  MFCApplication3.vcxproj -> D:\VS_Project\MFCApplication3\Debug\MFCApplication3.pdb (Partial PDB)
