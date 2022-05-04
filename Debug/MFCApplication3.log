@@ -1,23 +1,27 @@
 ﻿  MainFrm.cpp
-d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(515): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(516): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(517): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(518): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(519): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(522): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(523): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(524): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(525): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(526): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(529): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(530): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(531): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(532): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(533): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(536): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(537): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(538): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(539): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(540): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(336): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(337): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(358): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(359): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(641): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(642): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(643): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(644): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(645): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(648): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(649): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(650): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(651): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(652): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(655): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(656): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(657): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(658): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(659): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(662): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(663): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(664): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(665): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(666): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
   MFCApplication3.vcxproj -> D:\VS_Project\MFCApplication3\Debug\MFCApplication3.exe
   MFCApplication3.vcxproj -> D:\VS_Project\MFCApplication3\Debug\MFCApplication3.pdb (Partial PDB)

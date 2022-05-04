@@ -225,28 +225,153 @@ void CMainFrame::OnButtonToroid()
 void CMainFrame::OnMenuType()
 {
 	// TODO: 여기에 명령 처리기 코드를 추가합니다.
-	float a[4][4] = { {1,0,3,7}, {4,2,0,1}, {7,7,3,0}, {5,0,6,8} };
-	float b[4][4] = {};
-	float* ptrB = MatrixReverse(a);
+	float x = 10; float y = 10; float z = 10;
+	float* ptr = pSphere(x, y, z);
+	float sph[230][3] = {};
 	int count = 0;
-	for (int i = 0; i < 4; i++)
+	for (int i = 0; i < 230; i++)
 	{
-		for (int j = 0; j < 4; j++)
+		for (int j = 0; j < 3; j++)
 		{
-			b[i][j] = *(ptrB + count);
+			sph[i][j] = *(ptr + count);
 			count++;
 		}
 	}
 
-	CString strTmp = _T("");
-	strTmp.Format(_T("(%f) - (%f) - (%f) - (%f)"), b[0][0], b[1][0], b[2][0], b[3][0]);
-	AfxMessageBox(strTmp);
-	strTmp.Format(_T("(%f) - (%f) - (%f) - (%f)"), b[0][1], b[1][1], b[2][1], b[3][1]);
-	AfxMessageBox(strTmp);
-	strTmp.Format(_T("(%f) - (%f) - (%f) - (%f)"), b[0][2], b[1][2], b[2][2], b[3][2]);
-	AfxMessageBox(strTmp);
-	strTmp.Format(_T("(%f) - (%f) - (%f) - (%f)"), b[0][3], b[1][3], b[2][3], b[3][3]);
-	AfxMessageBox(strTmp);
+	CClientDC cdc(this);
+	CRect rect;
+	GetClientRect(&rect);
+
+	CPoint cp = (10, 10);
+
+	CDC memDC;
+	CBitmap myBitmap;
+	CBitmap* pOldBitmap;
+
+	memDC.CreateCompatibleDC(&cdc);
+	myBitmap.CreateCompatibleBitmap(&cdc, rect.Width(), rect.Height());
+	pOldBitmap = memDC.SelectObject(&myBitmap);
+
+	// 메모리 DC에 그리기
+	CBrush bgBrush(RGB(0, 0, 255));
+	CBrush* pOldBrush = memDC.SelectObject(&bgBrush);
+	memDC.PatBlt(0, 0, rect.Width(), rect.Height(), /*WHITENESS*/ PATCOPY);
+	memDC.SelectObject(pOldBrush);
+	DeleteObject(bgBrush);
+
+	CPen newPen;
+	newPen.CreatePen(PS_SOLID, 5, RGB(255, 0, 0));
+	CPen* oldPen = memDC.SelectObject(&newPen);
+
+	#pragma region 뷰 행렬 변환
+	float camera[3][1] = { { 0 },{ 0 },{ 40 } };
+	float look[3][1] = { { 0 },{ 0 },{ -1 } };
+	float view[4][4] = {};
+	float* viewPtr = ViewMatrix(camera, look/*값 아무거나 넣어도 됨, 나중에 지울 파라미터*/, look);
+	int viewCount = 0;
+	for (int i = 0; i < 4; i++)
+	{
+		for (int j = 0; j < 4; j++)
+		{
+			view[i][j] = *(viewPtr + viewCount);
+			viewCount++;
+		}
+	}
+
+	ptr = 0;
+	float sample[4][1] = {}; 
+	for (int i = 0; i < 230; i++)
+	{
+		for (int j = 0; j < 4; j++)
+		{
+			sample[j][0] = sph[i][j];
+		}
+		sample[3][0] = 1;
+		ptr = MatrixMulti(view, sample);
+		int sphCount = 0;
+		for (int j = 0; j < 3; j++)
+		{
+			sph[i][j] = *(ptr + sphCount);
+			sphCount++;
+		}
+	}
+	#pragma endregion
+	#pragma region 투영 행렬 변환
+	float proj[4][4] = {};
+	ptr = ProjectionMatrix(rect.Width(), rect.Height(), 90, 2, 15);
+	count = 0;
+	for (int i = 0; i < 4; i++)
+	{
+		for (int j = 0; j < 4; j++)
+		{
+			proj[i][j] = *(ptr + count);
+			count++;
+		}
+	}
+
+	for (int i = 0; i < 230; i++)
+	{
+		for (int j = 0; j < 4; j++)
+		{
+			sample[j][0] = sph[i][j];
+		}
+		sample[3][0] = 1;
+		ptr = MatrixMulti(proj, sample);
+		int sphCount = 0;
+		for (int j = 0; j < 3; j++)
+		{
+			sph[i][j] = *(ptr + sphCount);
+			if (j == 2)
+			{
+				sph[i][0] /= sph[i][2];
+				sph[i][1] /= sph[i][2];
+			}
+			sphCount++;
+		}
+	}
+	#pragma endregion
+	#pragma region 좌표계 변환 후 그리기
+	for (int i = 1; i < 13; i++)
+	{
+		memDC.MoveTo(ToScreenX(rect.Width(), rect.left, sph[0][0]), ToScreenY(rect.Height(), rect.top, sph[0][1]));
+		memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i][0]), ToScreenY(rect.Height(), rect.top, sph[i][1]));
+	}
+	for (int i = 1; i < 229; i++)
+	{
+		if (i % 12 == 0)
+		{
+			memDC.MoveTo(ToScreenX(rect.Width(), rect.left, sph[i][0]), ToScreenY(rect.Height(), rect.top, sph[i][1]));
+			memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i - 11][0]), ToScreenY(rect.Height(), rect.top, sph[i -11][1]));
+		}
+		else
+		{
+			memDC.MoveTo(ToScreenX(rect.Width(), rect.left, sph[i][0]), ToScreenY(rect.Height(), rect.top, sph[i][1]));
+			memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i + 1][0]), ToScreenY(rect.Height(), rect.top, sph[i + 1][1]));
+		}
+		if (i > 217) continue;
+		memDC.MoveTo(ToScreenX(rect.Width(), rect.left, sph[i][0]), ToScreenY(rect.Height(), rect.top, sph[i][1]));
+		memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i + 12][0]), ToScreenY(rect.Height(), rect.top, sph[i + 12][1]));
+	}
+	for (int i = 1; i < 13; i++)
+	{
+		memDC.MoveTo(ToScreenX(rect.Width(), rect.left, sph[229][0]), ToScreenY(rect.Height(), rect.top, sph[229][1]));
+		memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[229 - i][0]), ToScreenY(rect.Height(), rect.top, sph[229 - i][1]));
+	}
+	#pragma endregion
+
+	//memDC.MoveTo(ToScreenX(rect.Width(), rect.left, pt5[0][0]), ToScreenY(rect.Height(), rect.top, pt5[1][0]));
+	//memDC.LineTo(ToScreenX(rect.Width(), rect.left, pt8[0][0]), ToScreenY(rect.Height(), rect.top, pt8[1][0]));
+	//memDC.LineTo(ToScreenX(rect.Width(), rect.left, pt7[0][0]), ToScreenY(rect.Height(), rect.top, pt7[1][0]));
+
+	memDC.SelectObject(oldPen);
+	DeleteObject(newPen);
+
+	cdc.BitBlt(0, 0, rect.Width(), rect.Height(), &memDC, 0, 0, SRCCOPY);
+
+	memDC.SelectObject(pOldBitmap);
+	myBitmap.DeleteObject();
+	memDC.DeleteDC();
+	ReleaseDC(&cdc);
 	//AfxMessageBox(_T("타입!"));
 }
 
@@ -547,6 +672,9 @@ void CMainFrame::OnProjectionPers()
 	//memDC.SelectObject(OldBrush);
 	//DeleteObject(TriBrush);
 	
+	memDC.SelectObject(oldPen);
+	DeleteObject(newPen);
+
 	cdc.BitBlt(0, 0, rect.Width(), rect.Height(), &memDC, 0, 0, SRCCOPY);
 
 	memDC.SelectObject(pOldBitmap);
