@@ -11,6 +11,8 @@
 
 #include "MFCApplication3Doc.h"
 #include "MFCApplication3View.h"
+#include "MainFrm.h"
+
 
 // 만든 파일들
 #include "Matrix.h"
@@ -35,6 +37,8 @@ BEGIN_MESSAGE_MAP(CMFCApplication3View, CView)
 	ON_WM_LBUTTONUP()
 	ON_WM_MOUSEMOVE()
 	ON_WM_ERASEBKGND()
+	ON_WM_HOTKEY()
+	ON_WM_RBUTTONUP()
 END_MESSAGE_MAP()
 
 // CMFCApplication3View 생성/소멸
@@ -42,7 +46,8 @@ END_MESSAGE_MAP()
 CMFCApplication3View::CMFCApplication3View()
 {
 	// TODO: 여기에 생성 코드를 추가합니다.
-
+	RegisterHotKey(m_hWnd, 15000, 0, VK_RIGHT);
+	RegisterHotKey(m_hWnd, 15001, 0, VK_LEFT);
 }
 
 CMFCApplication3View::~CMFCApplication3View()
@@ -136,10 +141,30 @@ void CMFCApplication3View::OnPaint()
 	memDC.SelectObject(pOldBrush);
 	DeleteObject(bgBrush);
 
+		// 삼각형 그리기 + 칠하기
+	if (myPoint.x != 0 || myPoint.y != 0)
+	{
+		CBrush TriBrush(RGB(255, 0, 0));
+		CBrush* OldBrush = memDC.SelectObject(&TriBrush);
+
+		memDC.BeginPath();
+		memDC.MoveTo(C1);
+		memDC.LineTo(C2);
+		memDC.LineTo(C3);
+		memDC.LineTo(C1);
+		memDC.EndPath();
+		memDC.StrokeAndFillPath();
+
+		memDC.SelectObject(OldBrush);
+		DeleteObject(TriBrush);
+	}
+		////////
+	/*
 	for (auto shape : m_vShape)
 	{
 		memDC.Rectangle(shape.ptStart.x, shape.ptStart.y, shape.ptEnd.x, shape.ptEnd.y);
 	}
+	*/
 	//////////////////////
 	dc.BitBlt(0, 0, rect.Width(), rect.Height(), &memDC, 0, 0, SRCCOPY);
 
@@ -154,10 +179,19 @@ void CMFCApplication3View::OnLButtonDown(UINT nFlags, CPoint point)
 {
 	// TODO: 여기에 메시지 처리기 코드를 추가 및/또는 기본값을 호출합니다.
 
+	myPoint = point;
+	int x = myPoint.x;
+	int y = myPoint.y;
+	C1.x = x; C1.y = y - 60;
+	C2.x = x + 40; C2.y = y + 20;
+	C3.x = x - 40; C3.y = y + 20;
+	Invalidate();
+
+	/*
 	m_shCur.ptStart.x = point.x;
 	m_shCur.ptStart.y = point.y;
 	m_bDrag = TRUE;
-
+	*/
 	CView::OnLButtonDown(nFlags, point);
 }
 
@@ -166,6 +200,12 @@ void CMFCApplication3View::OnLButtonUp(UINT nFlags, CPoint point)
 {
 	// TODO: 여기에 메시지 처리기 코드를 추가 및/또는 기본값을 호출합니다.
 
+	CString strTmp = _T("");
+	strTmp.Format(_T("(%f) + (%f)"), (float)point.x, float(point.y));
+	AfxMessageBox(strTmp);
+
+
+	/*
 	if (m_bDrag)
 	{
 		m_bDrag = FALSE;
@@ -173,7 +213,7 @@ void CMFCApplication3View::OnLButtonUp(UINT nFlags, CPoint point)
 		m_vShape.push_back(m_shCur);
 		Invalidate();
 	}
-
+	*/
 	CView::OnLButtonUp(nFlags, point);
 }
 
@@ -182,6 +222,10 @@ void CMFCApplication3View::OnMouseMove(UINT nFlags, CPoint point)
 {
 	// TODO: 여기에 메시지 처리기 코드를 추가 및/또는 기본값을 호출합니다.
 
+
+
+
+	/*
 	if (m_bDrag)
 	{
 		m_shCur.ptEnd.x = point.x;
@@ -189,7 +233,7 @@ void CMFCApplication3View::OnMouseMove(UINT nFlags, CPoint point)
 
 		Invalidate();
 	}
-
+	*/
 	CView::OnMouseMove(nFlags, point);
 }
 
@@ -209,4 +253,54 @@ BOOL CMFCApplication3View::OnEraseBkgnd(CDC* pDC)
 	return TRUE;
 
 	return CView::OnEraseBkgnd(pDC);
+}
+
+
+void CMFCApplication3View::OnHotKey(UINT nHotKeyId, UINT nKey1, UINT nKey2)
+{
+	// TODO: 여기에 메시지 처리기 코드를 추가 및/또는 기본값을 호출합니다.
+
+	CView::OnHotKey(nHotKeyId, nKey1, nKey2);
+}
+
+
+void CMFCApplication3View::OnRButtonUp(UINT nFlags, CPoint point)
+{
+	// TODO: 여기에 메시지 처리기 코드를 추가 및/또는 기본값을 호출합니다.
+	C1.x = 0; C1.y = -60;
+	C2.x = 40; C2.y = 20;
+	C3.x = -40; C3.y = 20;
+	float c1Point[4][1] = { {0}, {-60}, {1}, {1} };
+	float c2Point[4][1] = { {40}, {20}, {1}, {1} };
+	float c3Point[4][1] = { {-40}, {20}, {1}, {1} };
+	float* ptr = MatrixRotate(c1Point, 0, 0, 30);
+	int count = 0;
+	for (int i = 0; i < 4; i++)
+	{
+		c1Point[i][0] = *(ptr + count);
+		count++;
+	}
+	ptr = MatrixRotate(c2Point, 0, 0, 30);
+	count = 0;
+	for (int i = 0; i < 4; i++)
+	{
+		c2Point[i][0] = *(ptr + count);
+		count++;
+	}
+	ptr = MatrixRotate(c3Point, 0, 0, 30);
+	count = 0;
+	for (int i = 0; i < 4; i++)
+	{
+		c3Point[i][0] = *(ptr + count);
+		count++;
+	}
+	int x = myPoint.x;
+	int y = myPoint.y;
+	C1.x = x + c1Point[0][0]; C1.y = y + c1Point[0][1];
+	C2.x = x + c2Point[0][0]; C2.y = y + c2Point[0][1];
+	C3.x = x + c3Point[0][0]; C3.y = y + c3Point[0][1];
+
+	Invalidate();
+
+	CView::OnRButtonUp(nFlags, point);
 }

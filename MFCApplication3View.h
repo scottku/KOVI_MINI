@@ -3,7 +3,7 @@
 //
 
 #pragma once
-
+#include "MFCApplication3Doc.h"
 using namespace std;
 #include <vector>
 struct MyShape
@@ -12,11 +12,17 @@ struct MyShape
 	CPoint ptEnd;
 };
 
+typedef struct Vertex
+{
+	float x, y, z;
+	float vertexNormal[4][1];
+} Vertex;
+
 class CMFCApplication3View : public CView
 {
 protected: // serialization에서만 만들어집니다.
 	CMFCApplication3View();
-	DECLARE_DYNCREATE(CMFCApplication3View)
+	DECLARE_DYNCREATE(CMFCApplication3View);
 
 // 특성입니다.
 public:
@@ -24,6 +30,10 @@ public:
 
 // 작업입니다.
 public:
+	CPoint myPoint;
+	CPoint C1;
+	CPoint C2;
+	CPoint C3;
 	BOOL m_bDrag;
 	MyShape m_shCur;
 	vector<MyShape> m_vShape;
@@ -55,6 +65,8 @@ public:
 	afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
 	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
 	afx_msg BOOL OnEraseBkgnd(CDC* pDC);
+	afx_msg void OnHotKey(UINT nHotKeyId, UINT nKey1, UINT nKey2);
+	afx_msg void OnRButtonUp(UINT nFlags, CPoint point);
 };
 
 #ifndef _DEBUG  // MFCApplication3View.cpp의 디버그 버전
