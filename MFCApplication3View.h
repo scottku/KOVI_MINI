@@ -30,6 +30,12 @@ public:
 
 // 작업입니다.
 public:
+	// 테스트용
+	float cameraX;
+	float cameraY;
+	float cameraZ;
+	CPoint moveDirX;
+	///////////
 	CPoint myPoint;
 	CPoint C1;
 	CPoint C2;

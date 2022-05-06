@@ -320,22 +320,80 @@ float* ViewMatrix(float a[3][1] /*카메라 위치*/, float b[3][1]  /*물체 위치*/, f
 	}
 	float cameraToMaterial[4][1] = { {b[0][0] - a[0][0]}, {b[1][0] - a[1][0]}, {b[2][0] - a[2][0]}, {0} };
 
-	float axisX[4][1] = { {c[2][0]}, {0}, {-c[0][0]}, {0} }; // Up 벡터(0,1,0)와 카메라 시야 방향(z')를 외적해 얻은 새로운 x축
-	float* normX = MatrixNormalize(axisX); // x축 정규화
+	float Up[4][1] = { {0}, {1}, {0}, {1} };
+	float bParallel[3][1] = {};
+	float* ifParallel = CrossProduct(axisZ, Up);
 	count = 0;
-	for (int i = 0; i < 4; i++)
+	for (int i = 0; i < 3; i++)
 	{
-		axisX[i][0] = *(normX + count);
+		bParallel[i][0] = *(ifParallel + count);
 		count++;
 	}
 
-	float axisY[4][1] = { {-(c[0][0] * c[1][0])}, {(c[0][0] * c[0][0]) + (c[2][0] * c[2][0])}, {-(c[1][0] * c[2][0])}, {0} }; // x' 축과 z' 축을 외적해 얻은 새로운 y축
-	float* normY = MatrixNormalize(axisY); // y축 정규화
-	count = 0;
-	for (int i = 0; i < 4; i++)
+	float axisX[4][1] = {};
+	float axisY[4][1] = {};
+	if (bParallel[0][0] != 0 || bParallel[1][0] != 0 || bParallel[2][0] != 0) // 만약 카메라 방황과 up벡터가 평행이 아니라면
 	{
-		axisY[i][0] = *(normY + count);
-		count++;
+		//axisX[4][1] = { { c[2][0] }, { 0 }, { -c[0][0] }, { 0 } }; // Up 벡터(0,1,0)와 카메라 시야 방향(z')를 외적해 얻은 새로운 x축
+		axisX[0][0] = c[2][0];
+		axisX[1][0] = 0;
+		axisX[2][0] = -c[0][0];
+
+		float* normX = MatrixNormalize(axisX); // x축 정규화
+		count = 0;
+		for (int i = 0; i < 4; i++)
+		{
+			axisX[i][0] = *(normX + count);
+			count++;
+		}
+
+		//axisY[4][1] = { { -(c[0][0] * c[1][0]) }, { (c[0][0] * c[0][0]) + (c[2][0] * c[2][0]) }, { -(c[1][0] * c[2][0]) }, { 0 } }; // x' 축과 z' 축을 외적해 얻은 새로운 y축
+		axisY[0][0] = -(c[0][0] * c[1][0]);
+		axisY[1][0] = (c[0][0] * c[0][0]) + (c[2][0] * c[2][0]);
+		axisY[2][0] = -(c[1][0] * c[2][0]);
+
+		float* normY = MatrixNormalize(axisY); // y축 정규화
+		count = 0;
+		for (int i = 0; i < 4; i++)
+		{
+			axisY[i][0] = *(normY + count);
+			count++;
+		}
+	}
+	else
+	{
+		float newUp[4][1] = { { 0 },{ 0 },{ 1 },{ 1 } };
+		ifParallel = CrossProduct(newUp, axisZ);
+		count = 0;
+		for (int i = 0; i < 4; i++)
+		{
+			axisX[i][0] = *(ifParallel + count);
+			count++;
+		}
+
+		float* normX = MatrixNormalize(axisX); // x축 정규화
+		count = 0;
+		for (int i = 0; i < 4; i++)
+		{
+			axisX[i][0] = *(normX + count);
+			count++;
+		}
+
+		ifParallel = CrossProduct(axisZ, axisX);
+		count = 0;
+		for (int i = 0; i < 4; i++)
+		{
+			axisY[i][0] = *(ifParallel + count);
+			count++;
+		}
+
+		float* normY = MatrixNormalize(axisY); // y축 정규화
+		count = 0;
+		for (int i = 0; i < 4; i++)
+		{
+			axisY[i][0] = *(normY + count);
+			count++;
+		}
 	}
 
 	// 기본적인 뷰 행렬 구성

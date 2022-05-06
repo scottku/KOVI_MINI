@@ -5,4 +5,4 @@ float* pCube(float x, float y, float z);
 
 float* pSphere(float x, float y, float z);
 
-void makingTorus(CPoint pt);
+float* pTorus(float x, float y, float z, float distanceFromOriginToCenterOfTorus, float radiusOfTorus);

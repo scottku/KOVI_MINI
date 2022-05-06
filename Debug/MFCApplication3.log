@@ -1,27 +1,64 @@
-﻿  MainFrm.cpp
+﻿  Matrix.cpp
+d:\vs_project\mfcapplication3\mfcapplication3\matrix.cpp(113): warning C4838: 'double'에서 'float'(으)로의 변환에는 축소 변환이 필요합니다.
+d:\vs_project\mfcapplication3\mfcapplication3\matrix.cpp(113): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\matrix.cpp(114): warning C4838: 'double'에서 'float'(으)로의 변환에는 축소 변환이 필요합니다.
+d:\vs_project\mfcapplication3\mfcapplication3\matrix.cpp(114): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\matrix.cpp(115): warning C4838: 'double'에서 'float'(으)로의 변환에는 축소 변환이 필요합니다.
+d:\vs_project\mfcapplication3\mfcapplication3\matrix.cpp(115): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\matrix.cpp(512): warning C4244: '초기화 중': 'int'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+  MainFrm.cpp
+d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(324): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(325): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(328): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(329): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
 d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(336): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
 d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(337): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(358): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(359): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(641): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(642): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(643): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(644): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(645): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(648): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(649): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(650): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(651): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(652): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(655): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(656): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(657): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(658): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(659): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(662): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(663): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(664): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(665): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(666): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(340): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(341): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(469): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(470): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(476): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(477): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(481): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(482): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(485): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(486): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(490): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(491): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(776): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(777): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(778): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(779): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(780): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(783): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(784): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(785): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(786): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(787): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(790): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(791): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(792): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(793): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(794): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(797): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(798): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(799): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(800): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mainfrm.cpp(801): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+  코드를 생성하고 있습니다...
+d:\vs_project\mfcapplication3\mfcapplication3\matrix.cpp(35): warning C4172: 지역 변수 또는 임시: sampleMatrix의 주소를 반환하고 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\matrix.cpp(49): warning C4172: 지역 변수 또는 임시: sampleMatrix의 주소를 반환하고 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\matrix.cpp(68): warning C4172: 지역 변수 또는 임시: sampleMatrix의 주소를 반환하고 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\matrix.cpp(84): warning C4172: 지역 변수 또는 임시: sampleMatrix의 주소를 반환하고 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\matrix.cpp(101): warning C4172: 지역 변수 또는 임시: resultMatrix의 주소를 반환하고 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\matrix.cpp(140): warning C4172: 지역 변수 또는 임시: myArray의 주소를 반환하고 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\matrix.cpp(157): warning C4172: 지역 변수 또는 임시: resultMatrix의 주소를 반환하고 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\matrix.cpp(170): warning C4172: 지역 변수 또는 임시: result의 주소를 반환하고 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\matrix.cpp(205): warning C4172: 지역 변수 또는 임시: result의 주소를 반환하고 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\matrix.cpp(593): warning C4172: 지역 변수 또는 임시: result의 주소를 반환하고 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\matrix.cpp(503): warning C4172: 지역 변수 또는 임시: viewMatrix의 주소를 반환하고 있습니다.
+  건너뛰고 있습니다... (관련된 변경 내용 없음)
+  MFCApplication3View.cpp
+  Figure.cpp
   MFCApplication3.vcxproj -> D:\VS_Project\MFCApplication3\Debug\MFCApplication3.exe
   MFCApplication3.vcxproj -> D:\VS_Project\MFCApplication3\Debug\MFCApplication3.pdb (Partial PDB)

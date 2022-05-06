@@ -12,6 +12,7 @@
 #include "MFCApplication3Doc.h"
 #include "MFCApplication3View.h"
 #include "MainFrm.h"
+#include "Figure.h"
 
 
 // 만든 파일들
@@ -48,6 +49,11 @@ CMFCApplication3View::CMFCApplication3View()
 	// TODO: 여기에 생성 코드를 추가합니다.
 	RegisterHotKey(m_hWnd, 15000, 0, VK_RIGHT);
 	RegisterHotKey(m_hWnd, 15001, 0, VK_LEFT);
+	cameraX = -40;
+	cameraY = 40;
+	cameraZ = 0;
+	moveDirX.x = 0;
+	moveDirX.y = 0;
 }
 
 CMFCApplication3View::~CMFCApplication3View()
@@ -120,18 +126,32 @@ CMFCApplication3Doc* CMFCApplication3View::GetDocument() const // 디버그되지 않�
 
 void CMFCApplication3View::OnPaint()
 {
-	CPaintDC dc(this); // device context for painting
-					   // TODO: 여기에 메시지 처리기 코드를 추가합니다.
-					   // 그리기 메시지에 대해서는 CView::OnPaint()을(를) 호출하지 마십시오.
+	float x = 10; float y = 0; float z = 0;
+	float* ptr = pTorus(x, y, z, 15, 8);
+	float tor[144][3] = {};
+	int count = 0;
+	// 만든 Torus 정보 가져오기
+	for (int i = 0; i < 144; i++)
+	{
+		for (int j = 0; j < 3; j++)
+		{
+			tor[i][j] = *(ptr + count);
+			count++;
+		}
+	}
+	// 그리기 준비
+	CPaintDC cdc(this);
+	CRect rect;
+	GetClientRect(&rect);
+
+	CPoint cp = (10, 10);
 
 	CDC memDC;
 	CBitmap myBitmap;
 	CBitmap* pOldBitmap;
-	CRect rect;
-	GetClientRect(&rect);
 
-	memDC.CreateCompatibleDC(&dc);
-	myBitmap.CreateCompatibleBitmap(&dc, rect.Width(), rect.Height());
+	memDC.CreateCompatibleDC(&cdc);
+	myBitmap.CreateCompatibleBitmap(&cdc, rect.Width(), rect.Height());
 	pOldBitmap = memDC.SelectObject(&myBitmap);
 
 	// 메모리 DC에 그리기
@@ -141,37 +161,170 @@ void CMFCApplication3View::OnPaint()
 	memDC.SelectObject(pOldBrush);
 	DeleteObject(bgBrush);
 
-		// 삼각형 그리기 + 칠하기
-	if (myPoint.x != 0 || myPoint.y != 0)
-	{
-		CBrush TriBrush(RGB(255, 0, 0));
-		CBrush* OldBrush = memDC.SelectObject(&TriBrush);
+	CPen newPen;
+	newPen.CreatePen(PS_SOLID, 5, RGB(255, 0, 0));
+	CPen* oldPen = memDC.SelectObject(&newPen);
 
-		memDC.BeginPath();
-		memDC.MoveTo(C1);
-		memDC.LineTo(C2);
-		memDC.LineTo(C3);
-		memDC.LineTo(C1);
-		memDC.EndPath();
-		memDC.StrokeAndFillPath();
-
-		memDC.SelectObject(OldBrush);
-		DeleteObject(TriBrush);
-	}
-		////////
-	/*
-	for (auto shape : m_vShape)
+#pragma region 뷰 행렬 변환
+	float camera[3][1] = { { cameraX },{ cameraY },{ cameraZ } };
+	float look[3][1] = { { 1 },{ -1 },{ 0 } };
+	float view[4][4] = {};
+	float* viewPtr = ViewMatrix(camera, look/*뷰 행렬 만드는데 물체 위치가 크게 중요하지 않은 것 같아서 나중에 지울 예정*/, look);
+	int viewCount = 0;
+	for (int i = 0; i < 4; i++)
 	{
-		memDC.Rectangle(shape.ptStart.x, shape.ptStart.y, shape.ptEnd.x, shape.ptEnd.y);
+		for (int j = 0; j < 4; j++)
+		{
+			view[i][j] = *(viewPtr + viewCount);
+			viewCount++;
+		}
 	}
-	*/
-	//////////////////////
-	dc.BitBlt(0, 0, rect.Width(), rect.Height(), &memDC, 0, 0, SRCCOPY);
+
+	ptr = 0;
+	float sample[4][1] = {};
+	// torus 각 점들을 뷰 행렬 변환 시킴
+	for (int i = 0; i < 144; i++)
+	{
+		for (int j = 0; j < 4; j++)
+		{
+			sample[j][0] = tor[i][j];
+		}
+		sample[3][0] = 1;
+		ptr = MatrixMulti(view, sample);
+		int torCount = 0;
+		for (int j = 0; j < 3; j++)
+		{
+			tor[i][j] = *(ptr + torCount);
+			torCount++;
+		}
+	}
+#pragma endregion
+#pragma region 투영 행렬 변환
+	float proj[4][4] = {};
+	ptr = ProjectionMatrix(rect.Width(), rect.Height(), 90, 2, 15);
+	count = 0;
+	// 투영 행렬 생성
+	for (int i = 0; i < 4; i++)
+	{
+		for (int j = 0; j < 4; j++)
+		{
+			proj[i][j] = *(ptr + count);
+			count++;
+		}
+	}
+
+	// 뷰 변환 한 점들 투영 변환
+	for (int i = 0; i < 144; i++)
+	{
+		for (int j = 0; j < 4; j++)
+		{
+			sample[j][0] = tor[i][j];
+		}
+		sample[3][0] = 1;
+		ptr = MatrixMulti(proj, sample);
+		int torCount = 0;
+		for (int j = 0; j < 3; j++)
+		{
+			tor[i][j] = *(ptr + torCount);
+			if (j == 2)
+			{
+				tor[i][0] /= tor[i][2];
+				tor[i][1] /= tor[i][2];
+			}
+			torCount++;
+		}
+	}
+#pragma endregion
+#pragma region 좌표계 변환 후 그리기
+	// 원들끼리 그리기
+	for (int i = 0; i < 144; i++)
+	{
+		if ((i + 1) % 12 == 0)
+		{
+			memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i][0]), ToScreenY(rect.Height(), rect.top, tor[i][1]));
+			memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 11][0]), ToScreenY(rect.Height(), rect.top, tor[i - 11][1]));
+			continue;
+		}
+		memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i][0]), ToScreenY(rect.Height(), rect.top, tor[i][1]));
+		memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 1][0]), ToScreenY(rect.Height(), rect.top, tor[i + 1][1]));
+	}
+	// 옆끼리 연결하기
+	for (int i = 0; i < 144; i++)
+	{
+		if (i >= 132)
+		{
+			memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i][0]), ToScreenY(rect.Height(), rect.top, tor[i][1]));
+			memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 132][0]), ToScreenY(rect.Height(), rect.top, tor[i - 132][1]));
+			continue;
+		}
+		memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i][0]), ToScreenY(rect.Height(), rect.top, tor[i][1]));
+		memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 12][0]), ToScreenY(rect.Height(), rect.top, tor[i + 12][1]));
+	}
+#pragma endregion
+
+	memDC.SelectObject(oldPen);
+	DeleteObject(newPen);
+
+	cdc.BitBlt(0, 0, rect.Width(), rect.Height(), &memDC, 0, 0, SRCCOPY);
 
 	memDC.SelectObject(pOldBitmap);
 	myBitmap.DeleteObject();
 	memDC.DeleteDC();
-	ReleaseDC(&dc);
+	ReleaseDC(&cdc);
+	#pragma region 기존 코드들
+	//CPaintDC dc(this); // device context for painting
+	//				   // TODO: 여기에 메시지 처리기 코드를 추가합니다.
+	//				   // 그리기 메시지에 대해서는 CView::OnPaint()을(를) 호출하지 마십시오.
+
+	//CDC memDC;
+	//CBitmap myBitmap;
+	//CBitmap* pOldBitmap;
+	//CRect rect;
+	//GetClientRect(&rect);
+
+	//memDC.CreateCompatibleDC(&dc);
+	//myBitmap.CreateCompatibleBitmap(&dc, rect.Width(), rect.Height());
+	//pOldBitmap = memDC.SelectObject(&myBitmap);
+
+	//// 메모리 DC에 그리기
+	//CBrush bgBrush(RGB(0, 0, 255));
+	//CBrush* pOldBrush = memDC.SelectObject(&bgBrush);
+	//memDC.PatBlt(0, 0, rect.Width(), rect.Height(), /*WHITENESS*/ PATCOPY);
+	//memDC.SelectObject(pOldBrush);
+	//DeleteObject(bgBrush);
+
+	//	// 삼각형 그리기 + 칠하기
+	//if (myPoint.x != 0 || myPoint.y != 0)
+	//{
+	//	CBrush TriBrush(RGB(255, 0, 0));
+	//	CBrush* OldBrush = memDC.SelectObject(&TriBrush);
+
+	//	memDC.BeginPath();
+	//	memDC.MoveTo(C1);
+	//	memDC.LineTo(C2);
+	//	memDC.LineTo(C3);
+	//	memDC.LineTo(C1);
+	//	memDC.EndPath();
+	//	memDC.StrokeAndFillPath();
+
+	//	memDC.SelectObject(OldBrush);
+	//	DeleteObject(TriBrush);
+	//}
+	//	////////
+	///*
+	//for (auto shape : m_vShape)
+	//{
+	//	memDC.Rectangle(shape.ptStart.x, shape.ptStart.y, shape.ptEnd.x, shape.ptEnd.y);
+	//}
+	//*/
+	////////////////////////
+	//dc.BitBlt(0, 0, rect.Width(), rect.Height(), &memDC, 0, 0, SRCCOPY);
+
+	//memDC.SelectObject(pOldBitmap);
+	//myBitmap.DeleteObject();
+	//memDC.DeleteDC();
+	//ReleaseDC(&dc);
+	#pragma endregion
 }
 
 
@@ -221,9 +374,35 @@ void CMFCApplication3View::OnLButtonUp(UINT nFlags, CPoint point)
 void CMFCApplication3View::OnMouseMove(UINT nFlags, CPoint point)
 {
 	// TODO: 여기에 메시지 처리기 코드를 추가 및/또는 기본값을 호출합니다.
+	if (moveDirX.x == 0 && moveDirX.y == 0)
+	{
+		moveDirX.x = point.x;
+		moveDirX.y = point.y;
+		return;
+	}
+	else
+	{
+		if (point.x > moveDirX.x)
+		{
+			cameraZ += 1;
+		}
+		else 
+		{
+			cameraZ -= 1;
+		}
+		//if (point.y > moveDirX.y)
+		//{
+		//	cameraY -= 1;
+		//}
+		//else
+		//{
+		//	cameraY += 1;
+		//}
+		moveDirX.x = point.x;
+		moveDirX.y = point.y;
+	}
 
-
-
+	Invalidate();
 
 	/*
 	if (m_bDrag)
@@ -270,24 +449,25 @@ void CMFCApplication3View::OnRButtonUp(UINT nFlags, CPoint point)
 	C1.x = 0; C1.y = -60;
 	C2.x = 40; C2.y = 20;
 	C3.x = -40; C3.y = 20;
-	float c1Point[4][1] = { {0}, {-60}, {1}, {1} };
-	float c2Point[4][1] = { {40}, {20}, {1}, {1} };
-	float c3Point[4][1] = { {-40}, {20}, {1}, {1} };
-	float* ptr = MatrixRotate(c1Point, 0, 0, 30);
+	float c1Point[4][1] = { {0}, {-60}, {0}, {1} };
+	float c2Point[4][1] = { {40}, {20}, {0}, {1} };
+	float c3Point[4][1] = { {-40}, {20}, {0}, {1} };
+	float* ptr = MatrixRotate(c1Point, 0, 0, 90);
 	int count = 0;
 	for (int i = 0; i < 4; i++)
 	{
 		c1Point[i][0] = *(ptr + count);
+
 		count++;
 	}
-	ptr = MatrixRotate(c2Point, 0, 0, 30);
+	ptr = MatrixRotate(c2Point, 0, 0, 90);
 	count = 0;
 	for (int i = 0; i < 4; i++)
 	{
 		c2Point[i][0] = *(ptr + count);
 		count++;
 	}
-	ptr = MatrixRotate(c3Point, 0, 0, 30);
+	ptr = MatrixRotate(c3Point, 0, 0, 90);
 	count = 0;
 	for (int i = 0; i < 4; i++)
 	{
