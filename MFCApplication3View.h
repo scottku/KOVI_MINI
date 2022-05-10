@@ -25,7 +25,24 @@ typedef struct TorusInfo
 	MyVertex torus[144];
 	MyVertex torusCopy[144];
 	int vertexCount;
+	bool isClicked;
 } TorusInfo;
+
+typedef struct SphereInfo
+{
+	MyVertex sphere[230];
+	MyVertex sphereCopy[230];
+	int vertexCount;
+	bool isClicked;
+} SphereInfo;
+
+typedef struct CubeInfo
+{
+	MyVertex cube[8];
+	MyVertex cubeCopy[8];
+	int vertexCount;
+	bool isClicked = FALSE;
+} CubeInfo;
 
 class CMFCApplication3View : public CView
 {
@@ -49,7 +66,9 @@ public:
 	float left;
 	float top;
 	CPoint moveDirX;
-	vector<TorusInfo> v_Figure;
+	vector<TorusInfo> v_torusFigure;
+	vector<SphereInfo> v_sphereFigure;
+	vector<CubeInfo> v_cubeFigure;
 	///////////
 	CPoint myPoint;
 	CPoint C1;

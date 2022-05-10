@@ -7,8 +7,8 @@ typedef struct Vertex
 	float vertexNormal[4][1];
 } MyVertex;
 
-float* pCube(float x, float y, float z);
+MyVertex* pCube(float x, float y, float z);
 
-float* pSphere(float x, float y, float z);
+MyVertex* pSphere(float x, float y, float z);
 
 MyVertex* pTorus(float x, float y, float z, float distanceFromOriginToCenterOfTorus, float radiusOfTorus);

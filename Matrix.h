@@ -37,6 +37,7 @@ float DotProduct(float a[3][1], float b[3][1]); //  벡터 내적
 //float DotProduct(float a[4][1], float b[4][1]);
 
 float* CrossProduct(float a[4][1], float b[4][1]); // 벡터 외적
+float* CrossProduct2X2(float a[2][1], float b[2][1]);
 
 float* MatrixReverse(float a[4][4]); // 역행렬
 

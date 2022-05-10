@@ -189,6 +189,16 @@ float* CrossProduct(float a[4][1], float b[4][1])
 
 	return (float*)result;
 }
+float* CrossProduct2X2(float a[2][1], float b[2][1])
+{
+	float x[3][1] = { {a[0][0]}, {a[1][0]}, {0} };
+	float y[3][1] = { {b[0][0]}, {b[1][0]}, {0} };
+
+	float result[3][1] = {};
+	result[2][0] = a[0][0] * b[1][0] - a[1][0] * b[0][0];
+
+	return (float*)result;
+}
 
 float* MatrixReverse(float a[4][4]) // TODO : for문으로 바꿀만한게 있을까?
 {
