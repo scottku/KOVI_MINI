@@ -6,17 +6,26 @@
 #include "MFCApplication3Doc.h"
 using namespace std;
 #include <vector>
+#include "Figure.h"
+#include "MainFrm.h"
 struct MyShape
 {
 	CPoint ptStart;
 	CPoint ptEnd;
 };
 
-typedef struct Vertex
+//typedef struct Vertex
+//{
+//	float x, y, z;
+//	float vertexNormal[4][1];
+//} Vertex;
+
+typedef struct TorusInfo
 {
-	float x, y, z;
-	float vertexNormal[4][1];
-} Vertex;
+	MyVertex torus[144];
+	MyVertex torusCopy[144];
+	int vertexCount;
+} TorusInfo;
 
 class CMFCApplication3View : public CView
 {
@@ -31,10 +40,16 @@ public:
 // 작업입니다.
 public:
 	// 테스트용
+	float camera[3][1];
 	float cameraX;
 	float cameraY;
 	float cameraZ;
+	float width;
+	float height;
+	float left;
+	float top;
 	CPoint moveDirX;
+	vector<TorusInfo> v_Figure;
 	///////////
 	CPoint myPoint;
 	CPoint C1;

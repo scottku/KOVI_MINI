@@ -21,6 +21,7 @@ IMPLEMENT_DYNCREATE(CMainFrame, CFrameWnd)
 const int  iMaxUserToolbars = 10;
 const UINT uiFirstUserToolBarId = AFX_IDW_CONTROLBAR_FIRST + 40;
 const UINT uiLastUserToolBarId = uiFirstUserToolBarId + iMaxUserToolbars - 1;
+int figureNum = 0;
 
 
 BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
@@ -47,7 +48,6 @@ static UINT indicators[] =
 CMainFrame::CMainFrame()
 {
 	// TODO: 여기에 멤버 초기화 코드를 추가합니다.
-
 }
 
 CMainFrame::~CMainFrame()
@@ -114,53 +114,7 @@ void CMainFrame::Dump(CDumpContext& dc) const
 void CMainFrame::OnButtonTri()
 {
 	// TODO: 여기에 명령 처리기 코드를 추가합니다.
-	float a[4][4] = { { 1,2,3,4 },{ 5,6,7,8 },{ 9,10,11,12 },{ 13,14,15,16 } };
-	float b[4][4] = { { 1,2,3,4 },{ 5,6,7,8 },{ 9,10,11,12 },{ 13,14,15,16 } };
-
-	float cp[4][4]; // 4x4 행렬의 덧셈
-	float cm[4][4]; // 4x4 행렬의 뺄셈
-	float cMul[4][4]; // 4x4 행렬의 곱셈
-
-	float* ptrCp = MatrixPlus(a, b);
-	int count = 0;
-	for (int i = 0; i < 4; i++)
-	{
-		for (int j = 0; j < 4; j++)
-		{
-			cp[i][j] = *(ptrCp+count);
-			count++;
-		}
-	}
-
-	float* ptrCm = MatrixMinus(a, b);
-	count = 0;
-	for (int i = 0; i < 4; i++)
-	{
-		for (int j = 0; j < 4; j++)
-		{
-			cm[i][j] = *(ptrCm + count);
-			count++;
-		}
-	}
-
-	float* ptrCMul = MatrixMulti(a, b);
-	count = 0;
-	for (int i = 0; i < 4; i++)
-	{
-		for (int j = 0; j < 4; j++)
-		{
-			cMul[i][j] = *(ptrCMul + count);
-			count++;
-		}
-	}
-
-	CString strTmp = _T("");
-	strTmp.Format(_T("%f + %f = %f"), cp[0][0], cp[2][0], cp[0][0] + cp[2][0]);
-	AfxMessageBox(strTmp);
-	strTmp.Format(_T("%f + %f = %f"), cm[0][0], cm[2][0], cm[0][0] + cm[2][0]);
-	AfxMessageBox(strTmp);
-	strTmp.Format(_T("%f + %f = %f"), cMul[0][0], cMul[2][0], cMul[0][0] + cMul[2][0]);
-	AfxMessageBox(strTmp);
+	figureNum = 0;
 	//AfxMessageBox(_T("삼각형!"));
 }
 
@@ -168,18 +122,7 @@ void CMainFrame::OnButtonTri()
 void CMainFrame::OnButtonCube()
 {
 	// TODO: 여기에 명령 처리기 코드를 추가합니다.
-	float a[4][1] = { {2}, {4}, {6}, {0} };
-	float* scaleA = MatrixScale(a, 2, 3, 4);
-	int count = 0;
-	for (int i = 0; i < 4; i++)
-	{
-		a[i][0] = *(scaleA + count);
-		count++;
-	}
-
-	CString strTmp = _T("");
-	strTmp.Format(_T("%f - %f - %f - %f"), a[0][0], a[1][0], a[2][0], a[3][0]);
-	AfxMessageBox(strTmp);
+	figureNum = 1;
 	//AfxMessageBox(_T("정육면체!"));
 }
 
@@ -187,18 +130,7 @@ void CMainFrame::OnButtonCube()
 void CMainFrame::OnButtonSphe()
 {
 	// TODO: 여기에 명령 처리기 코드를 추가합니다.
-	float a[4][1] = { { 1 },{ 1 },{ 1 },{ 0 } };
-	float* rotateA = MatrixRotate(a, 90, 90, 90);
-	int count = 0;
-	for (int i = 0; i < 4; i++)
-	{
-		a[i][0] = *(rotateA + count);
-		count++;
-	}
-
-	CString strTmp = _T("");
-	strTmp.Format(_T("(%f) - (%f) - (%f) - (%f)"), a[0][0], a[1][0], a[2][0], a[3][0]);
-	AfxMessageBox(strTmp);
+	figureNum = 2;
 	//AfxMessageBox(_T("구!"));
 }
 
@@ -206,151 +138,166 @@ void CMainFrame::OnButtonSphe()
 void CMainFrame::OnButtonToroid() // 현재 원환체 그리기 코드
 {
 	// TODO: 여기에 명령 처리기 코드를 추가합니다.
-	float x = 10; float y = 0; float z = 0;
-	float* ptr = pTorus(x, y, z, 15, 8);
-	float tor[144][3] = {};
-	int count = 0;
-	// 만든 Torus 정보 가져오기
-	for (int i = 0; i < 144; i++)
-	{
-		for (int j = 0; j < 3; j++)
-		{
-			tor[i][j] = *(ptr + count);
-			count++;
-		}
-	}
-	// 그리기 준비
-	CClientDC cdc(this);
-	CRect rect;
-	GetClientRect(&rect);
+	figureNum = 3;
 
-	CPoint cp = (10, 10);
-
-	CDC memDC;
-	CBitmap myBitmap;
-	CBitmap* pOldBitmap;
-
-	memDC.CreateCompatibleDC(&cdc);
-	myBitmap.CreateCompatibleBitmap(&cdc, rect.Width(), rect.Height());
-	pOldBitmap = memDC.SelectObject(&myBitmap);
-
-	// 메모리 DC에 그리기
-	CBrush bgBrush(RGB(0, 0, 255));
-	CBrush* pOldBrush = memDC.SelectObject(&bgBrush);
-	memDC.PatBlt(0, 0, rect.Width(), rect.Height(), /*WHITENESS*/ PATCOPY);
-	memDC.SelectObject(pOldBrush);
-	DeleteObject(bgBrush);
-
-	CPen newPen;
-	newPen.CreatePen(PS_SOLID, 5, RGB(255, 0, 0));
-	CPen* oldPen = memDC.SelectObject(&newPen);
-
-#pragma region 뷰 행렬 변환
-	float camera[3][1] = { { -40 },{ 40 },{ 0 } };
-	float look[3][1] = { { 1 },{ -1 },{ 0 } };
-	float view[4][4] = {};
-	float* viewPtr = ViewMatrix(camera, look/*뷰 행렬 만드는데 물체 위치가 크게 중요하지 않은 것 같아서 나중에 지울 예정*/, look);
-	int viewCount = 0;
-	for (int i = 0; i < 4; i++)
-	{
-		for (int j = 0; j < 4; j++)
-		{
-			view[i][j] = *(viewPtr + viewCount);
-			viewCount++;
-		}
-	}
-
-	ptr = 0;
-	float sample[4][1] = {};
-	// torus 각 점들을 뷰 행렬 변환 시킴
-	for (int i = 0; i < 144; i++)
-	{
-		for (int j = 0; j < 4; j++)
-		{
-			sample[j][0] = tor[i][j];
-		}
-		sample[3][0] = 1;
-		ptr = MatrixMulti(view, sample);
-		int torCount = 0;
-		for (int j = 0; j < 3; j++)
-		{
-			tor[i][j] = *(ptr + torCount);
-			torCount++;
-		}
-	}
+	#pragma region 이전 코드
+//	float x = 10; float y = 0; float z = 0;
+//	Vertex* vPtr = pTorus(x, y, z, 15, 8);
+//	Vertex tor[144] = {};
+//	int count = 0;
+//	// 만든 Torus 정보 가져오기
+//	for (int i = 0; i < 144; i++)
+//	{
+//		for (int j = 0; j < 3; j++)
+//		{
+//			tor[i] = *(vPtr + count);
+//			count++;
+//		}
+//	}
+//	// 그리기 준비
+//	CClientDC cdc(this);
+//	CRect rect;
+//	GetClientRect(&rect);
+//
+//	CPoint cp = (10, 10);
+//
+//	CDC memDC;
+//	CBitmap myBitmap;
+//	CBitmap* pOldBitmap;
+//
+//	memDC.CreateCompatibleDC(&cdc);
+//	myBitmap.CreateCompatibleBitmap(&cdc, rect.Width(), rect.Height());
+//	pOldBitmap = memDC.SelectObject(&myBitmap);
+//
+//	// 메모리 DC에 그리기
+//	CBrush bgBrush(RGB(0, 0, 255));
+//	CBrush* pOldBrush = memDC.SelectObject(&bgBrush);
+//	memDC.PatBlt(0, 0, rect.Width(), rect.Height(), /*WHITENESS*/ PATCOPY);
+//	memDC.SelectObject(pOldBrush);
+//	DeleteObject(bgBrush);
+//
+//	CPen newPen;
+//	newPen.CreatePen(PS_SOLID, 5, RGB(255, 0, 0));
+//	CPen* oldPen = memDC.SelectObject(&newPen);
+//
+//#pragma region 뷰 행렬 변환
+//	float camera[3][1] = { { -40 },{ 40 },{ 0 } };
+//	float look[3][1] = { { 1 },{ -1 },{ 0 } };
+//	float view[4][4] = {};
+//	float* viewPtr = ViewMatrix(camera, look/*뷰 행렬 만드는데 물체 위치가 크게 중요하지 않은 것 같아서 나중에 지울 예정*/, look);
+//	int viewCount = 0;
+//	for (int i = 0; i < 4; i++)
+//	{
+//		for (int j = 0; j < 4; j++)
+//		{
+//			view[i][j] = *(viewPtr + viewCount);
+//			viewCount++;
+//		}
+//	}
+//
+//	float* fPtr;
+//	float sample[4][1] = {};
+//	// torus 각 점들을 뷰 행렬 변환 시킴
+//	for (int i = 0; i < 144; i++)
+//	{
+//		sample[0][0] = tor[i].x;
+//		sample[1][0] = tor[i].y;
+//		sample[2][0] = tor[i].z;
+//		sample[3][0] = 1;
+//
+//		fPtr = MatrixMulti(view, sample);
+//		int torCount = 0;
+//
+//		tor[i].x = *(fPtr + torCount);
+//		torCount++;
+//		tor[i].y = *(fPtr + torCount);
+//		torCount++;
+//		tor[i].z = *(fPtr + torCount);
+//		torCount++;
+//	}
+//#pragma endregion
+//#pragma region 투영 행렬 변환
+//	float proj[4][4] = {};
+//	fPtr = ProjectionMatrix(rect.Width(), rect.Height(), 90, 2, 15);
+//	count = 0;
+//	// 투영 행렬 생성
+//	for (int i = 0; i < 4; i++)
+//	{
+//		for (int j = 0; j < 4; j++)
+//		{
+//			proj[i][j] = *(fPtr + count);
+//			count++;
+//		}
+//	}
+//
+//	// 뷰 변환 한 점들 투영 변환
+//	for (int i = 0; i < 144; i++)
+//	{
+//		sample[0][0] = tor[i].x;
+//		sample[1][0] = tor[i].y;
+//		sample[2][0] = tor[i].z;
+//		sample[3][0] = 1;
+//
+//		fPtr = MatrixMulti(proj, sample);
+//		int torCount = 0;
+//		for (int j = 0; j < 3; j++)
+//		{
+//			tor[i].x = *(fPtr + torCount);
+//			torCount++;
+//			tor[i].y = *(fPtr + torCount);
+//			torCount++;
+//			tor[i].z = *(fPtr + torCount);
+//			torCount++;
+//
+//			tor[i].x /= tor[i].z;
+//			tor[i].y /= tor[i].z;
+//			tor[i].z /= tor[i].z;
+//			//if (j == 2)
+//			//{
+//			//	tor[i][0] /= tor[i][2];
+//			//	tor[i][1] /= tor[i][2];
+//			//}
+//			//torCount++;
+//		}
+//	}
+//#pragma endregion
+//#pragma region 좌표계 변환 후 그리기
+//	// 원들끼리 그리기
+//	for (int i = 0; i < 144; i++)
+//	{
+//		if ((i + 1) % 12 == 0)
+//		{
+//			memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+//			memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 11].x), ToScreenY(rect.Height(), rect.top, tor[i - 11].y));
+//			continue;
+//		}
+//		memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+//		memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i+1].x), ToScreenY(rect.Height(), rect.top, tor[i+1].y));
+//	}
+//	// 옆끼리 연결하기
+//	for (int i = 0; i < 144; i++)
+//	{
+//		if (i >= 132)
+//		{
+//			memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+//			memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 132].x), ToScreenY(rect.Height(), rect.top, tor[i - 132].y));
+//			continue;
+//		}
+//		memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+//		memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 12].x), ToScreenY(rect.Height(), rect.top, tor[i +12].y));
+//	}
+//#pragma endregion
+//
+//	memDC.SelectObject(oldPen);
+//	DeleteObject(newPen);
+//
+//	cdc.BitBlt(0, 0, rect.Width(), rect.Height(), &memDC, 0, 0, SRCCOPY);
+//
+//	memDC.SelectObject(pOldBitmap);
+//	myBitmap.DeleteObject();
+//	memDC.DeleteDC();
+//	ReleaseDC(&cdc);
 #pragma endregion
-#pragma region 투영 행렬 변환
-	float proj[4][4] = {};
-	ptr = ProjectionMatrix(rect.Width(), rect.Height(), 90, 2, 15);
-	count = 0;
-	// 투영 행렬 생성
-	for (int i = 0; i < 4; i++)
-	{
-		for (int j = 0; j < 4; j++)
-		{
-			proj[i][j] = *(ptr + count);
-			count++;
-		}
-	}
-
-	// 뷰 변환 한 점들 투영 변환
-	for (int i = 0; i < 144; i++)
-	{
-		for (int j = 0; j < 4; j++)
-		{
-			sample[j][0] = tor[i][j];
-		}
-		sample[3][0] = 1;
-		ptr = MatrixMulti(proj, sample);
-		int torCount = 0;
-		for (int j = 0; j < 3; j++)
-		{
-			tor[i][j] = *(ptr + torCount);
-			if (j == 2)
-			{
-				tor[i][0] /= tor[i][2];
-				tor[i][1] /= tor[i][2];
-			}
-			torCount++;
-		}
-	}
-#pragma endregion
-#pragma region 좌표계 변환 후 그리기
-	// 원들끼리 그리기
-	for (int i = 0; i < 144; i++)
-	{
-		if ((i + 1) % 12 == 0)
-		{
-			memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i][0]), ToScreenY(rect.Height(), rect.top, tor[i][1]));
-			memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 11][0]), ToScreenY(rect.Height(), rect.top, tor[i - 11][1]));
-			continue;
-		}
-		memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i][0]), ToScreenY(rect.Height(), rect.top, tor[i][1]));
-		memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i+1][0]), ToScreenY(rect.Height(), rect.top, tor[i+1][1]));
-	}
-	// 옆끼리 연결하기
-	for (int i = 0; i < 144; i++)
-	{
-		if (i >= 132)
-		{
-			memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i][0]), ToScreenY(rect.Height(), rect.top, tor[i][1]));
-			memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 132][0]), ToScreenY(rect.Height(), rect.top, tor[i - 132][1]));
-			continue;
-		}
-		memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i][0]), ToScreenY(rect.Height(), rect.top, tor[i][1]));
-		memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 12][0]), ToScreenY(rect.Height(), rect.top, tor[i +12][1]));
-	}
-#pragma endregion
-
-	memDC.SelectObject(oldPen);
-	DeleteObject(newPen);
-
-	cdc.BitBlt(0, 0, rect.Width(), rect.Height(), &memDC, 0, 0, SRCCOPY);
-
-	memDC.SelectObject(pOldBitmap);
-	myBitmap.DeleteObject();
-	memDC.DeleteDC();
-	ReleaseDC(&cdc);
 	//AfxMessageBox(_T("원환체!"));
 }
 

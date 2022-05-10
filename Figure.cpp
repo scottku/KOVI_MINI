@@ -120,9 +120,10 @@ float* pSphere(float x, float y, float z)
 	return (float*)result;
 }
 
-float* pTorus(float x, float y, float z, float distanceFromOriginToCenterOfTorus, float radiusOfTorus)
+MyVertex* pTorus(float x, float y, float z, float distanceFromOriginToCenterOfTorus, float radiusOfTorus)
 {
 	float result[144][3] = {};
+	Vertex myResult[144] = {};
 	float sample[12][3] = {};
 	float* ptr;
 	// (x, y, z)가 중심, 중심에서부터 distanceFromOriginToCenterOfTorus만큼 떨어진 곳에 torus의 중심, torus의 반지름은 radiusOfTorus
@@ -166,6 +167,9 @@ float* pTorus(float x, float y, float z, float distanceFromOriginToCenterOfTorus
 			ptr = MatrixRotate(pt, 0, (30 * j), 0);
 			count = 0;
 			for (int k = 0; k < 3; k++)
+
+
+
 			{
 				result[i + (12 * j)][k] = *(ptr + count);
 				count++;
@@ -176,10 +180,14 @@ float* pTorus(float x, float y, float z, float distanceFromOriginToCenterOfTorus
 	float center[3][1] = { {x}, {y}, {z} };
 	for (int i = 0; i < 144; i++)
 	{
-		result[i][0] += x;
-		result[i][1] += y;
-		result[i][2] += z;
+		myResult[i].x = result[i][0] + x;
+		myResult[i].y = result[i][1] + y;
+		myResult[i].z = result[i][2] + z;
+
+		//result[i][0] += x;
+		//result[i][1] += y;
+		//result[i][2] += z;
 	}
 
-	return (float*)result;
+	return (Vertex*)myResult;
 }
