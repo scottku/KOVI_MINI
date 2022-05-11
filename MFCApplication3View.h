@@ -31,7 +31,6 @@ typedef struct TorusInfo
 typedef struct SphereInfo
 {
 	MyVertex sphere[230];
-	MyVertex sphereCopy[230];
 	int vertexCount;
 	bool isClicked;
 } SphereInfo;
@@ -39,7 +38,6 @@ typedef struct SphereInfo
 typedef struct CubeInfo
 {
 	MyVertex cube[8];
-	MyVertex cubeCopy[8];
 	int vertexCount;
 	bool isClicked = FALSE;
 } CubeInfo;
@@ -107,6 +105,8 @@ public:
 	afx_msg BOOL OnEraseBkgnd(CDC* pDC);
 	afx_msg void OnHotKey(UINT nHotKeyId, UINT nKey1, UINT nKey2);
 	afx_msg void OnRButtonUp(UINT nFlags, CPoint point);
+//	afx_msg void OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags);
+	BOOL PreTranslateMessage(MSG* pMsg);
 };
 
 #ifndef _DEBUG  // MFCApplication3View.cpp의 디버그 버전

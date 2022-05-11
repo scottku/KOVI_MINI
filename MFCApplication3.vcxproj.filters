@@ -68,6 +68,9 @@
     <ClCompile Include="Figure.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="View기존꺼복사본.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="MFCApplication3.rc">
