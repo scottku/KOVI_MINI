@@ -23,16 +23,15 @@ struct MyShape
 typedef struct TorusInfo
 {
 	MyVertex torus[144];
-	MyVertex torusCopy[144];
 	int vertexCount;
-	bool isClicked;
+	bool isClicked = FALSE;
 } TorusInfo;
 
 typedef struct SphereInfo
 {
 	MyVertex sphere[230];
 	int vertexCount;
-	bool isClicked;
+	bool isClicked = FALSE;
 } SphereInfo;
 
 typedef struct CubeInfo
