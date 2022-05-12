@@ -23,21 +23,50 @@ struct MyShape
 typedef struct TorusInfo
 {
 	MyVertex torus[144];
+	MyVertex torus_justForClick[144] = {};
 	int vertexCount;
+	float originTorusLongRadius;
+	float originTorusRadius;
+	float torusLongRadius;
+	float torusRadius;
+	int moveX = 0;
+	int moveY = 0;
+	int rotX = 0;
+	int rotY = 0;
+	int rotZ = 0;
+	MyVertex torusOrigin;
 	bool isClicked = FALSE;
 } TorusInfo;
 
 typedef struct SphereInfo
 {
 	MyVertex sphere[230];
+	MyVertex sphere_justForClick[230] = {};
 	int vertexCount;
+	float originRadius;
+	float radius;
+	int moveX = 0;
+	int moveY = 0;
+	int rotX = 0;
+	int rotY = 0;
+	int rotZ = 0;
+	MyVertex sphereOrigin;
 	bool isClicked = FALSE;
 } SphereInfo;
 
 typedef struct CubeInfo
 {
 	MyVertex cube[8];
+	MyVertex cube_justForClick[8] = {};
 	int vertexCount;
+	float originLength;
+	float length;
+	int moveX = 0;
+	int moveY = 0;
+	int rotX = 0;
+	int rotY = 0;
+	int rotZ = 0;
+	MyVertex cubeOrigin;
 	bool isClicked = FALSE;
 } CubeInfo;
 
@@ -58,10 +87,18 @@ public:
 	float cameraX;
 	float cameraY;
 	float cameraZ;
+	float look[3][1];
+	float lookX;
+	float lookY;
+	float lookZ;
 	float width;
 	float height;
 	float left;
 	float top;
+	int cameraRotateX;
+	int cameraRotateY;
+	int rotateXCount;
+	int rotateYCount;
 	CPoint moveDirX;
 	vector<TorusInfo> v_torusFigure;
 	vector<SphereInfo> v_sphereFigure;

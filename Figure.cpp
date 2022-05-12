@@ -4,96 +4,41 @@
 #include "Figure.h"
 #include "Matrix.h"
 
-MyVertex* pCube(float x, float y, float z)
+MyVertex* pCube(float length, float x, float y, float z)
 {
 	MyVertex result[8] = {};
-	result[0].x = x - 20; result[0].y = y + 20; result[0].z = z + 20;
-	result[1].x = x - 20; result[1].y = y - 20; result[1].z = z + 20;
-	result[2].x = x + 20; result[2].y = y - 20; result[2].z = z + 20;
-	result[3].x = x + 20; result[3].y = y + 20; result[3].z = z + 20;
-	result[4].x = x - 20; result[4].y = y + 20; result[4].z = z - 20;
-	result[5].x = x - 20; result[5].y = y - 20; result[5].z = z - 20;
-	result[6].x = x + 20; result[6].y = y - 20; result[6].z = z - 20;
-	result[7].x = x + 20; result[7].y = y + 20; result[7].z = z - 20;
+	result[0].x = x - length; result[0].y = y + length; result[0].z = z + length;
+	result[1].x = x - length; result[1].y = y - length; result[1].z = z + length;
+	result[2].x = x + length; result[2].y = y - length; result[2].z = z + length;
+	result[3].x = x + length; result[3].y = y + length; result[3].z = z + length;
+	result[4].x = x - length; result[4].y = y + length; result[4].z = z - length;
+	result[5].x = x - length; result[5].y = y - length; result[5].z = z - length;
+	result[6].x = x + length; result[6].y = y - length; result[6].z = z - length;
+	result[7].x = x + length; result[7].y = y + length; result[7].z = z - length;
 	
 	return (MyVertex*)result;
 }
 
-MyVertex* pSphere(float x, float y, float z)
+MyVertex* pSphere(float radius, float x, float y, float z)
 {
-	#pragma region 이건 아닌거 같아...
-	// x^2 + y^2 + z^2 = r^2
-	/*float result1[1][3] = {};
-	float result2[24][3] = {};
-	float result3[24][3] = {};
-	float result4[24][3] = {};
-	float result5[24][3] = {};
-	float result6[24][3] = {};
-	float result7[24][3] = {};
-	float result8[24][3] = {};
-	float result9[24][3] = {};
-	float result10[24][3] = {};
-	float result11[24][3] = {};
-	float result12[24][3] = {};
-	float result13[24][3] = {};
-	float result14[24][3] = {};
-	float result15[24][3] = {};
-	float result16[24][3] = {};
-	float result17[24][3] = {};
-	float result18[24][3] = {};
-	float result19[24][3] = {};
-	float result20[1][3] = {};
-	float* result[20] = { (float*)result1, (float*)result2, (float*)result3, (float*)result4, (float*)result5, (float*)result6, (float*)result7, 
-		(float*)result8, (float*)result9, (float*)result10, (float*)result11, (float*)result12, (float*)result13, (float*)result14, (float*)result15, 
-		(float*)result16, (float*)result17, (float*)result18, (float*)result19, (float*)result20 };
-
-	for (int i = 0; i < 21; i++)
-	{
-		if ((i - 10) * (i - 10) - 100 == 0)
-		{
-			*(result[i] + 0) = 0;
-			*(result[i] + 1) = 0;
-			*(result[i] + 2) = i - 10;
-		}
-		else
-		{
-			int count = 0;
-			float firstX = (float)sqrt(100 - (i * i)); float firstY = 0;
-			*(result[i] + 0) = firstX; *(result[i] + 1) = 0; *(result[i] + 2) = i - 10;
-			float first[4][1] = { {firstX}, {firstY}, {i - 10}, {1} };
-			for (int rot = 1; rot < 24; rot++)
-			{
-				float* ptr = MatrixRotate(first, 0, 0, 15 * rot);
-				count = 0;
-				for (int c = 0; c < 3; c++)
-				{
-					*(result[i] + (3 * rot) + c) = *(ptr + count);
-				}
-			}
-		}
-	}
-
-	return (float*)result;*/
-	#pragma endregion
-
 	float result[230][3] = {};
 	MyVertex vResult[230] = {};
 	int count = 0;
 	int num = 0;
-	for (int i = 0; i < 21; i++) // 반지름 20으로 해봅시다.
+	for (int i = 0; i < 21 ; i++) 
 	{
-		if ((2 * i/*i*/ - 20/*10*/) * (2 * i/*i*/ - 20/*10*/) - 400/*100*/ == 0)
+		if (((radius/10) * i - radius) * ((radius/10) * i - radius) - radius*radius == 0)
 		{
 			result[count][0] = 0;
 			result[count][1] = 0;
-			result[count][2] = 2 * i/*i*/ - 20/*10*/;
+			result[count][2] = (radius/10) * i - radius;
 			count++;
 		}
 		else
 		{ // count 1부터
-			float firstX = (float)sqrt(400 - ((2*i - 20)*(2*i - 20))/*100 - ((i-10) * (i-10))*/); float firstY = 0;
-			float first[4][1] = { {firstX}, {firstY}, {2 * i - 20/*i - 10*/}, {1} };
-			result[count][0] = firstX; result[count][1] = firstY; result[count][2] = i - 10; // result[1][0] ~ result[1][2] 까지 채움
+			float firstX = (float)sqrt(radius*radius - (((radius/10)*i - radius)*((radius/10)*i - radius))); float firstY = 0;
+			float first[4][1] = { {firstX}, {firstY}, {(radius/10) * i - radius}, {1} };
+			result[count][0] = firstX; result[count][1] = firstY; result[count][2] = (radius / 10) * i - radius; // result[1][0] ~ result[1][2] 까지 채움
 			count++; // result[2][] 채우기
 			for (int rot = 1; rot < 12; rot++)
 			{
@@ -167,9 +112,6 @@ MyVertex* pTorus(float x, float y, float z, float distanceFromOriginToCenterOfTo
 			ptr = MatrixRotate(pt, 0, (30 * j), 0);
 			count = 0;
 			for (int k = 0; k < 3; k++)
-
-
-
 			{
 				result[i + (12 * j)][k] = *(ptr + count);
 				count++;

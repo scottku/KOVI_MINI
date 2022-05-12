@@ -52,6 +52,13 @@ CMFCApplication3View::CMFCApplication3View()
 	cameraX = -40;
 	cameraY = 40;
 	cameraZ = 0;
+	cameraRotateX = 5;
+	cameraRotateY = 5;
+	rotateXCount = 0;
+	rotateYCount = 0;
+	lookX = 1;
+	lookY = -1;
+	lookZ = 0;
 	moveDirX.x = 0;
 	moveDirX.y = 0;
 	width = 0;
@@ -61,6 +68,9 @@ CMFCApplication3View::CMFCApplication3View()
 	camera[0][0] = cameraX;
 	camera[1][0] = cameraY;
 	camera[2][0] = cameraZ;
+	look[0][0] = lookX;
+	look[1][0] = lookY;
+	look[2][0] = lookZ;
 }
 
 CMFCApplication3View::~CMFCApplication3View()
@@ -164,8 +174,8 @@ void CMFCApplication3View::OnPaint()
 
 	CBrush newBrush(RGB(255, 0, 0));
 	CBrush* oldBrush = memDC.SelectObject(&newBrush);
-#pragma region 뷰 & 투영행렬 만들기
-	float look[3][1] = { { 1 },{ -1 },{ 0 } };
+#pragma region 뷰 & 투영행렬 만들기 + 역행렬까지
+	look[0][0] = lookX; look[1][0] = lookY; look[2][0] = lookZ;
 	float view[4][4] = {};
 	camera[0][0] = cameraX; camera[1][0] = cameraY; camera[2][0] = cameraZ;
 	float* viewPtr = ViewMatrix(camera, look/*뷰 행렬 만드는데 물체 위치가 크게 중요하지 않은 것 같아서 나중에 지울 예정*/, look);
@@ -178,6 +188,19 @@ void CMFCApplication3View::OnPaint()
 			viewCount++;
 		}
 	}
+	// 뷰 역행렬
+	float viewReverse[4][4] = {};
+	viewPtr = MatrixReverse(view);
+	viewCount = 0;
+	for (int i = 0; i < 4; i++)
+	{
+		for (int j = 0; j < 4; j++)
+		{
+			viewReverse[i][j] = *(viewPtr + viewCount);
+			viewCount++;
+		}
+	}
+	////////////
 	// 투영 행렬
 	float proj[4][4] = {};
 	float* pPtr = ProjectionMatrix(width, height, 90, 2, 15);
@@ -190,9 +213,22 @@ void CMFCApplication3View::OnPaint()
 			prjCount++;
 		}
 	}
+	// 투영 역행렬
+	float projReverse[4][4] = {};
+	pPtr = MatrixReverse(proj);
+	prjCount = 0;
+	for (int i = 0; i < 4; i++)
+	{
+		for (int j = 0; j < 4; j++)
+		{
+			projReverse[i][j] = *(pPtr + prjCount);
+			prjCount++;
+		}
+	}
+	//////////////
 #pragma endregion
 
-	for (auto figure : v_cubeFigure)
+	for (auto& figure : v_cubeFigure)
 	{
 		int count = 0;
 		MyVertex cub[8] = {};
@@ -201,6 +237,18 @@ void CMFCApplication3View::OnPaint()
 			cub[i] = figure.cube[i];
 			count++;
 		}
+
+		if (figure.length != figure.originLength) // 크기 변경이 된 친구라면?
+		{
+			MyVertex* makingCube = pCube(figure.length, figure.cubeOrigin.x, figure.cubeOrigin.y, figure.cubeOrigin.z); // 다시 만들어서 넣어줌
+			int cubeCount = 0;
+			for (int i = 0; i < 8; i++)
+			{
+				cub[i] = *(makingCube + cubeCount);
+				cubeCount++;
+			}
+		}
+
 
 		float* fPtr;
 		float sample[4][1] = {};
@@ -221,6 +269,63 @@ void CMFCApplication3View::OnPaint()
 			cub[i].z = *(fPtr + cubCount);
 			cubCount++;
 		}
+
+		////// 테스트 : 카메라 좌표계에서 회전시키기
+		float originInView[4][1] = {};
+		originInView[0][0] = figure.cubeOrigin.x; originInView[1][0] = figure.cubeOrigin.y; originInView[2][0] = figure.cubeOrigin.z; originInView[3][0] = 1;
+		fPtr = MatrixMulti(view, originInView);
+		int sampleCount = 0;
+		for (int i = 0; i < 3; i++) // 뷰 좌표계에서의 큐브의 중심을 구하기
+		{
+			originInView[i][0] = *(fPtr + sampleCount);
+			sampleCount++;
+		}
+
+		for (int i = 0; i < 8; i++) // 뷰 좌표계에서의 큐브 중심을 원점으로 옮기면서 나머지 점들도 다 동일하게 옮겨줌
+		{
+			cub[i].x -= originInView[0][0];
+			cub[i].y -= originInView[1][0];
+			cub[i].z -= originInView[2][0];
+		}
+
+		for (int i = 0; i < 8; i++) // 해당 점들을 축을 기준으로 회전
+		{
+			float sample[4][1] = { { cub[i].x },{ cub[i].y },{ cub[i].z },{ 1 } };
+			float* rotPtr = MatrixRotate(sample, figure.rotX, figure.rotY, 0);
+			sampleCount = 0;
+			for (int j = 0; j < 4; j++)
+			{
+				sample[j][0] = *(rotPtr + sampleCount);
+				sampleCount++;
+			}
+			cub[i].x = sample[0][0]; cub[i].y = sample[1][0]; cub[i].z = sample[2][0];
+		}
+
+		for (int i = 0; i < 8; i++) // 다시 큐브의 중심을 원점에서 원래의 중심으로 복구
+		{
+			cub[i].x += originInView[0][0];
+			cub[i].y += originInView[1][0];
+			cub[i].z += originInView[2][0];
+		}
+
+
+		////////////////////////////////////////////
+		////// 테스트 : 카메라 좌표계에서 x, y축으로 평행이동 시키기
+		if (figure.moveY != 0)
+		{
+			for (int i = 0; i < 8; i++)
+			{
+				cub[i].y += figure.moveY;
+			}
+		}
+		if (figure.moveX != 0)
+		{
+			for (int i = 0; i < 8; i++)
+			{
+				cub[i].x += figure.moveX;
+			}
+		}
+		////////////////////////////////////////////////////////////
 
 		// sphere 각 점들을 투영 시킴
 		for (int i = 0; i < 8; i++)
@@ -244,6 +349,54 @@ void CMFCApplication3View::OnPaint()
 			cub[i].z /= cub[i].z;
 
 		}
+		/////////// 테스트 : 화면 밖으로 모든 점이 나가버리면 안그리게 할 것
+		float pointOfView[2][1] = {};
+		bool outOfView[8] = {};
+		for (int i = 0; i < 8; i++)
+		{
+			pointOfView[0][0] = ToScreenX(width, left, cub[i].x); pointOfView[1][0] = ToScreenY(height, top, cub[i].y);
+			if (pointOfView[0][0] < 0 || pointOfView[0][0] > width || pointOfView[1][0] < 0 || pointOfView[1][0] > height)
+				outOfView[i] = TRUE;
+			else outOfView[i] = FALSE;
+		}
+		bool totalOut = FALSE;
+		for (int i = 0; i < 8; i++)
+		{
+			if (outOfView[i]) totalOut = TRUE;
+			else
+			{
+				totalOut = FALSE;
+				break;
+			}
+		}
+		if (totalOut) continue;
+		////////////////////////////////////////////////////////////////////
+
+		//위치가 이동되었으니 월드좌표계의 좌표들도 변했을 것-> 현재 받아둔 좌표를 다 뒤로 돌려서 새로운 월드좌표를 받아야 함
+		MyVertex newCubeWC[8] = {};
+		float tempVertex[4][1] = {};
+		for (int i = 0; i < 8; i++)
+		{
+			tempVertex[0][0] = cub[i].x * cub[i].z; tempVertex[1][0] = cub[i].y * cub[i].z; tempVertex[2][0] = cub[i].z; tempVertex[3][0] = 1;
+			float* tempPtr = MatrixMulti(projReverse, tempVertex);
+			int tempCount = 0;
+			for (int j = 0; j < 4; j++) // 투영 역행렬 = 카메라 좌표계
+			{
+				tempVertex[j][0] = *(tempPtr + tempCount);
+				tempCount++;
+			}
+			tempPtr = MatrixMulti(viewReverse, tempVertex);
+			tempCount = 0;
+			for (int j = 0; j < 4; j++) // 뷰 역행렬 = 월드 좌표계
+			{
+				tempVertex[j][0] = *(tempPtr + tempCount);
+				tempCount++;
+			}
+			// 새로운 월드 좌표계 저장
+			newCubeWC[i].x = tempVertex[0][0]; newCubeWC[i].y = tempVertex[1][0]; newCubeWC[i].z = tempVertex[2][0];
+			figure.cube_justForClick[i].x = tempVertex[0][0]; figure.cube_justForClick[i].y = tempVertex[1][0]; figure.cube_justForClick[i].z = tempVertex[2][0];
+		}
+		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 		if (figure.isClicked)
 		{
@@ -417,7 +570,7 @@ void CMFCApplication3View::OnPaint()
 		}
 	}
 
-	for (auto figure : v_sphereFigure)
+	for (auto& figure : v_sphereFigure)
 	{
 		// vector로부터 구 좌표 받아오기
 		int count = 0;
@@ -425,6 +578,17 @@ void CMFCApplication3View::OnPaint()
 		for (int i = 0; i < 230; i++) {
 			sph[i] = figure.sphere[i];
 			count++;
+		}
+
+		if (figure.radius != figure.originRadius) // 크기 변경이 된 친구라면?
+		{ // 다시 만들어서 넣어줌
+			MyVertex* makingSphere = pSphere(figure.radius, figure.sphereOrigin.x, figure.sphereOrigin.y, figure.sphereOrigin.z);
+			int sphereCount = 0;
+			for (int i = 0; i < 230; i++)
+			{
+				sph[i] = *(makingSphere + sphereCount);
+				sphereCount++;
+			}
 		}
 
 		float* fPtr;
@@ -447,6 +611,61 @@ void CMFCApplication3View::OnPaint()
 			sphCount++;
 		}
 
+		////// 테스트 : 카메라 좌표계에서 회전시키기
+		float originInView[4][1] = {};
+		originInView[0][0] = figure.sphereOrigin.x; originInView[1][0] = figure.sphereOrigin.y; originInView[2][0] = figure.sphereOrigin.z; originInView[3][0] = 1;
+		fPtr = MatrixMulti(view, originInView);
+		int sampleCount = 0;
+		for (int i = 0; i < 3; i++) // 뷰 좌표계에서의 큐브의 중심을 구하기
+		{
+			originInView[i][0] = *(fPtr + sampleCount);
+			sampleCount++;
+		}
+
+		for (int i = 0; i < 230; i++) // 뷰 좌표계에서의 큐브 중심을 원점으로 옮기면서 나머지 점들도 다 동일하게 옮겨줌
+		{
+			sph[i].x -= originInView[0][0];
+			sph[i].y -= originInView[1][0];
+			sph[i].z -= originInView[2][0];
+		}
+
+		for (int i = 0; i < 230; i++) // 해당 점들을 축을 기준으로 회전
+		{
+			float sample[4][1] = { { sph[i].x },{ sph[i].y },{ sph[i].z },{ 1 } };
+			float* rotPtr = MatrixRotate(sample, figure.rotX, figure.rotY, 0);
+			sampleCount = 0;
+			for (int j = 0; j < 4; j++)
+			{
+				sample[j][0] = *(rotPtr + sampleCount);
+				sampleCount++;
+			}
+			sph[i].x = sample[0][0]; sph[i].y = sample[1][0]; sph[i].z = sample[2][0];
+		}
+
+		for (int i = 0; i < 230; i++) // 다시 큐브의 중심을 원점에서 원래의 중심으로 복구
+		{
+			sph[i].x += originInView[0][0];
+			sph[i].y += originInView[1][0];
+			sph[i].z += originInView[2][0];
+		}
+
+		////// 테스트 : 카메라 좌표계에서 x, y축으로 평행이동 시키기
+		if (figure.moveY != 0)
+		{
+			for (int i = 0; i < 230; i++)
+			{
+				sph[i].y += figure.moveY;
+			}
+		}
+		if (figure.moveX != 0)
+		{
+			for (int i = 0; i < 230; i++)
+			{
+				sph[i].x += figure.moveX;
+			}
+		}
+		////////////////////////////////////////////////////////////
+
 		// sphere 각 점들을 투영 시킴
 		for (int i = 0; i < 230; i++)
 		{
@@ -466,9 +685,57 @@ void CMFCApplication3View::OnPaint()
 
 			sph[i].x /= sph[i].z;
 			sph[i].y /= sph[i].z;
-			sph[i].z /= sph[i].z;
-
+			//sph[i].z /= sph[i].z;
 		}
+
+#pragma region /////////// 테스트 : 화면 밖으로 모든 점이 나가버리면 안그리게 할 것
+		float pointOfView[2][1] = {};
+		bool outOfView[230] = {};
+		for (int i = 0; i < 230; i++)
+		{
+			pointOfView[0][0] = ToScreenX(width, left, sph[i].x); pointOfView[1][0] = ToScreenY(height, top, sph[i].y);
+			if (pointOfView[0][0] < 0 || pointOfView[0][0] > width || pointOfView[1][0] < 0 || pointOfView[1][0] > height)
+				outOfView[i] = TRUE;
+			else outOfView[i] = FALSE;
+		}
+		bool totalOut = FALSE;
+		for (int i = 0; i < 230; i++)
+		{
+			if (outOfView[i]) totalOut = TRUE;
+			else
+			{
+				totalOut = FALSE;
+				break;
+			}
+		}
+		if (totalOut) continue;
+#pragma endregion ////////////////////////////////////////////////////////////////////
+
+		//위치가 이동되었으니 월드좌표계의 좌표들도 변했을 것-> 현재 받아둔 좌표를 다 뒤로 돌려서 새로운 월드좌표를 받아야 함
+		MyVertex newSphereWC[230] = {};
+		float tempVertex[4][1] = {};
+		for (int i = 0; i < 230; i++)
+		{
+			tempVertex[0][0] = sph[i].x * sph[i].z; tempVertex[1][0] = sph[i].y * sph[i].z; tempVertex[2][0] = sph[i].z; tempVertex[3][0] = 1;
+			float* tempPtr = MatrixMulti(projReverse, tempVertex);
+			int tempCount = 0;
+			for (int j = 0; j < 4; j++) // 투영 역행렬 = 카메라 좌표계
+			{
+				tempVertex[j][0] = *(tempPtr + tempCount);
+				tempCount++;
+			}
+			tempPtr = MatrixMulti(viewReverse, tempVertex);
+			tempCount = 0;
+			for (int j = 0; j < 4; j++) // 뷰 역행렬 = 월드 좌표계
+			{
+				tempVertex[j][0] = *(tempPtr + tempCount);
+				tempCount++;
+			}
+			// 새로운 월드 좌표계 저장
+			newSphereWC[i].x = tempVertex[0][0]; newSphereWC[i].y = tempVertex[1][0]; newSphereWC[i].z = tempVertex[2][0];
+			figure.sphere_justForClick[i].x = tempVertex[0][0]; figure.sphere_justForClick[i].y = tempVertex[1][0]; figure.sphere_justForClick[i].z = tempVertex[2][0];
+		}
+		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 		// 뒷면 잘라내기
 		float vFst[4][1] = {}; // 계산에 쓸 방향 저장용 벡터
@@ -488,39 +755,39 @@ void CMFCApplication3View::OnPaint()
 		{
 			if ((i % 12) != 0)
 			{
-				vFst[0][0] = -figure.sphere[0].x + figure.sphere[i].x;
-				vFst[1][0] = -figure.sphere[0].y + figure.sphere[i].y;
-				vFst[2][0] = -figure.sphere[0].z + figure.sphere[i].z;
-				vSec[0][0] = -figure.sphere[i].x + figure.sphere[i + 1].x;
-				vSec[1][0] = -figure.sphere[i].y + figure.sphere[i + 1].y;
-				vSec[2][0] = -figure.sphere[i].z + figure.sphere[i + 1].z;
-				cameraToPolygon1[0][0] = figure.sphere[0].x;
-				cameraToPolygon1[1][0] = figure.sphere[0].y;
-				cameraToPolygon1[2][0] = figure.sphere[0].z;
-				cameraToPolygon2[0][0] = figure.sphere[i].x;
-				cameraToPolygon2[1][0] = figure.sphere[i].y;
-				cameraToPolygon2[2][0] = figure.sphere[i].z;
-				cameraToPolygon3[0][0] = figure.sphere[i + 1].x;
-				cameraToPolygon3[1][0] = figure.sphere[i + 1].y;
-				cameraToPolygon3[2][0] = figure.sphere[i + 1].z;
+				vFst[0][0] = -newSphereWC[0].x + newSphereWC[i].x;
+				vFst[1][0] = -newSphereWC[0].y + newSphereWC[i].y;
+				vFst[2][0] = -newSphereWC[0].z + newSphereWC[i].z;
+				vSec[0][0] = -newSphereWC[i].x + newSphereWC[i + 1].x;
+				vSec[1][0] = -newSphereWC[i].y + newSphereWC[i + 1].y;
+				vSec[2][0] = -newSphereWC[i].z + newSphereWC[i + 1].z;
+				cameraToPolygon1[0][0] = newSphereWC[0].x;
+				cameraToPolygon1[1][0] = newSphereWC[0].y;
+				cameraToPolygon1[2][0] = newSphereWC[0].z;
+				cameraToPolygon2[0][0] = newSphereWC[i].x;
+				cameraToPolygon2[1][0] = newSphereWC[i].y;
+				cameraToPolygon2[2][0] = newSphereWC[i].z;
+				cameraToPolygon3[0][0] = newSphereWC[i + 1].x;
+				cameraToPolygon3[1][0] = newSphereWC[i + 1].y;
+				cameraToPolygon3[2][0] = newSphereWC[i + 1].z;
 			}
 			else
 			{
-				vFst[0][0] = -figure.sphere[0].x + figure.sphere[i].x;
-				vFst[1][0] = -figure.sphere[0].y + figure.sphere[i].y;
-				vFst[2][0] = -figure.sphere[0].z + figure.sphere[i].z;
-				vSec[0][0] = -figure.sphere[i].x + figure.sphere[i - 11].x;
-				vSec[1][0] = -figure.sphere[i].y + figure.sphere[i - 11].y;
-				vSec[2][0] = -figure.sphere[i].z + figure.sphere[i - 11].z;
-				cameraToPolygon1[0][0] = figure.sphere[0].x;
-				cameraToPolygon1[1][0] = figure.sphere[0].y;
-				cameraToPolygon1[2][0] = figure.sphere[0].z;
-				cameraToPolygon2[0][0] = figure.sphere[i].x;
-				cameraToPolygon2[1][0] = figure.sphere[i].y;
-				cameraToPolygon2[2][0] = figure.sphere[i].z;
-				cameraToPolygon3[0][0] = figure.sphere[i - 11].x;
-				cameraToPolygon3[1][0] = figure.sphere[i - 11].y;
-				cameraToPolygon3[2][0] = figure.sphere[i - 11].z;
+				vFst[0][0] = -newSphereWC[0].x + newSphereWC[i].x;
+				vFst[1][0] = -newSphereWC[0].y + newSphereWC[i].y;
+				vFst[2][0] = -newSphereWC[0].z + newSphereWC[i].z;
+				vSec[0][0] = -newSphereWC[i].x + newSphereWC[i - 11].x;
+				vSec[1][0] = -newSphereWC[i].y + newSphereWC[i - 11].y;
+				vSec[2][0] = -newSphereWC[i].z + newSphereWC[i - 11].z;
+				cameraToPolygon1[0][0] = newSphereWC[0].x;
+				cameraToPolygon1[1][0] = newSphereWC[0].y;
+				cameraToPolygon1[2][0] = newSphereWC[0].z;
+				cameraToPolygon2[0][0] = newSphereWC[i].x;
+				cameraToPolygon2[1][0] = newSphereWC[i].y;
+				cameraToPolygon2[2][0] = newSphereWC[i].z;
+				cameraToPolygon3[0][0] = newSphereWC[i - 11].x;
+				cameraToPolygon3[1][0] = newSphereWC[i - 11].y;
+				cameraToPolygon3[2][0] = newSphereWC[i - 11].z;
 			}
 			vFst[3][0] = 1; vSec[3][0] = 1;
 
@@ -559,39 +826,39 @@ void CMFCApplication3View::OnPaint()
 		{
 			if ((i % 12) == 0)
 			{
-				vFst[0][0] = -figure.sphere[i].x + figure.sphere[i + 12].x;
-				vFst[1][0] = -figure.sphere[i].y + figure.sphere[i + 12].y;
-				vFst[2][0] = -figure.sphere[i].z + figure.sphere[i + 12].z;
-				vSec[0][0] = -figure.sphere[i + 12].x + figure.sphere[i + 1].x;
-				vSec[1][0] = -figure.sphere[i + 12].y + figure.sphere[i + 1].y;
-				vSec[2][0] = -figure.sphere[i + 12].z + figure.sphere[i + 1].z;
-				cameraToPolygon1[0][0] = figure.sphere[i].x;
-				cameraToPolygon1[1][0] = figure.sphere[i].y;
-				cameraToPolygon1[2][0] = figure.sphere[i].z;
-				cameraToPolygon2[0][0] = figure.sphere[i + 12].x;
-				cameraToPolygon2[1][0] = figure.sphere[i + 12].y;
-				cameraToPolygon2[2][0] = figure.sphere[i + 12].z;
-				cameraToPolygon3[0][0] = figure.sphere[i + 1].x;
-				cameraToPolygon3[1][0] = figure.sphere[i + 1].y;
-				cameraToPolygon3[2][0] = figure.sphere[i + 1].z;
+				vFst[0][0] = -newSphereWC[i].x + newSphereWC[i + 12].x;
+				vFst[1][0] = -newSphereWC[i].y + newSphereWC[i + 12].y;
+				vFst[2][0] = -newSphereWC[i].z + newSphereWC[i + 12].z;
+				vSec[0][0] = -newSphereWC[i + 12].x + newSphereWC[i + 1].x;
+				vSec[1][0] = -newSphereWC[i + 12].y + newSphereWC[i + 1].y;
+				vSec[2][0] = -newSphereWC[i + 12].z + newSphereWC[i + 1].z;
+				cameraToPolygon1[0][0] = newSphereWC[i].x;
+				cameraToPolygon1[1][0] = newSphereWC[i].y;
+				cameraToPolygon1[2][0] = newSphereWC[i].z;
+				cameraToPolygon2[0][0] = newSphereWC[i + 12].x;
+				cameraToPolygon2[1][0] = newSphereWC[i + 12].y;
+				cameraToPolygon2[2][0] = newSphereWC[i + 12].z;
+				cameraToPolygon3[0][0] = newSphereWC[i + 1].x;
+				cameraToPolygon3[1][0] = newSphereWC[i + 1].y;
+				cameraToPolygon3[2][0] = newSphereWC[i + 1].z;
 			}
 			else
 			{
-				vFst[0][0] = -figure.sphere[i].x + figure.sphere[i + 12].x;
-				vFst[1][0] = -figure.sphere[i].y + figure.sphere[i + 12].y;
-				vFst[2][0] = -figure.sphere[i].z + figure.sphere[i + 12].z;
-				vSec[0][0] = -figure.sphere[i + 12].x + figure.sphere[i + 13].x;
-				vSec[1][0] = -figure.sphere[i + 12].y + figure.sphere[i + 13].y;
-				vSec[2][0] = -figure.sphere[i + 12].z + figure.sphere[i + 13].z;
-				cameraToPolygon1[0][0] = figure.sphere[i].x;
-				cameraToPolygon1[1][0] = figure.sphere[i].y;
-				cameraToPolygon1[2][0] = figure.sphere[i].z;
-				cameraToPolygon2[0][0] = figure.sphere[i + 12].x;
-				cameraToPolygon2[1][0] = figure.sphere[i + 12].y;
-				cameraToPolygon2[2][0] = figure.sphere[i + 12].z;
-				cameraToPolygon3[0][0] = figure.sphere[i + 13].x;
-				cameraToPolygon3[1][0] = figure.sphere[i + 13].y;
-				cameraToPolygon3[2][0] = figure.sphere[i + 13].z;
+				vFst[0][0] = -newSphereWC[i].x + newSphereWC[i + 12].x;
+				vFst[1][0] = -newSphereWC[i].y + newSphereWC[i + 12].y;
+				vFst[2][0] = -newSphereWC[i].z + newSphereWC[i + 12].z;
+				vSec[0][0] = -newSphereWC[i + 12].x + newSphereWC[i + 13].x;
+				vSec[1][0] = -newSphereWC[i + 12].y + newSphereWC[i + 13].y;
+				vSec[2][0] = -newSphereWC[i + 12].z + newSphereWC[i + 13].z;
+				cameraToPolygon1[0][0] = newSphereWC[i].x;
+				cameraToPolygon1[1][0] = newSphereWC[i].y;
+				cameraToPolygon1[2][0] = newSphereWC[i].z;
+				cameraToPolygon2[0][0] = newSphereWC[i + 12].x;
+				cameraToPolygon2[1][0] = newSphereWC[i + 12].y;
+				cameraToPolygon2[2][0] = newSphereWC[i + 12].z;
+				cameraToPolygon3[0][0] = newSphereWC[i + 13].x;
+				cameraToPolygon3[1][0] = newSphereWC[i + 13].y;
+				cameraToPolygon3[2][0] = newSphereWC[i + 13].z;
 			}
 			vFst[3][0] = 1; vSec[3][0] = 1;
 
@@ -630,39 +897,39 @@ void CMFCApplication3View::OnPaint()
 		{
 			if ((i % 12) != 0)
 			{
-				vFst[0][0] = -figure.sphere[i].x + figure.sphere[229].x;
-				vFst[1][0] = -figure.sphere[i].y + figure.sphere[229].y;
-				vFst[2][0] = -figure.sphere[i].z + figure.sphere[229].z;
-				vSec[0][0] = -figure.sphere[i].x + figure.sphere[i + 1].x;
-				vSec[1][0] = -figure.sphere[i].y + figure.sphere[i + 1].y;
-				vSec[2][0] = -figure.sphere[i].z + figure.sphere[i + 1].z;
-				cameraToPolygon1[0][0] = figure.sphere[i].x;
-				cameraToPolygon1[1][0] = figure.sphere[i].y;
-				cameraToPolygon1[2][0] = figure.sphere[i].z;
-				cameraToPolygon2[0][0] = figure.sphere[229].x;
-				cameraToPolygon2[1][0] = figure.sphere[229].y;
-				cameraToPolygon2[2][0] = figure.sphere[229].z;
-				cameraToPolygon3[0][0] = figure.sphere[i + 1].x;
-				cameraToPolygon3[1][0] = figure.sphere[i + 1].y;
-				cameraToPolygon3[2][0] = figure.sphere[i + 1].z;
+				vFst[0][0] = -newSphereWC[i].x + newSphereWC[229].x;
+				vFst[1][0] = -newSphereWC[i].y + newSphereWC[229].y;
+				vFst[2][0] = -newSphereWC[i].z + newSphereWC[229].z;
+				vSec[0][0] = -newSphereWC[i].x + newSphereWC[i + 1].x;
+				vSec[1][0] = -newSphereWC[i].y + newSphereWC[i + 1].y;
+				vSec[2][0] = -newSphereWC[i].z + newSphereWC[i + 1].z;
+				cameraToPolygon1[0][0] = newSphereWC[i].x;
+				cameraToPolygon1[1][0] = newSphereWC[i].y;
+				cameraToPolygon1[2][0] = newSphereWC[i].z;
+				cameraToPolygon2[0][0] = newSphereWC[229].x;
+				cameraToPolygon2[1][0] = newSphereWC[229].y;
+				cameraToPolygon2[2][0] = newSphereWC[229].z;
+				cameraToPolygon3[0][0] = newSphereWC[i + 1].x;
+				cameraToPolygon3[1][0] = newSphereWC[i + 1].y;
+				cameraToPolygon3[2][0] = newSphereWC[i + 1].z;
 			}
 			else
 			{
-				vFst[0][0] = -figure.sphere[i].x + figure.sphere[229].x;
-				vFst[1][0] = -figure.sphere[i].y + figure.sphere[229].y;
-				vFst[2][0] = -figure.sphere[i].z + figure.sphere[229].z;
-				vSec[0][0] = -figure.sphere[i].x + figure.sphere[i - 11].x;
-				vSec[1][0] = -figure.sphere[i].y + figure.sphere[i - 11].y;
-				vSec[2][0] = -figure.sphere[i].z + figure.sphere[i - 11].z;
-				cameraToPolygon1[0][0] = figure.sphere[i].x;
-				cameraToPolygon1[1][0] = figure.sphere[i].y;
-				cameraToPolygon1[2][0] = figure.sphere[i].z;
-				cameraToPolygon2[0][0] = figure.sphere[229].x;
-				cameraToPolygon2[1][0] = figure.sphere[229].y;
-				cameraToPolygon2[2][0] = figure.sphere[229].z;
-				cameraToPolygon3[0][0] = figure.sphere[i - 11].x;
-				cameraToPolygon3[1][0] = figure.sphere[i - 11].y;
-				cameraToPolygon3[2][0] = figure.sphere[i - 11].z;
+				vFst[0][0] = -newSphereWC[i].x + newSphereWC[229].x;
+				vFst[1][0] = -newSphereWC[i].y + newSphereWC[229].y;
+				vFst[2][0] = -newSphereWC[i].z + newSphereWC[229].z;
+				vSec[0][0] = -newSphereWC[i].x + newSphereWC[i - 11].x;
+				vSec[1][0] = -newSphereWC[i].y + newSphereWC[i - 11].y;
+				vSec[2][0] = -newSphereWC[i].z + newSphereWC[i - 11].z;
+				cameraToPolygon1[0][0] = newSphereWC[i].x;
+				cameraToPolygon1[1][0] = newSphereWC[i].y;
+				cameraToPolygon1[2][0] = newSphereWC[i].z;
+				cameraToPolygon2[0][0] = newSphereWC[229].x;
+				cameraToPolygon2[1][0] = newSphereWC[229].y;
+				cameraToPolygon2[2][0] = newSphereWC[229].z;
+				cameraToPolygon3[0][0] = newSphereWC[i - 11].x;
+				cameraToPolygon3[1][0] = newSphereWC[i - 11].y;
+				cameraToPolygon3[2][0] = newSphereWC[i - 11].z;
 			}
 			vFst[3][0] = 1; vSec[3][0] = 1;
 
@@ -697,51 +964,112 @@ void CMFCApplication3View::OnPaint()
 			}
 		}
 
-		for (int i = 1; i < 13; i++)
+		if (figure.isClicked == FALSE)
 		{
-			if (isVisableDot1[i - 1] == 0) continue;
-			memDC.MoveTo(ToScreenX(rect.Width(), rect.left, sph[0].x), ToScreenY(rect.Height(), rect.top, sph[0].y));
-			memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i].x), ToScreenY(rect.Height(), rect.top, sph[i].y));
-			if (i % 12 == 0)
+			for (int i = 1; i < 13; i++)
 			{
-				memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i - 11].x), ToScreenY(rect.Height(), rect.top, sph[i - 11].y));
+				if (isVisableDot1[i - 1] == 0) continue;
+				memDC.MoveTo(ToScreenX(rect.Width(), rect.left, sph[0].x), ToScreenY(rect.Height(), rect.top, sph[0].y));
+				memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i].x), ToScreenY(rect.Height(), rect.top, sph[i].y));
+				if (i % 12 == 0)
+				{
+					memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i - 11].x), ToScreenY(rect.Height(), rect.top, sph[i - 11].y));
+				}
+				else
+				{
+					memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i + 1].x), ToScreenY(rect.Height(), rect.top, sph[i + 1].y));
+				}
+				memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[0].x), ToScreenY(rect.Height(), rect.top, sph[0].y));
 			}
-			else
+			for (int i = 1; i < 217; i++)
 			{
-				memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i + 1].x), ToScreenY(rect.Height(), rect.top, sph[i + 1].y));
+				if (isVisable[i - 1] == 0) continue;
+				memDC.MoveTo(ToScreenX(rect.Width(), rect.left, sph[i].x), ToScreenY(rect.Height(), rect.top, sph[i].y));
+				memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i + 12].x), ToScreenY(rect.Height(), rect.top, sph[i + 12].y));
+				if (i % 12 == 0)
+				{
+					memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i + 1].x), ToScreenY(rect.Height(), rect.top, sph[i + 1].y));
+				}
+				else
+				{
+					memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i + 13].x), ToScreenY(rect.Height(), rect.top, sph[i + 13].y));
+				}
+				memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i].x), ToScreenY(rect.Height(), rect.top, sph[i].y));
 			}
-			memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[0].x), ToScreenY(rect.Height(), rect.top, sph[0].y));
+			for (int i = 217; i < 229; i++)
+			{
+				if (isVisableDot2[i - 217] == 0) continue;
+				memDC.MoveTo(ToScreenX(rect.Width(), rect.left, sph[i].x), ToScreenY(rect.Height(), rect.top, sph[i].y));
+				memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[229].x), ToScreenY(rect.Height(), rect.top, sph[229].y));
+				if (i % 12 == 0)
+				{
+					memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i - 11].x), ToScreenY(rect.Height(), rect.top, sph[i - 11].y));
+				}
+				else
+				{
+					memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i + 1].x), ToScreenY(rect.Height(), rect.top, sph[i + 1].y));
+				}
+				memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i].x), ToScreenY(rect.Height(), rect.top, sph[i].y));
+			}
 		}
-		for (int i = 1; i < 217; i++)
+		else
 		{
-			if (isVisable[i - 1] == 0) continue;
-			memDC.MoveTo(ToScreenX(rect.Width(), rect.left, sph[i].x), ToScreenY(rect.Height(), rect.top, sph[i].y));
-			memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i + 12].x), ToScreenY(rect.Height(), rect.top, sph[i + 12].y));
-			if (i % 12 == 0)
+			for (int i = 1; i < 13; i++)
 			{
-				memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i + 1].x), ToScreenY(rect.Height(), rect.top, sph[i + 1].y));
+				if (isVisableDot1[i - 1] == 0) continue;
+				memDC.BeginPath();
+				memDC.MoveTo(ToScreenX(rect.Width(), rect.left, sph[0].x), ToScreenY(rect.Height(), rect.top, sph[0].y));
+				memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i].x), ToScreenY(rect.Height(), rect.top, sph[i].y));
+				if (i % 12 == 0)
+				{
+					memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i - 11].x), ToScreenY(rect.Height(), rect.top, sph[i - 11].y));
+				}
+				else
+				{
+					memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i + 1].x), ToScreenY(rect.Height(), rect.top, sph[i + 1].y));
+				}
+				memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[0].x), ToScreenY(rect.Height(), rect.top, sph[0].y));
+				memDC.EndPath();
+				memDC.StrokeAndFillPath();
 			}
-			else
+			for (int i = 1; i < 217; i++)
 			{
-				memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i + 13].x), ToScreenY(rect.Height(), rect.top, sph[i + 13].y));
+				if (isVisable[i - 1] == 0) continue;
+				memDC.BeginPath();
+				memDC.MoveTo(ToScreenX(rect.Width(), rect.left, sph[i].x), ToScreenY(rect.Height(), rect.top, sph[i].y));
+				memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i + 12].x), ToScreenY(rect.Height(), rect.top, sph[i + 12].y));
+				if (i % 12 == 0)
+				{
+					memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i + 1].x), ToScreenY(rect.Height(), rect.top, sph[i + 1].y));
+				}
+				else
+				{
+					memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i + 13].x), ToScreenY(rect.Height(), rect.top, sph[i + 13].y));
+				}
+				memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i].x), ToScreenY(rect.Height(), rect.top, sph[i].y));
+				memDC.EndPath();
+				memDC.StrokeAndFillPath();
 			}
-			memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i].x), ToScreenY(rect.Height(), rect.top, sph[i].y));
+			for (int i = 217; i < 229; i++)
+			{
+				if (isVisableDot2[i - 217] == 0) continue;
+				memDC.BeginPath();
+				memDC.MoveTo(ToScreenX(rect.Width(), rect.left, sph[i].x), ToScreenY(rect.Height(), rect.top, sph[i].y));
+				memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[229].x), ToScreenY(rect.Height(), rect.top, sph[229].y));
+				if (i % 12 == 0)
+				{
+					memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i - 11].x), ToScreenY(rect.Height(), rect.top, sph[i - 11].y));
+				}
+				else
+				{
+					memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i + 1].x), ToScreenY(rect.Height(), rect.top, sph[i + 1].y));
+				}
+				memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i].x), ToScreenY(rect.Height(), rect.top, sph[i].y));
+				memDC.EndPath();
+				memDC.StrokeAndFillPath();
+			}
 		}
-		for (int i = 217; i < 229; i++)
-		{
-			if (isVisableDot2[i - 217] == 0) continue;
-			memDC.MoveTo(ToScreenX(rect.Width(), rect.left, sph[i].x), ToScreenY(rect.Height(), rect.top, sph[i].y));
-			memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[229].x), ToScreenY(rect.Height(), rect.top, sph[229].y));
-			if (i % 12 == 0)
-			{
-				memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i - 11].x), ToScreenY(rect.Height(), rect.top, sph[i - 11].y));
-			}
-			else
-			{
-				memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i + 1].x), ToScreenY(rect.Height(), rect.top, sph[i + 1].y));
-			}
-			memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i].x), ToScreenY(rect.Height(), rect.top, sph[i].y));
-		}
+
 #pragma endregion
 
 #pragma region 두번째 삼각 폴리곤 -> 가장 끝쪽의 꼭짓점들이랑은 더이상 이을 필요 없음
@@ -750,39 +1078,39 @@ void CMFCApplication3View::OnPaint()
 		{
 			if ((i % 12) == 0)
 			{
-				vFst[0][0] = -figure.sphere[i + 1].x + figure.sphere[i - 11].x;
-				vFst[1][0] = -figure.sphere[i + 1].y + figure.sphere[i - 11].y;
-				vFst[2][0] = -figure.sphere[i + 1].z + figure.sphere[i - 11].z;
-				vSec[0][0] = -figure.sphere[i - 11].x + figure.sphere[i].x;
-				vSec[1][0] = -figure.sphere[i - 11].y + figure.sphere[i].y;
-				vSec[2][0] = -figure.sphere[i - 11].z + figure.sphere[i].z;
-				cameraToPolygon1[0][0] = figure.sphere[i].x;
-				cameraToPolygon1[1][0] = figure.sphere[i].y;
-				cameraToPolygon1[2][0] = figure.sphere[i].z;
-				cameraToPolygon2[0][0] = figure.sphere[i - 11].x;
-				cameraToPolygon2[1][0] = figure.sphere[i - 11].y;
-				cameraToPolygon2[2][0] = figure.sphere[i - 11].z;
-				cameraToPolygon3[0][0] = figure.sphere[i + 1].x;
-				cameraToPolygon3[1][0] = figure.sphere[i + 1].y;
-				cameraToPolygon3[2][0] = figure.sphere[i + 1].z;
+				vFst[0][0] = -newSphereWC[i + 1].x + newSphereWC[i - 11].x;
+				vFst[1][0] = -newSphereWC[i + 1].y + newSphereWC[i - 11].y;
+				vFst[2][0] = -newSphereWC[i + 1].z + newSphereWC[i - 11].z;
+				vSec[0][0] = -newSphereWC[i - 11].x + newSphereWC[i].x;
+				vSec[1][0] = -newSphereWC[i - 11].y + newSphereWC[i].y;
+				vSec[2][0] = -newSphereWC[i - 11].z + newSphereWC[i].z;
+				cameraToPolygon1[0][0] = newSphereWC[i].x;
+				cameraToPolygon1[1][0] = newSphereWC[i].y;
+				cameraToPolygon1[2][0] = newSphereWC[i].z;
+				cameraToPolygon2[0][0] = newSphereWC[i - 11].x;
+				cameraToPolygon2[1][0] = newSphereWC[i - 11].y;
+				cameraToPolygon2[2][0] = newSphereWC[i - 11].z;
+				cameraToPolygon3[0][0] = newSphereWC[i + 1].x;
+				cameraToPolygon3[1][0] = newSphereWC[i + 1].y;
+				cameraToPolygon3[2][0] = newSphereWC[i + 1].z;
 			}
 			else
 			{
-				vFst[0][0] = -figure.sphere[i + 13].x + figure.sphere[i + 1].x;
-				vFst[1][0] = -figure.sphere[i + 13].y + figure.sphere[i + 1].y;
-				vFst[2][0] = -figure.sphere[i + 13].z + figure.sphere[i + 1].z;
-				vSec[0][0] = -figure.sphere[i + 1].x + figure.sphere[i].x;
-				vSec[1][0] = -figure.sphere[i + 1].y + figure.sphere[i].y;
-				vSec[2][0] = -figure.sphere[i + 1].z + figure.sphere[i].z;
-				cameraToPolygon1[0][0] = figure.sphere[i].x;
-				cameraToPolygon1[1][0] = figure.sphere[i].y;
-				cameraToPolygon1[2][0] = figure.sphere[i].z;
-				cameraToPolygon2[0][0] = figure.sphere[i + 1].x;
-				cameraToPolygon2[1][0] = figure.sphere[i + 1].y;
-				cameraToPolygon2[2][0] = figure.sphere[i + 1].z;
-				cameraToPolygon3[0][0] = figure.sphere[i + 13].x;
-				cameraToPolygon3[1][0] = figure.sphere[i + 13].y;
-				cameraToPolygon3[2][0] = figure.sphere[i + 13].z;
+				vFst[0][0] = -newSphereWC[i + 13].x + newSphereWC[i + 1].x;
+				vFst[1][0] = -newSphereWC[i + 13].y + newSphereWC[i + 1].y;
+				vFst[2][0] = -newSphereWC[i + 13].z + newSphereWC[i + 1].z;
+				vSec[0][0] = -newSphereWC[i + 1].x + newSphereWC[i].x;
+				vSec[1][0] = -newSphereWC[i + 1].y + newSphereWC[i].y;
+				vSec[2][0] = -newSphereWC[i + 1].z + newSphereWC[i].z;
+				cameraToPolygon1[0][0] = newSphereWC[i].x;
+				cameraToPolygon1[1][0] = newSphereWC[i].y;
+				cameraToPolygon1[2][0] = newSphereWC[i].z;
+				cameraToPolygon2[0][0] = newSphereWC[i + 1].x;
+				cameraToPolygon2[1][0] = newSphereWC[i + 1].y;
+				cameraToPolygon2[2][0] = newSphereWC[i + 1].z;
+				cameraToPolygon3[0][0] = newSphereWC[i + 13].x;
+				cameraToPolygon3[1][0] = newSphereWC[i + 13].y;
+				cameraToPolygon3[2][0] = newSphereWC[i + 13].z;
 			}
 			vFst[3][0] = 1; vSec[3][0] = 1;
 
@@ -819,24 +1147,46 @@ void CMFCApplication3View::OnPaint()
 
 		for (int i = 1; i < 217; i++)
 		{
-			if (isVisable[i - 1] == 0) continue;
-			memDC.MoveTo(ToScreenX(rect.Width(), rect.left, sph[i].x), ToScreenY(rect.Height(), rect.top, sph[i].y));
-			if (i % 12 == 0)
+			if (figure.isClicked)
 			{
-				memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i + 1].x), ToScreenY(rect.Height(), rect.top, sph[i + 1].y));
-				memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i - 11].x), ToScreenY(rect.Height(), rect.top, sph[i - 11].y));
+				if (isVisable[i - 1] == 0) continue;
+				memDC.BeginPath();
+				memDC.MoveTo(ToScreenX(rect.Width(), rect.left, sph[i].x), ToScreenY(rect.Height(), rect.top, sph[i].y));
+				if (i % 12 == 0)
+				{
+					memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i + 1].x), ToScreenY(rect.Height(), rect.top, sph[i + 1].y));
+					memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i - 11].x), ToScreenY(rect.Height(), rect.top, sph[i - 11].y));
+				}
+				else
+				{
+					memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i + 13].x), ToScreenY(rect.Height(), rect.top, sph[i + 13].y));
+					memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i + 1].x), ToScreenY(rect.Height(), rect.top, sph[i + 1].y));
+				}
+				memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i].x), ToScreenY(rect.Height(), rect.top, sph[i].y));
+				memDC.EndPath();
+				memDC.StrokeAndFillPath();
 			}
 			else
 			{
-				memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i + 13].x), ToScreenY(rect.Height(), rect.top, sph[i + 13].y));
-				memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i + 1].x), ToScreenY(rect.Height(), rect.top, sph[i + 1].y));
+				if (isVisable[i - 1] == 0) continue;
+				memDC.MoveTo(ToScreenX(rect.Width(), rect.left, sph[i].x), ToScreenY(rect.Height(), rect.top, sph[i].y));
+				if (i % 12 == 0)
+				{
+					memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i + 1].x), ToScreenY(rect.Height(), rect.top, sph[i + 1].y));
+					memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i - 11].x), ToScreenY(rect.Height(), rect.top, sph[i - 11].y));
+				}
+				else
+				{
+					memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i + 13].x), ToScreenY(rect.Height(), rect.top, sph[i + 13].y));
+					memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i + 1].x), ToScreenY(rect.Height(), rect.top, sph[i + 1].y));
+				}
+				memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i].x), ToScreenY(rect.Height(), rect.top, sph[i].y));
 			}
-			memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i].x), ToScreenY(rect.Height(), rect.top, sph[i].y));
 		}
 #pragma endregion
 	}
 
-	for (auto figure : v_torusFigure)
+	for (auto& figure : v_torusFigure)
 	{
 #pragma region 좌표계 변환 후 그리기
 		// 원들끼리 그리기
@@ -861,6 +1211,17 @@ void CMFCApplication3View::OnPaint()
 			count++;
 		}
 
+		if (figure.torusRadius != figure.originTorusRadius) // 크기 변경이 된 친구라면?
+		{ // 다시 만들어서 넣어줌
+			MyVertex* makingTorus = pTorus(figure.torusOrigin.x, figure.torusOrigin.y, figure.torusOrigin.z, figure.torusLongRadius, figure.torusRadius);
+			int torusCount = 0;
+			for (int i = 0; i < 144; i++)
+			{
+				tor[i] = *(makingTorus + torusCount);
+				torusCount++;
+			}
+		}
+
 #pragma region 뷰 행렬 변환
 
 		float* fPtr;
@@ -883,6 +1244,62 @@ void CMFCApplication3View::OnPaint()
 			torCount++;
 		}
 #pragma endregion
+
+		////// 테스트 : 카메라 좌표계에서 회전시키기
+		float originInView[4][1] = {};
+		originInView[0][0] = figure.torusOrigin.x; originInView[1][0] = figure.torusOrigin.y; originInView[2][0] = figure.torusOrigin.z; originInView[3][0] = 1;
+		fPtr = MatrixMulti(view, originInView);
+		int sampleCount = 0;
+		for (int i = 0; i < 3; i++) // 뷰 좌표계에서의 큐브의 중심을 구하기
+		{
+			originInView[i][0] = *(fPtr + sampleCount);
+			sampleCount++;
+		}
+
+		for (int i = 0; i < 144; i++) // 뷰 좌표계에서의 큐브 중심을 원점으로 옮기면서 나머지 점들도 다 동일하게 옮겨줌
+		{
+			tor[i].x -= originInView[0][0];
+			tor[i].y -= originInView[1][0];
+			tor[i].z -= originInView[2][0];
+		}
+
+		for (int i = 0; i < 144; i++) // 해당 점들을 축을 기준으로 회전
+		{
+			float sample[4][1] = { { tor[i].x },{ tor[i].y },{ tor[i].z },{ 1 } };
+			float* rotPtr = MatrixRotate(sample, figure.rotX, figure.rotY, 0);
+			sampleCount = 0;
+			for (int j = 0; j < 4; j++)
+			{
+				sample[j][0] = *(rotPtr + sampleCount);
+				sampleCount++;
+			}
+			tor[i].x = sample[0][0]; tor[i].y = sample[1][0]; tor[i].z = sample[2][0];
+		}
+
+		for (int i = 0; i < 144; i++) // 다시 큐브의 중심을 원점에서 원래의 중심으로 복구
+		{
+			tor[i].x += originInView[0][0];
+			tor[i].y += originInView[1][0];
+			tor[i].z += originInView[2][0];
+		}
+
+		////// 테스트 : 카메라 좌표계에서 x, y축으로 평행이동 시키기
+		if (figure.moveY != 0)
+		{
+			for (int i = 0; i < 144; i++)
+			{
+				tor[i].y += figure.moveY;
+			}
+		}
+		if (figure.moveX != 0)
+		{
+			for (int i = 0; i < 144; i++)
+			{
+				tor[i].x += figure.moveX;
+			}
+		}
+		////////////////////////////////////////////////////////////
+
 #pragma region 투영 행렬 변환
 		// 뷰 변환 한 점들 투영 변환
 		for (int i = 0; i < 144; i++)
@@ -908,6 +1325,55 @@ void CMFCApplication3View::OnPaint()
 		}
 #pragma endregion
 
+		/////////// 테스트 : 화면 밖으로 모든 점이 나가버리면 안그리게 할 것
+		float pointOfView[2][1] = {};
+		bool outOfView[144] = {};
+		for (int i = 0; i < 144; i++)
+		{
+			pointOfView[0][0] = ToScreenX(width, left, tor[i].x); pointOfView[1][0] = ToScreenY(height, top, tor[i].y);
+			if (pointOfView[0][0] < 0 || pointOfView[0][0] > width || pointOfView[1][0] < 0 || pointOfView[1][0] > height)
+				outOfView[i] = TRUE;
+			else outOfView[i] = FALSE;
+		}
+		bool totalOut = FALSE;
+		for (int i = 0; i < 144; i++)
+		{
+			if (outOfView[i]) totalOut = TRUE;
+			else
+			{
+				totalOut = FALSE;
+				break;
+			}
+		}
+		if (totalOut) continue;
+		////////////////////////////////////////////////////////////////////
+
+		//위치가 이동되었으니 월드좌표계의 좌표들도 변했을 것-> 현재 받아둔 좌표를 다 뒤로 돌려서 새로운 월드좌표를 받아야 함
+		MyVertex newTorusWC[144] = {};
+		float tempVertex[4][1] = {};
+		for (int i = 0; i < 144; i++)
+		{
+			tempVertex[0][0] = tor[i].x * tor[i].z; tempVertex[1][0] = tor[i].y * tor[i].z; tempVertex[2][0] = tor[i].z; tempVertex[3][0] = 1;
+			float* tempPtr = MatrixMulti(projReverse, tempVertex);
+			int tempCount = 0;
+			for (int j = 0; j < 4; j++) // 투영 역행렬 = 카메라 좌표계
+			{
+				tempVertex[j][0] = *(tempPtr + tempCount);
+				tempCount++;
+			}
+			tempPtr = MatrixMulti(viewReverse, tempVertex);
+			tempCount = 0;
+			for (int j = 0; j < 4; j++) // 뷰 역행렬 = 월드 좌표계
+			{
+				tempVertex[j][0] = *(tempPtr + tempCount);
+				tempCount++;
+			}
+			// 새로운 월드 좌표계 저장
+			newTorusWC[i].x = tempVertex[0][0]; newTorusWC[i].y = tempVertex[1][0]; newTorusWC[i].z = tempVertex[2][0];
+			figure.torus_justForClick[i].x = tempVertex[0][0]; figure.torus_justForClick[i].y = tempVertex[1][0]; figure.torus_justForClick[i].z = tempVertex[2][0];
+		}
+		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 #pragma region 첫번째 삼각 폴리곤 
 		for (int i = 0; i < 144; i++)
 		{
@@ -915,78 +1381,78 @@ void CMFCApplication3View::OnPaint()
 			{
 				if (i >= 132)
 				{
-					dotFst[0][0] = -figure.torus[i].x + figure.torus[i - 132].x;
-					dotSec[0][0] = -figure.torus[i].x + figure.torus[i - 11].x;
-					dotFst[1][0] = -figure.torus[i].y + figure.torus[i - 132].y;
-					dotSec[1][0] = -figure.torus[i].y + figure.torus[i - 11].y;
-					dotFst[2][0] = -figure.torus[i].z + figure.torus[i - 132].z;
-					dotSec[2][0] = -figure.torus[i].z + figure.torus[i - 11].z;
-					cameraToPolygon1[0][0] = figure.torus[i].x;
-					cameraToPolygon1[1][0] = figure.torus[i].y;
-					cameraToPolygon1[2][0] = figure.torus[i].z;
-					cameraToPolygon2[0][0] = figure.torus[i - 132].x;
-					cameraToPolygon2[1][0] = figure.torus[i - 132].y;
-					cameraToPolygon2[2][0] = figure.torus[i - 132].z;
-					cameraToPolygon3[0][0] = figure.torus[i - 11].x;
-					cameraToPolygon3[1][0] = figure.torus[i - 11].y;
-					cameraToPolygon3[2][0] = figure.torus[i - 11].z;
+					dotFst[0][0] = -newTorusWC[i].x + newTorusWC[i - 132].x;
+					dotSec[0][0] = -newTorusWC[i].x + newTorusWC[i - 11].x;
+					dotFst[1][0] = -newTorusWC[i].y + newTorusWC[i - 132].y;
+					dotSec[1][0] = -newTorusWC[i].y + newTorusWC[i - 11].y;
+					dotFst[2][0] = -newTorusWC[i].z + newTorusWC[i - 132].z;
+					dotSec[2][0] = -newTorusWC[i].z + newTorusWC[i - 11].z;
+					cameraToPolygon1[0][0] = newTorusWC[i].x;
+					cameraToPolygon1[1][0] = newTorusWC[i].y;
+					cameraToPolygon1[2][0] = newTorusWC[i].z;
+					cameraToPolygon2[0][0] = newTorusWC[i - 132].x;
+					cameraToPolygon2[1][0] = newTorusWC[i - 132].y;
+					cameraToPolygon2[2][0] = newTorusWC[i - 132].z;
+					cameraToPolygon3[0][0] = newTorusWC[i - 11].x;
+					cameraToPolygon3[1][0] = newTorusWC[i - 11].y;
+					cameraToPolygon3[2][0] = newTorusWC[i - 11].z;
 				}
 				else
 				{
-					dotFst[0][0] = -figure.torus[i].x + figure.torus[i + 12].x;
-					dotSec[0][0] = -figure.torus[i].x + figure.torus[i - 11].x;
-					dotFst[1][0] = -figure.torus[i].y + figure.torus[i + 12].y;
-					dotSec[1][0] = -figure.torus[i].y + figure.torus[i - 11].y;
-					dotFst[2][0] = -figure.torus[i].z + figure.torus[i + 12].z;
-					dotSec[2][0] = -figure.torus[i].z + figure.torus[i - 11].z;
-					cameraToPolygon1[0][0] = figure.torus[i].x;
-					cameraToPolygon1[1][0] = figure.torus[i].y;
-					cameraToPolygon1[2][0] = figure.torus[i].z;
-					cameraToPolygon2[0][0] = figure.torus[i + 12].x;
-					cameraToPolygon2[1][0] = figure.torus[i + 12].y;
-					cameraToPolygon2[2][0] = figure.torus[i + 12].z;
-					cameraToPolygon3[0][0] = figure.torus[i - 11].x;
-					cameraToPolygon3[1][0] = figure.torus[i - 11].y;
-					cameraToPolygon3[2][0] = figure.torus[i - 11].z;
+					dotFst[0][0] = -newTorusWC[i].x + newTorusWC[i + 12].x;
+					dotSec[0][0] = -newTorusWC[i].x + newTorusWC[i - 11].x;
+					dotFst[1][0] = -newTorusWC[i].y + newTorusWC[i + 12].y;
+					dotSec[1][0] = -newTorusWC[i].y + newTorusWC[i - 11].y;
+					dotFst[2][0] = -newTorusWC[i].z + newTorusWC[i + 12].z;
+					dotSec[2][0] = -newTorusWC[i].z + newTorusWC[i - 11].z;
+					cameraToPolygon1[0][0] = newTorusWC[i].x;
+					cameraToPolygon1[1][0] = newTorusWC[i].y;
+					cameraToPolygon1[2][0] = newTorusWC[i].z;
+					cameraToPolygon2[0][0] = newTorusWC[i + 12].x;
+					cameraToPolygon2[1][0] = newTorusWC[i + 12].y;
+					cameraToPolygon2[2][0] = newTorusWC[i + 12].z;
+					cameraToPolygon3[0][0] = newTorusWC[i - 11].x;
+					cameraToPolygon3[1][0] = newTorusWC[i - 11].y;
+					cameraToPolygon3[2][0] = newTorusWC[i - 11].z;
 				}
 			}
 			else
 			{
 				if (i >= 132)
 				{
-					dotFst[0][0] = -figure.torus[i].x + figure.torus[i - 132].x;
-					dotSec[0][0] = -figure.torus[i].x + figure.torus[i + 1].x;
-					dotFst[1][0] = -figure.torus[i].y + figure.torus[i - 132].y;
-					dotSec[1][0] = -figure.torus[i].y + figure.torus[i + 1].y;
-					dotFst[2][0] = -figure.torus[i].z + figure.torus[i - 132].z;
-					dotSec[2][0] = -figure.torus[i].z + figure.torus[i + 1].z;
-					cameraToPolygon1[0][0] = figure.torus[i].x;
-					cameraToPolygon1[1][0] = figure.torus[i].y;
-					cameraToPolygon1[2][0] = figure.torus[i].z;
-					cameraToPolygon2[0][0] = figure.torus[i - 132].x;
-					cameraToPolygon2[1][0] = figure.torus[i - 132].y;
-					cameraToPolygon2[2][0] = figure.torus[i - 132].z;
-					cameraToPolygon3[0][0] = figure.torus[i + 1].x;
-					cameraToPolygon3[1][0] = figure.torus[i + 1].y;
-					cameraToPolygon3[2][0] = figure.torus[i + 1].z;
+					dotFst[0][0] = -newTorusWC[i].x + newTorusWC[i - 132].x;
+					dotSec[0][0] = -newTorusWC[i].x + newTorusWC[i + 1].x;
+					dotFst[1][0] = -newTorusWC[i].y + newTorusWC[i - 132].y;
+					dotSec[1][0] = -newTorusWC[i].y + newTorusWC[i + 1].y;
+					dotFst[2][0] = -newTorusWC[i].z + newTorusWC[i - 132].z;
+					dotSec[2][0] = -newTorusWC[i].z + newTorusWC[i + 1].z;
+					cameraToPolygon1[0][0] = newTorusWC[i].x;
+					cameraToPolygon1[1][0] = newTorusWC[i].y;
+					cameraToPolygon1[2][0] = newTorusWC[i].z;
+					cameraToPolygon2[0][0] = newTorusWC[i - 132].x;
+					cameraToPolygon2[1][0] = newTorusWC[i - 132].y;
+					cameraToPolygon2[2][0] = newTorusWC[i - 132].z;
+					cameraToPolygon3[0][0] = newTorusWC[i + 1].x;
+					cameraToPolygon3[1][0] = newTorusWC[i + 1].y;
+					cameraToPolygon3[2][0] = newTorusWC[i + 1].z;
 				}
 				else
 				{
-					dotFst[0][0] = -figure.torus[i].x + figure.torus[i + 12].x;
-					dotSec[0][0] = -figure.torus[i].x + figure.torus[i + 1].x;
-					dotFst[1][0] = -figure.torus[i].y + figure.torus[i + 12].y;
-					dotSec[1][0] = -figure.torus[i].y + figure.torus[i + 1].y;
-					dotFst[2][0] = -figure.torus[i].z + figure.torus[i + 12].z;
-					dotSec[2][0] = -figure.torus[i].z + figure.torus[i + 1].z;
-					cameraToPolygon1[0][0] = figure.torus[i].x;
-					cameraToPolygon1[1][0] = figure.torus[i].y;
-					cameraToPolygon1[2][0] = figure.torus[i].z;
-					cameraToPolygon2[0][0] = figure.torus[i + 12].x;
-					cameraToPolygon2[1][0] = figure.torus[i + 12].y;
-					cameraToPolygon2[2][0] = figure.torus[i + 12].z;
-					cameraToPolygon3[0][0] = figure.torus[i + 1].x;
-					cameraToPolygon3[1][0] = figure.torus[i + 1].y;
-					cameraToPolygon3[2][0] = figure.torus[i + 1].z;
+					dotFst[0][0] = -newTorusWC[i].x + newTorusWC[i + 12].x;
+					dotSec[0][0] = -newTorusWC[i].x + newTorusWC[i + 1].x;
+					dotFst[1][0] = -newTorusWC[i].y + newTorusWC[i + 12].y;
+					dotSec[1][0] = -newTorusWC[i].y + newTorusWC[i + 1].y;
+					dotFst[2][0] = -newTorusWC[i].z + newTorusWC[i + 12].z;
+					dotSec[2][0] = -newTorusWC[i].z + newTorusWC[i + 1].z;
+					cameraToPolygon1[0][0] = newTorusWC[i].x;
+					cameraToPolygon1[1][0] = newTorusWC[i].y;
+					cameraToPolygon1[2][0] = newTorusWC[i].z;
+					cameraToPolygon2[0][0] = newTorusWC[i + 12].x;
+					cameraToPolygon2[1][0] = newTorusWC[i + 12].y;
+					cameraToPolygon2[2][0] = newTorusWC[i + 12].z;
+					cameraToPolygon3[0][0] = newTorusWC[i + 1].x;
+					cameraToPolygon3[1][0] = newTorusWC[i + 1].y;
+					cameraToPolygon3[2][0] = newTorusWC[i + 1].z;
 				}
 			}
 			dotFst[3][0] = 1;
@@ -1035,19 +1501,24 @@ void CMFCApplication3View::OnPaint()
 		// i = 0 일때만 따로 그려주기 -> 0일때는 건너뛰게 그려놓았음.
 		if (fstResult == 1)
 		{
-			// 선으로 그리기
-			memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[0].x), ToScreenY(rect.Height(), rect.top, tor[0].y));
-			memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[1].x), ToScreenY(rect.Height(), rect.top, tor[1].y));
-			memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[12].x), ToScreenY(rect.Height(), rect.top, tor[12].y));
-			memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[0].x), ToScreenY(rect.Height(), rect.top, tor[0].y));
-			// 면으로 그리기
-			/*memDC.BeginPath();
-			memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[0].x), ToScreenY(rect.Height(), rect.top, tor[0].y));
-			memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[1].x), ToScreenY(rect.Height(), rect.top, tor[1].y));
-			memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[12].x), ToScreenY(rect.Height(), rect.top, tor[12].y));
-			memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[0].x), ToScreenY(rect.Height(), rect.top, tor[0].y));
-			memDC.EndPath();
-			memDC.StrokeAndFillPath();*/
+			if (figure.isClicked == FALSE)
+			{// 선으로 그리기
+				memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[0].x), ToScreenY(rect.Height(), rect.top, tor[0].y));
+				memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[1].x), ToScreenY(rect.Height(), rect.top, tor[1].y));
+				memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[12].x), ToScreenY(rect.Height(), rect.top, tor[12].y));
+				memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[0].x), ToScreenY(rect.Height(), rect.top, tor[0].y));
+			}
+			else
+			{
+				// 면으로 그리기
+				memDC.BeginPath();
+				memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[0].x), ToScreenY(rect.Height(), rect.top, tor[0].y));
+				memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[1].x), ToScreenY(rect.Height(), rect.top, tor[1].y));
+				memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[12].x), ToScreenY(rect.Height(), rect.top, tor[12].y));
+				memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[0].x), ToScreenY(rect.Height(), rect.top, tor[0].y));
+				memDC.EndPath();
+				memDC.StrokeAndFillPath();
+			}
 		}
 		//////
 		for (auto i : myInt)
@@ -1057,83 +1528,97 @@ void CMFCApplication3View::OnPaint()
 			{
 				if (i >= 132)
 				{
-					// 선으로 그리기
-					memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 11].x), ToScreenY(rect.Height(), rect.top, tor[i - 11].y));
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 132].x), ToScreenY(rect.Height(), rect.top, tor[i - 132].y));
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-					// 면으로 그리기
-					/*memDC.BeginPath();
-					memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 11].x), ToScreenY(rect.Height(), rect.top, tor[i - 11].y));
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 132].x), ToScreenY(rect.Height(), rect.top, tor[i - 132].y));
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-					memDC.EndPath();
-					memDC.StrokeAndFillPath();*/
+					if (figure.isClicked == FALSE)
+					{
+						// 선으로 그리기
+						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+						memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 11].x), ToScreenY(rect.Height(), rect.top, tor[i - 11].y));
+						memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 132].x), ToScreenY(rect.Height(), rect.top, tor[i - 132].y));
+						memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+					}
+					else
+					{
+						// 면으로 그리기
+						memDC.BeginPath();
+						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+						memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 11].x), ToScreenY(rect.Height(), rect.top, tor[i - 11].y));
+						memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 132].x), ToScreenY(rect.Height(), rect.top, tor[i - 132].y));
+						memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+						memDC.EndPath();
+						memDC.StrokeAndFillPath();
+					}
 				}
 				else
 				{
-					// 선으로 그리기
-					memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 11].x), ToScreenY(rect.Height(), rect.top, tor[i - 11].y));
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 12].x), ToScreenY(rect.Height(), rect.top, tor[i + 12].y));
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-					// 면으로 그리기
-					/*memDC.BeginPath();
-					memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 11].x), ToScreenY(rect.Height(), rect.top, tor[i - 11].y));
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 12].x), ToScreenY(rect.Height(), rect.top, tor[i + 12].y));
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-					memDC.EndPath();
-					memDC.StrokeAndFillPath();*/
+					if (figure.isClicked == FALSE)
+					{
+						// 선으로 그리기
+						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+						memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 11].x), ToScreenY(rect.Height(), rect.top, tor[i - 11].y));
+						memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 12].x), ToScreenY(rect.Height(), rect.top, tor[i + 12].y));
+						memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+					}
+					else
+					{
+						// 면으로 그리기
+						memDC.BeginPath();
+						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+						memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 11].x), ToScreenY(rect.Height(), rect.top, tor[i - 11].y));
+						memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 12].x), ToScreenY(rect.Height(), rect.top, tor[i + 12].y));
+						memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+						memDC.EndPath();
+						memDC.StrokeAndFillPath();
+					}
 				}
 			}
 			else
 			{
 				if (i >= 132)
 				{
-					// 선으로 그리기
-					memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 1].x), ToScreenY(rect.Height(), rect.top, tor[i + 1].y));
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 132].x), ToScreenY(rect.Height(), rect.top, tor[i - 132].y));
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-					// 면으로 그리기
-					/*memDC.BeginPath();
-					memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 1].x), ToScreenY(rect.Height(), rect.top, tor[i + 1].y));
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 132].x), ToScreenY(rect.Height(), rect.top, tor[i - 132].y));
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-					memDC.EndPath();
-					memDC.StrokeAndFillPath();*/
+					if (figure.isClicked == FALSE)
+					{
+						// 선으로 그리기
+						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+						memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 1].x), ToScreenY(rect.Height(), rect.top, tor[i + 1].y));
+						memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 132].x), ToScreenY(rect.Height(), rect.top, tor[i - 132].y));
+						memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+					}
+					else
+					{
+						// 면으로 그리기
+						memDC.BeginPath();
+						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+						memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 1].x), ToScreenY(rect.Height(), rect.top, tor[i + 1].y));
+						memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 132].x), ToScreenY(rect.Height(), rect.top, tor[i - 132].y));
+						memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+						memDC.EndPath();
+						memDC.StrokeAndFillPath();
+					}
 				}
 				else
 				{
-					// 선으로 그리기
-					memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 1].x), ToScreenY(rect.Height(), rect.top, tor[i + 1].y));
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 12].x), ToScreenY(rect.Height(), rect.top, tor[i + 12].y));
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-					// 면으로 그리기
-					/*memDC.BeginPath();
-					memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 1].x), ToScreenY(rect.Height(), rect.top, tor[i + 1].y));
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 12].x), ToScreenY(rect.Height(), rect.top, tor[i + 12].y));
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-					memDC.EndPath();
-					memDC.StrokeAndFillPath();*/
+					if (figure.isClicked == FALSE)
+					{
+						// 선으로 그리기
+						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+						memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 1].x), ToScreenY(rect.Height(), rect.top, tor[i + 1].y));
+						memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 12].x), ToScreenY(rect.Height(), rect.top, tor[i + 12].y));
+						memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+					}
+					else
+					{
+						// 면으로 그리기
+						memDC.BeginPath();
+						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+						memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 1].x), ToScreenY(rect.Height(), rect.top, tor[i + 1].y));
+						memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 12].x), ToScreenY(rect.Height(), rect.top, tor[i + 12].y));
+						memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+						memDC.EndPath();
+						memDC.StrokeAndFillPath();
+					}
 				}
 			}
 		}
-
-		//	if (i >= 132)
-		//	{
-		//		memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-		//		memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 132].x), ToScreenY(rect.Height(), rect.top, tor[i - 132].y));
-		//		continue;
-		//	}
-		//	memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-		//	memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 12].x), ToScreenY(rect.Height(), rect.top, tor[i + 12].y));
-		//}
 #pragma endregion
 #pragma region 두번째 삼각 폴리곤 그리기
 		// 두번째 그리는 삼각형들
@@ -1144,78 +1629,78 @@ void CMFCApplication3View::OnPaint()
 			{
 				if (i == 0)
 				{
-					dotFst[0][0] = -figure.torus[i].x + figure.torus[i + 132].x;
-					dotSec[0][0] = -figure.torus[i].x + figure.torus[i + 11].x;
-					dotFst[1][0] = -figure.torus[i].y + figure.torus[i + 132].y;
-					dotSec[1][0] = -figure.torus[i].y + figure.torus[i + 11].y;
-					dotFst[2][0] = -figure.torus[i].z + figure.torus[i + 132].z;
-					dotSec[2][0] = -figure.torus[i].z + figure.torus[i + 11].z;
-					cameraToPolygon1[0][0] = figure.torus[i].x;
-					cameraToPolygon1[1][0] = figure.torus[i].y;
-					cameraToPolygon1[2][0] = figure.torus[i].z;
-					cameraToPolygon2[0][0] = figure.torus[i + 132].x;
-					cameraToPolygon2[1][0] = figure.torus[i + 132].y;
-					cameraToPolygon2[2][0] = figure.torus[i + 132].z;
-					cameraToPolygon3[0][0] = figure.torus[i + 11].x;
-					cameraToPolygon3[1][0] = figure.torus[i + 11].y;
-					cameraToPolygon3[2][0] = figure.torus[i + 11].z;
+					dotFst[0][0] = -newTorusWC[i].x + newTorusWC[i + 132].x;
+					dotSec[0][0] = -newTorusWC[i].x + newTorusWC[i + 11].x;
+					dotFst[1][0] = -newTorusWC[i].y + newTorusWC[i + 132].y;
+					dotSec[1][0] = -newTorusWC[i].y + newTorusWC[i + 11].y;
+					dotFst[2][0] = -newTorusWC[i].z + newTorusWC[i + 132].z;
+					dotSec[2][0] = -newTorusWC[i].z + newTorusWC[i + 11].z;
+					cameraToPolygon1[0][0] = newTorusWC[i].x;
+					cameraToPolygon1[1][0] = newTorusWC[i].y;
+					cameraToPolygon1[2][0] = newTorusWC[i].z;
+					cameraToPolygon2[0][0] = newTorusWC[i + 132].x;
+					cameraToPolygon2[1][0] = newTorusWC[i + 132].y;
+					cameraToPolygon2[2][0] = newTorusWC[i + 132].z;
+					cameraToPolygon3[0][0] = newTorusWC[i + 11].x;
+					cameraToPolygon3[1][0] = newTorusWC[i + 11].y;
+					cameraToPolygon3[2][0] = newTorusWC[i + 11].z;
 				}
 				else
 				{
-					dotFst[0][0] = -figure.torus[i].x + figure.torus[i - 12].x;
-					dotSec[0][0] = -figure.torus[i].x + figure.torus[i + 11].x;
-					dotFst[1][0] = -figure.torus[i].y + figure.torus[i - 12].y;
-					dotSec[1][0] = -figure.torus[i].y + figure.torus[i + 11].y;
-					dotFst[2][0] = -figure.torus[i].z + figure.torus[i - 12].z;
-					dotSec[2][0] = -figure.torus[i].z + figure.torus[i + 11].z;
-					cameraToPolygon1[0][0] = figure.torus[i].x;
-					cameraToPolygon1[1][0] = figure.torus[i].y;
-					cameraToPolygon1[2][0] = figure.torus[i].z;
-					cameraToPolygon2[0][0] = figure.torus[i - 12].x;
-					cameraToPolygon2[1][0] = figure.torus[i - 12].y;
-					cameraToPolygon2[2][0] = figure.torus[i - 12].z;
-					cameraToPolygon3[0][0] = figure.torus[i + 11].x;
-					cameraToPolygon3[1][0] = figure.torus[i + 11].y;
-					cameraToPolygon3[2][0] = figure.torus[i + 11].z;
+					dotFst[0][0] = -newTorusWC[i].x + newTorusWC[i - 12].x;
+					dotSec[0][0] = -newTorusWC[i].x + newTorusWC[i + 11].x;
+					dotFst[1][0] = -newTorusWC[i].y + newTorusWC[i - 12].y;
+					dotSec[1][0] = -newTorusWC[i].y + newTorusWC[i + 11].y;
+					dotFst[2][0] = -newTorusWC[i].z + newTorusWC[i - 12].z;
+					dotSec[2][0] = -newTorusWC[i].z + newTorusWC[i + 11].z;
+					cameraToPolygon1[0][0] = newTorusWC[i].x;
+					cameraToPolygon1[1][0] = newTorusWC[i].y;
+					cameraToPolygon1[2][0] = newTorusWC[i].z;
+					cameraToPolygon2[0][0] = newTorusWC[i - 12].x;
+					cameraToPolygon2[1][0] = newTorusWC[i - 12].y;
+					cameraToPolygon2[2][0] = newTorusWC[i - 12].z;
+					cameraToPolygon3[0][0] = newTorusWC[i + 11].x;
+					cameraToPolygon3[1][0] = newTorusWC[i + 11].y;
+					cameraToPolygon3[2][0] = newTorusWC[i + 11].z;
 				}
 			}
 			else
 			{
 				if (i < 12)
 				{
-					dotFst[0][0] = -figure.torus[i].x + figure.torus[i + 132].x;
-					dotSec[0][0] = -figure.torus[i].x + figure.torus[i - 1].x;
-					dotFst[1][0] = -figure.torus[i].y + figure.torus[i + 132].y;
-					dotSec[1][0] = -figure.torus[i].y + figure.torus[i - 1].y;
-					dotFst[2][0] = -figure.torus[i].z + figure.torus[i + 132].z;
-					dotSec[2][0] = -figure.torus[i].z + figure.torus[i - 1].z;
-					cameraToPolygon1[0][0] = figure.torus[i].x;
-					cameraToPolygon1[1][0] = figure.torus[i].y;
-					cameraToPolygon1[2][0] = figure.torus[i].z;
-					cameraToPolygon2[0][0] = figure.torus[i + 132].x;
-					cameraToPolygon2[1][0] = figure.torus[i + 132].y;
-					cameraToPolygon2[2][0] = figure.torus[i + 132].z;
-					cameraToPolygon3[0][0] = figure.torus[i - 1].x;
-					cameraToPolygon3[1][0] = figure.torus[i - 1].y;
-					cameraToPolygon3[2][0] = figure.torus[i - 1].z;
+					dotFst[0][0] = -newTorusWC[i].x + newTorusWC[i + 132].x;
+					dotSec[0][0] = -newTorusWC[i].x + newTorusWC[i - 1].x;
+					dotFst[1][0] = -newTorusWC[i].y + newTorusWC[i + 132].y;
+					dotSec[1][0] = -newTorusWC[i].y + newTorusWC[i - 1].y;
+					dotFst[2][0] = -newTorusWC[i].z + newTorusWC[i + 132].z;
+					dotSec[2][0] = -newTorusWC[i].z + newTorusWC[i - 1].z;
+					cameraToPolygon1[0][0] = newTorusWC[i].x;
+					cameraToPolygon1[1][0] = newTorusWC[i].y;
+					cameraToPolygon1[2][0] = newTorusWC[i].z;
+					cameraToPolygon2[0][0] = newTorusWC[i + 132].x;
+					cameraToPolygon2[1][0] = newTorusWC[i + 132].y;
+					cameraToPolygon2[2][0] = newTorusWC[i + 132].z;
+					cameraToPolygon3[0][0] = newTorusWC[i - 1].x;
+					cameraToPolygon3[1][0] = newTorusWC[i - 1].y;
+					cameraToPolygon3[2][0] = newTorusWC[i - 1].z;
 				}
 				else
 				{
-					dotFst[0][0] = -figure.torus[i].x + figure.torus[i - 12].x;
-					dotSec[0][0] = -figure.torus[i].x + figure.torus[i - 1].x;
-					dotFst[1][0] = -figure.torus[i].y + figure.torus[i - 12].y;
-					dotSec[1][0] = -figure.torus[i].y + figure.torus[i - 1].y;
-					dotFst[2][0] = -figure.torus[i].z + figure.torus[i - 12].z;
-					dotSec[2][0] = -figure.torus[i].z + figure.torus[i - 1].z;
-					cameraToPolygon1[0][0] = figure.torus[i].x;
-					cameraToPolygon1[1][0] = figure.torus[i].y;
-					cameraToPolygon1[2][0] = figure.torus[i].z;
-					cameraToPolygon2[0][0] = figure.torus[i - 12].x;
-					cameraToPolygon2[1][0] = figure.torus[i - 12].y;
-					cameraToPolygon2[2][0] = figure.torus[i - 12].z;
-					cameraToPolygon3[0][0] = figure.torus[i - 1].x;
-					cameraToPolygon3[1][0] = figure.torus[i - 1].y;
-					cameraToPolygon3[2][0] = figure.torus[i - 1].z;
+					dotFst[0][0] = -newTorusWC[i].x + newTorusWC[i - 12].x;
+					dotSec[0][0] = -newTorusWC[i].x + newTorusWC[i - 1].x;
+					dotFst[1][0] = -newTorusWC[i].y + newTorusWC[i - 12].y;
+					dotSec[1][0] = -newTorusWC[i].y + newTorusWC[i - 1].y;
+					dotFst[2][0] = -newTorusWC[i].z + newTorusWC[i - 12].z;
+					dotSec[2][0] = -newTorusWC[i].z + newTorusWC[i - 1].z;
+					cameraToPolygon1[0][0] = newTorusWC[i].x;
+					cameraToPolygon1[1][0] = newTorusWC[i].y;
+					cameraToPolygon1[2][0] = newTorusWC[i].z;
+					cameraToPolygon2[0][0] = newTorusWC[i - 12].x;
+					cameraToPolygon2[1][0] = newTorusWC[i - 12].y;
+					cameraToPolygon2[2][0] = newTorusWC[i - 12].z;
+					cameraToPolygon3[0][0] = newTorusWC[i - 1].x;
+					cameraToPolygon3[1][0] = newTorusWC[i - 1].y;
+					cameraToPolygon3[2][0] = newTorusWC[i - 1].z;
 				}
 			}
 			dotFst[3][0] = 1;
@@ -1265,19 +1750,25 @@ void CMFCApplication3View::OnPaint()
 		// i = 0 일때만 따로 그려주기 -> 0일때는 건너뛰게 그려놓았음.
 		if (secResult == 1)
 		{
-			// 선으로 그리기
-			memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[0].x), ToScreenY(rect.Height(), rect.top, tor[0].y));
-			memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[11].x), ToScreenY(rect.Height(), rect.top, tor[11].y));
-			memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[132].x), ToScreenY(rect.Height(), rect.top, tor[132].y));
-			memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[0].x), ToScreenY(rect.Height(), rect.top, tor[0].y));
-			// 면으로 그리기
-			/*memDC.BeginPath();
-			memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[0].x), ToScreenY(rect.Height(), rect.top, tor[0].y));
-			memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[11].x), ToScreenY(rect.Height(), rect.top, tor[11].y));
-			memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[132].x), ToScreenY(rect.Height(), rect.top, tor[132].y));
-			memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[0].x), ToScreenY(rect.Height(), rect.top, tor[0].y));
-			memDC.EndPath();
-			memDC.StrokeAndFillPath();*/
+			if (figure.isClicked == FALSE)
+			{
+				// 선으로 그리기
+				memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[0].x), ToScreenY(rect.Height(), rect.top, tor[0].y));
+				memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[11].x), ToScreenY(rect.Height(), rect.top, tor[11].y));
+				memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[132].x), ToScreenY(rect.Height(), rect.top, tor[132].y));
+				memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[0].x), ToScreenY(rect.Height(), rect.top, tor[0].y));
+			}
+			else
+			{
+				// 면으로 그리기
+				memDC.BeginPath();
+				memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[0].x), ToScreenY(rect.Height(), rect.top, tor[0].y));
+				memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[11].x), ToScreenY(rect.Height(), rect.top, tor[11].y));
+				memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[132].x), ToScreenY(rect.Height(), rect.top, tor[132].y));
+				memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[0].x), ToScreenY(rect.Height(), rect.top, tor[0].y));
+				memDC.EndPath();
+				memDC.StrokeAndFillPath();
+			}
 		}
 		//////
 		for (auto i : mySecInt)
@@ -1285,60 +1776,76 @@ void CMFCApplication3View::OnPaint()
 			if (i == 0) continue;
 			if (i % 12 == 0)
 			{
-				// 선으로 그리기
-				memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-				memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 11].x), ToScreenY(rect.Height(), rect.top, tor[i + 11].y));
-				memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 12].x), ToScreenY(rect.Height(), rect.top, tor[i - 12].y));
-				memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-				// 면으로 그리기
-				/*memDC.BeginPath();
-				memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-				memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 11].x), ToScreenY(rect.Height(), rect.top, tor[i + 11].y));
-				memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 12].x), ToScreenY(rect.Height(), rect.top, tor[i - 12].y));
-				memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-				memDC.EndPath();
-				memDC.StrokeAndFillPath();*/
-
+				if (figure.isClicked == FALSE)
+				{
+					// 선으로 그리기
+					memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+					memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 11].x), ToScreenY(rect.Height(), rect.top, tor[i + 11].y));
+					memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 12].x), ToScreenY(rect.Height(), rect.top, tor[i - 12].y));
+					memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+				}
+				else
+				{
+					// 면으로 그리기
+					memDC.BeginPath();
+					memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+					memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 11].x), ToScreenY(rect.Height(), rect.top, tor[i + 11].y));
+					memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 12].x), ToScreenY(rect.Height(), rect.top, tor[i - 12].y));
+					memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+					memDC.EndPath();
+					memDC.StrokeAndFillPath();
+				}
 			}
 			else
 			{
 				if (i < 12)
 				{
-					// 선으로 그리기
-					memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 1].x), ToScreenY(rect.Height(), rect.top, tor[i - 1].y));
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 132].x), ToScreenY(rect.Height(), rect.top, tor[i + 132].y));
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-					// 면으로 그리기
-					/*memDC.BeginPath();
-					memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 1].x), ToScreenY(rect.Height(), rect.top, tor[i -1].y));
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 132].x), ToScreenY(rect.Height(), rect.top, tor[i + 132].y));
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-					memDC.EndPath();
-					memDC.StrokeAndFillPath();*/
+					if (figure.isClicked == FALSE)
+					{
+						// 선으로 그리기
+						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+						memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 1].x), ToScreenY(rect.Height(), rect.top, tor[i - 1].y));
+						memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 132].x), ToScreenY(rect.Height(), rect.top, tor[i + 132].y));
+						memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+					}
+					else
+					{
+						// 면으로 그리기
+						memDC.BeginPath();
+						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+						memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 1].x), ToScreenY(rect.Height(), rect.top, tor[i - 1].y));
+						memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 132].x), ToScreenY(rect.Height(), rect.top, tor[i + 132].y));
+						memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+						memDC.EndPath();
+						memDC.StrokeAndFillPath();
+					}
 				}
 				else
 				{
-					// 선으로 그리기
-					memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 1].x), ToScreenY(rect.Height(), rect.top, tor[i - 1].y));
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 12].x), ToScreenY(rect.Height(), rect.top, tor[i - 12].y));
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-					// 면으로 그리기
-					/*memDC.BeginPath();
-					memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 1].x), ToScreenY(rect.Height(), rect.top, tor[i - 1].y));
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 12].x), ToScreenY(rect.Height(), rect.top, tor[i - 12].y));
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-					memDC.EndPath();
-					memDC.StrokeAndFillPath();*/
+					if (figure.isClicked == FALSE)
+					{
+						// 선으로 그리기
+						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+						memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 1].x), ToScreenY(rect.Height(), rect.top, tor[i - 1].y));
+						memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 12].x), ToScreenY(rect.Height(), rect.top, tor[i - 12].y));
+						memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+					}
+					else
+					{
+						// 면으로 그리기
+						memDC.BeginPath();
+						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+						memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 1].x), ToScreenY(rect.Height(), rect.top, tor[i - 1].y));
+						memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 12].x), ToScreenY(rect.Height(), rect.top, tor[i - 12].y));
+						memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+						memDC.EndPath();
+						memDC.StrokeAndFillPath();
+					}
 				}
 			}
 		}
 #pragma endregion
 #pragma endregion
-
 	}
 
 
@@ -1420,8 +1927,9 @@ void CMFCApplication3View::OnLButtonDown(UINT nFlags, CPoint point)
 	az10[1][0] = (point.y - top - height / 2) * (-1) / (height / 2) * az10[2][0];
 	az10[3][0] = 1; // 화면을 클릭했을 때 얻어지는 투영면에서의 한 지점
 					// 뷰 행렬
-	float look[3][1] = { { 1 },{ -1 },{ 0 } };
+	look[0][0] = lookX; look[1][0] = lookY; look[2][0] = lookZ;
 	float view[4][4] = {};
+	camera[0][0] = cameraX; camera[1][0] = cameraY; camera[2][0] = cameraZ;
 	float* viewPtr = ViewMatrix(camera, look/*뷰 행렬 만드는데 물체 위치가 크게 중요하지 않은 것 같아서 나중에 지울 예정*/, look);
 	int viewCount = 0;
 	for (int i = 0; i < 4; i++)
@@ -1498,7 +2006,7 @@ void CMFCApplication3View::OnLButtonDown(UINT nFlags, CPoint point)
 	case 1:
 	{
 		float x = az10[0][0]; float y = az10[1][0]; float z = az10[2][0];
-		MyVertex* vPtr = pCube(x, y, z);
+		MyVertex* vPtr = pCube(20, x, y, z);
 		MyVertex cub[8] = {};
 		int count = 0;
 		for (int i = 0; i < 8; i++)
@@ -1514,6 +2022,8 @@ void CMFCApplication3View::OnLButtonDown(UINT nFlags, CPoint point)
 			Ci.cube[i] = cub[i];
 		}
 		Ci.vertexCount = sizeof(cub) / sizeof(MyVertex);
+		Ci.originLength = 20; Ci.length = 20;
+		Ci.cubeOrigin.x = x; Ci.cubeOrigin.y = y; Ci.cubeOrigin.z = z;
 		v_cubeFigure.push_back(Ci);
 #pragma endregion
 		break;
@@ -1523,7 +2033,7 @@ void CMFCApplication3View::OnLButtonDown(UINT nFlags, CPoint point)
 	case 2:
 	{
 		float x = az10[0][0]; float y = az10[1][0]; float z = az10[2][0];
-		MyVertex* vPtr = pSphere(x, y, z);
+		MyVertex* vPtr = pSphere(20, x, y, z);
 		MyVertex sph[230] = {};
 		int count = 0;
 		for (int i = 0; i < 230; i++)
@@ -1539,6 +2049,8 @@ void CMFCApplication3View::OnLButtonDown(UINT nFlags, CPoint point)
 			Si.sphere[i] = sph[i];
 		}
 		Si.vertexCount = sizeof(sph) / sizeof(MyVertex);
+		Si.radius = 20; Si.originRadius = 20;
+		Si.sphereOrigin.x = x; Si.sphereOrigin.y = y; Si.sphereOrigin.z = z;
 		v_sphereFigure.push_back(Si);
 #pragma endregion
 		break;
@@ -1566,6 +2078,9 @@ void CMFCApplication3View::OnLButtonDown(UINT nFlags, CPoint point)
 			ti.torus[i] = tor[i];
 		}
 		ti.vertexCount = sizeof(tor) / sizeof(MyVertex);
+		ti.torusLongRadius = 15; ti.originTorusLongRadius = 15;
+		ti.torusRadius = 8; ti.originTorusRadius = 8;
+		ti.torusOrigin.x = x; ti.torusOrigin.y = y; ti.torusOrigin.z = z;
 		v_torusFigure.push_back(ti);
 #pragma endregion
 		break;
@@ -1707,163 +2222,15 @@ void CMFCApplication3View::OnHotKey(UINT nHotKeyId, UINT nKey1, UINT nKey2)
 
 void CMFCApplication3View::OnRButtonUp(UINT nFlags, CPoint point)
 {
-#pragma region 스크린 좌표계로는 힘들듯
-	//for (auto figure : v_cubeFigure)
-	//{
-	//	MyVertex cub[8] = {};
-	//	for (int i = 0; i < 8; i++)
-	//	{
-	//		cub[i] = figure.cube[i];
-	//	}
-	//	CPoint cpointVector[12][3] = {};
-	//	CPoint originVector[12][3] = {};
-	//	
-	//	CPoint p1 = (ToScreenX(width, left, cub[0].x), ToScreenY(height, top, cub[0].y));
-	//	CPoint p2 = (ToScreenX(width, left, cub[3].x), ToScreenY(height, top, cub[3].y));
-	//	CPoint p3 = (ToScreenX(width, left, cub[4].x), ToScreenY(height, top, cub[4].y));
-
-	//	cpointVector[0][0] = -p1 + p2; cpointVector[0][1] = -p2 + p3, cpointVector[0][2] = -p3 + p1;
-	//	originVector[0][0] = p1; originVector[0][1] = p2; originVector[0][2] = p3;
-
-	//	p1 = (ToScreenX(width, left, cub[0].x), ToScreenY(height, top, cub[0].y));
-	//	p2 = (ToScreenX(width, left, cub[4].x), ToScreenY(height, top, cub[4].y));
-	//	p3 = (ToScreenX(width, left, cub[1].x), ToScreenY(height, top, cub[1].y));
-
-	//	cpointVector[1][0] = -p1 + p2; cpointVector[1][1] = -p2 + p3, cpointVector[1][2] = -p3 + p1;
-	//	originVector[1][0] = p1; originVector[1][1] = p2; originVector[1][2] = p3;
-
-	//	p1 = (ToScreenX(width, left, cub[0].x), ToScreenY(height, top, cub[0].y));
-	//	p2 = (ToScreenX(width, left, cub[1].x), ToScreenY(height, top, cub[1].y));
-	//	p3 = (ToScreenX(width, left, cub[3].x), ToScreenY(height, top, cub[3].y));
-
-	//	cpointVector[2][0] = -p1 + p2; cpointVector[2][1] = -p2 + p3, cpointVector[2][2] = -p3 + p1;
-	//	originVector[2][0] = p1; originVector[2][1] = p2; originVector[2][2] = p3;
-
-	//	p1 = (ToScreenX(width, left, cub[7].x), ToScreenY(height, top, cub[7].y));
-	//	p2 = (ToScreenX(width, left, cub[4].x), ToScreenY(height, top, cub[4].y));
-	//	p3 = (ToScreenX(width, left, cub[3].x), ToScreenY(height, top, cub[3].y));
-
-	//	cpointVector[3][0] = -p1 + p2; cpointVector[3][1] = -p2 + p3, cpointVector[3][2] = -p3 + p1;
-	//	originVector[3][0] = p1; originVector[3][1] = p2; originVector[3][2] = p3;
-
-	//	p1 = (ToScreenX(width, left, cub[7].x), ToScreenY(height, top, cub[7].y));
-	//	p2 = (ToScreenX(width, left, cub[6].x), ToScreenY(height, top, cub[6].y));
-	//	p3 = (ToScreenX(width, left, cub[4].x), ToScreenY(height, top, cub[4].y));
-
-	//	cpointVector[4][0] = -p1 + p2; cpointVector[4][1] = -p2 + p3, cpointVector[4][2] = -p3 + p1;
-	//	originVector[4][0] = p1; originVector[4][1] = p2; originVector[4][2] = p3;
-
-	//	p1 = (ToScreenX(width, left, cub[7].x), ToScreenY(height, top, cub[7].y));
-	//	p2 = (ToScreenX(width, left, cub[3].x), ToScreenY(height, top, cub[3].y));
-	//	p3 = (ToScreenX(width, left, cub[6].x), ToScreenY(height, top, cub[6].y));
-
-	//	cpointVector[5][0] = -p1 + p2; cpointVector[5][1] = -p2 + p3, cpointVector[5][2] = -p3 + p1;
-	//	originVector[5][0] = p1; originVector[5][1] = p2; originVector[5][2] = p3;
-
-	//	p1 = (ToScreenX(width, left, cub[2].x), ToScreenY(height, top, cub[2].y));
-	//	p2 = (ToScreenX(width, left, cub[1].x), ToScreenY(height, top, cub[1].y));
-	//	p3 = (ToScreenX(width, left, cub[6].x), ToScreenY(height, top, cub[6].y));
-
-	//	cpointVector[6][0] = -p1 + p2; cpointVector[6][1] = -p2 + p3, cpointVector[6][2] = -p3 + p1;
-	//	originVector[6][0] = p1; originVector[6][1] = p2; originVector[6][2] = p3;
-
-	//	p1 = (ToScreenX(width, left, cub[2].x), ToScreenY(height, top, cub[2].y));
-	//	p2 = (ToScreenX(width, left, cub[3].x), ToScreenY(height, top, cub[3].y));
-	//	p3 = (ToScreenX(width, left, cub[1].x), ToScreenY(height, top, cub[1].y));
-
-	//	cpointVector[7][0] = -p1 + p2; cpointVector[7][1] = -p2 + p3, cpointVector[7][2] = -p3 + p1;
-	//	originVector[7][0] = p1; originVector[7][1] = p2; originVector[7][2] = p3;
-
-	//	p1 = (ToScreenX(width, left, cub[2].x), ToScreenY(height, top, cub[2].y));
-	//	p2 = (ToScreenX(width, left, cub[3].x), ToScreenY(height, top, cub[3].y));
-	//	p3 = (ToScreenX(width, left, cub[6].x), ToScreenY(height, top, cub[6].y));
-
-	//	cpointVector[8][0] = -p1 + p2; cpointVector[8][1] = -p2 + p3, cpointVector[8][2] = -p3 + p1;
-	//	originVector[8][0] = p1; originVector[8][1] = p2; originVector[8][2] = p3;
-
-	//	p1 = (ToScreenX(width, left, cub[5].x), ToScreenY(height, top, cub[5].y));
-	//	p2 = (ToScreenX(width, left, cub[6].x), ToScreenY(height, top, cub[6].y));
-	//	p3 = (ToScreenX(width, left, cub[1].x), ToScreenY(height, top, cub[1].y));
-
-	//	cpointVector[9][0] = -p1 + p2; cpointVector[9][1] = -p2 + p3, cpointVector[9][2] = -p3 + p1;
-	//	originVector[9][0] = p1; originVector[9][1] = p2; originVector[9][2] = p3;
-
-	//	p1 = (ToScreenX(width, left, cub[5].x), ToScreenY(height, top, cub[5].y));
-	//	p2 = (ToScreenX(width, left, cub[1].x), ToScreenY(height, top, cub[1].y));
-	//	p3 = (ToScreenX(width, left, cub[4].x), ToScreenY(height, top, cub[4].y));
-
-	//	cpointVector[10][0] = -p1 + p2; cpointVector[10][1] = -p2 + p3, cpointVector[10][2] = -p3 + p1;
-	//	originVector[10][0] = p1; originVector[10][1] = p2; originVector[10][2] = p3;
-
-	//	p1 = (ToScreenX(width, left, cub[5].x), ToScreenY(height, top, cub[5].y));
-	//	p2 = (ToScreenX(width, left, cub[4].x), ToScreenY(height, top, cub[4].y));
-	//	p3 = (ToScreenX(width, left, cub[6].x), ToScreenY(height, top, cub[6].y));
-
-	//	cpointVector[11][0] = -p1 + p2; cpointVector[11][1] = -p2 + p3, cpointVector[11][2] = -p3 + p1;
-	//	originVector[11][0] = p1; originVector[11][1] = p2; originVector[11][2] = p3;
-	//	
-	//	
-	//	for (int i = 0; i < 12; i++)
-	//	{	
-	//		float result1[3][1] = {};
-	//		float result2[3][1] = {};
-	//		float result3[3][1] = {};
-	//		float lineVector[2][1] = {};
-	//		float pointVector[2][1] = {};
-	//		// 벡터 한개 계산
-	//		lineVector[0][0] = cpointVector[i][0].x;  lineVector[1][0] = cpointVector[i][0].y;
-	//		pointVector[0][0] = -originVector[i][0].x + point.x; pointVector[1][0] = -originVector[i][0].y + point.y;
-	//		float* ptr = CrossProduct2X2(lineVector, pointVector);
-	//		int count = 0;
-	//		for (int j = 0; j < 3; j++)
-	//		{
-	//			result1[j][0] = *(ptr + count);
-	//			count++;
-	//		}
-	//		// 벡터 한개 계산
-	//		lineVector[0][0] = cpointVector[i][1].x;  lineVector[1][0] = cpointVector[i][1].y;
-	//		pointVector[0][0] = -originVector[i][1].x + point.x; pointVector[1][0] = -originVector[i][1].y + point.y;
-	//		ptr = CrossProduct2X2(lineVector, pointVector);
-	//		count = 0;
-	//		for (int j = 0; j < 3; j++)
-	//		{
-	//			result2[j][0] = *(ptr + count);
-	//			count++;
-	//		}
-	//		// 벡터 한개 계산
-	//		lineVector[0][0] = cpointVector[i][2].x;  lineVector[1][0] = cpointVector[i][2].y;
-	//		pointVector[0][0] = -originVector[i][2].x + point.x; pointVector[1][0] = -originVector[i][2].y + point.y;
-	//		ptr = CrossProduct2X2(lineVector, pointVector);
-	//		count = 0;
-	//		for (int j = 0; j < 3; j++)
-	//		{
-	//			result3[j][0] = *(ptr + count);
-	//			count++;
-	//		}
-	//		// 계산된 z축 방향이 모두 같으면 면 내부에 있다.
-	//		if ((result1[2][0] > 0 && result2[2][0] > 0 && result3[2][0] > 0) || (result1[2][0] < 0 && result2[2][0] < 0 && result3[2][0] < 0))
-	//		{
-	//			if (figure.isClicked == FALSE) figure.isClicked = TRUE;
-	//			else figure.isClicked = FALSE;
-
-	//			break;
-	//		}
-	//		else
-	//		{
-	//			figure.isClicked = FALSE;
-	//		}
-	//	}
-	//}
-#pragma endregion
-
 #pragma region 스크린 좌표계의 점을 월드 좌표계로 이동
 	float az10[4][1];
-	az10[2][0] = 100;
-	az10[0][0] = (point.x - left - width / 2) / (width / 2) * az10[2][0];
-	az10[1][0] = (point.y - top - height / 2) * (-1) / (height / 2) * az10[2][0];
+	az10[2][0] = 1;
+	az10[0][0] = (point.x - left - width / 2) / (width / 2);
+	az10[1][0] = (point.y - top - height / 2) * (-1) / (height / 2);
 	az10[3][0] = 1; // 화면을 클릭했을 때 얻어지는 투영면에서의 한 지점
 					// 뷰 행렬
-	float look[3][1] = { { 1 },{ -1 },{ 0 } };
+
+	look[0][0] = lookX; look[1][0] = lookY; look[2][0] = lookZ;
 	float view[4][4] = {};
 	camera[0][0] = cameraX; camera[1][0] = cameraY; camera[2][0] = cameraZ;
 	float* viewPtr = ViewMatrix(camera, look/*뷰 행렬 만드는데 물체 위치가 크게 중요하지 않은 것 같아서 나중에 지울 예정*/, look);
@@ -1889,26 +2256,26 @@ void CMFCApplication3View::OnRButtonUp(UINT nFlags, CPoint point)
 		}
 	}
 
-	// TODO: 투영면의 점을 카메라 좌표계로 옮긴다 (투영 역행렬)
-	float projReverse[4][4] = {};
-	pPtr = MatrixReverse(proj);
-	prjCount = 0;
-	for (int i = 0; i < 4; i++)
-	{
-		for (int j = 0; j < 4; j++)
-		{
-			projReverse[i][j] = *(pPtr + prjCount);
-			prjCount++;
-		}
-	}
-	// 기존 점을 역행렬과 연산
-	pPtr = MatrixMulti(projReverse, az10);
-	prjCount = 0;
-	for (int i = 0; i < 4; i++)
-	{
-		az10[i][0] = *(pPtr + prjCount);
-		prjCount++;
-	}
+	//// TODO: 투영면의 점을 카메라 좌표계로 옮긴다 (투영 역행렬)
+	//float projReverse[4][4] = {};
+	//pPtr = MatrixReverse(proj);
+	//prjCount = 0;
+	//for (int i = 0; i < 4; i++)
+	//{
+	//	for (int j = 0; j < 4; j++)
+	//	{
+	//		projReverse[i][j] = *(pPtr + prjCount);
+	//		prjCount++;
+	//	}
+	//}
+	//// 기존 점을 역행렬과 연산
+	//pPtr = MatrixMulti(projReverse, az10);
+	//prjCount = 0;
+	//for (int i = 0; i < 4; i++)
+	//{
+	//	az10[i][0] = *(pPtr + prjCount);
+	//	prjCount++;
+	//}
 
 	// TODO: 카메라좌표계의 점을 월드 좌표계로 옮긴다 (뷰 역행렬) -> 뷰 좌표계에서 진행해볼 것.
 	//float viewReverse[4][4] = {};
@@ -1932,20 +2299,23 @@ void CMFCApplication3View::OnRButtonUp(UINT nFlags, CPoint point)
 	//	viewCount++;
 	//}
 #pragma endregion
-
+	BOOL oneFigureChecked = FALSE;
 	// az[4][1]의 좌표는 월드 좌표계의 한 점 -> 각 꼭짓점과 연결해서 각 면의 변들과 외적 -> 외적 방향을 정규화해서 모두 같으면 내부
 	for (auto& figure : v_cubeFigure)
 	{
+		figure.isClicked = FALSE;
+		if (oneFigureChecked) continue;
+
 		MyVertex cub[8] = {};
 		float vertexSample[4][1] = {};
 		int viewCount = 0;
 		float* viewPtr;
-		// 월드 좌표계를 기준으로 한다. -> 뷰 좌표계를 기준으로 해보자.
+		// 투영 좌표를 기준으로 해보자.
 		for (int i = 0; i < 8; i++)
 		{
-			vertexSample[0][0] = figure.cube[i].x;
-			vertexSample[1][0] = figure.cube[i].y;
-			vertexSample[2][0] = figure.cube[i].z;
+			vertexSample[0][0] = figure.cube_justForClick[i].x;
+			vertexSample[1][0] = figure.cube_justForClick[i].y;
+			vertexSample[2][0] = figure.cube_justForClick[i].z;
 			vertexSample[3][0] = 1;
 			viewPtr = MatrixMulti(view, vertexSample);
 			viewCount = 0;
@@ -1958,6 +2328,26 @@ void CMFCApplication3View::OnRButtonUp(UINT nFlags, CPoint point)
 			cub[i].y = vertexSample[1][0];
 			cub[i].z = vertexSample[2][0];
 		} // 뷰 좌표로 변환시킴
+
+		  //int pCount = 0;
+		  //float* pPtr;
+		for (int i = 0; i < 8; i++)
+		{
+			vertexSample[0][0] = cub[i].x;
+			vertexSample[1][0] = cub[i].y;
+			vertexSample[2][0] = cub[i].z;
+			vertexSample[3][0] = 1;
+			viewPtr = MatrixMulti(proj, vertexSample);
+			viewCount = 0;
+			for (int i = 0; i < 4; i++)
+			{
+				vertexSample[i][0] = *(viewPtr + viewCount);
+				viewCount++;
+			}
+			cub[i].z = vertexSample[2][0] / vertexSample[2][0];
+			cub[i].x = vertexSample[0][0] / vertexSample[2][0];
+			cub[i].y = vertexSample[1][0] / vertexSample[2][0];
+		} // 투영 좌표로 변환시킴
 
 
 		MyVertex p1 = {};
@@ -2090,141 +2480,497 @@ void CMFCApplication3View::OnRButtonUp(UINT nFlags, CPoint point)
 		/////
 #pragma endregion
 
-		MyVertex result[3] = {};
-		MyVertex resultCheck[12][3] = {};
+		float vertexToVertex1[2][1] = {};
+		float vertexToPoint1[2][1] = {};
+		float resultBeforeNorm1[4][1] = {};
+		float result1[4][1] = {};
+		float* crsPtr;
+		float* normPtr;
+		int count;
+		float finalResult[3][3] = {};
 		for (int i = 0; i < 12; i++)
 		{
-			//i = 0 기준
-			//법선 벡터 (n1, n2, n3): CrossProduct(planeVector[0][0], planeVector[0][1]) -> float으로 바꿔줌;
-			float planeLine1[4][1] = {}; float planeLine2[4][1] = {};
-			planeLine1[0][0] = planeVector[i][0].x; planeLine1[1][0] = planeVector[i][0].y; planeLine1[2][0] = planeVector[i][0].z;
-			planeLine2[0][0] = planeVector[i][1].x; planeLine2[1][0] = planeVector[i][1].y; planeLine2[2][0] = planeVector[i][1].z;
-			planeLine1[3][0] = 1; planeLine2[3][0] = 1;
+			/*vertexToVertex1[0][0] = planeVector[i][0].x; vertexToVertex1[1][0] = planeVector[i][0].y; vertexToVertex1[2][0] = planeVector[i][0].z;
+			vertexToVertex2[0][0] = planeVector[i][1].x; vertexToVertex2[1][0] = planeVector[i][1].y; vertexToVertex2[2][0] = planeVector[i][1].z;
+			vertexToVertex3[0][0] = planeVector[i][2].x; vertexToVertex3[1][0] = planeVector[i][2].y; vertexToVertex3[2][0] = planeVector[i][2].z;
+			vertexToPoint1[0][0] = (-1) * originVector[i][0].x + az10[0][0]; vertexToPoint1[1][0] = (-1) * originVector[i][0].y + az10[1][0]; vertexToPoint1[2][0] = (-1) * originVector[i][0].z + az10[2][0];
+			vertexToPoint2[0][0] = (-1) * originVector[i][1].x + az10[0][0]; vertexToPoint2[1][0] = (-1) * originVector[i][1].y + az10[1][0]; vertexToPoint2[2][0] = (-1) * originVector[i][1].z + az10[2][0];
+			vertexToPoint3[0][0] = (-1) * originVector[i][2].x + az10[0][0]; vertexToPoint3[1][0] = (-1) * originVector[i][2].y + az10[1][0]; vertexToPoint3[2][0] = (-1) * originVector[i][2].z + az10[2][0];
 
-			float planeNorm[4][1] = {};
-			float* normPtr = CrossProduct(planeLine1, planeLine2);
-			int count = 0;
-			for (int j = 0; j < 3; j++)
+			firstPtr = CrossProduct(vertexToVertex1, vertexToPoint1);
+			secondPtr = CrossProduct(vertexToVertex2, vertexToPoint2);
+			thirdPtr = CrossProduct(vertexToVertex3, vertexToPoint3);
+
+			count = 0;
+			for (int j = 0; j < 4; j++)
 			{
-				planeNorm[j][0] = *(normPtr + count);
-				count++;
-			} // 법선벡터 생성
-			normPtr = MatrixNormalize(planeNorm);
+			resultBeforeNorm1[j][0] = *(firstPtr + count);
+			resultBeforeNorm2[j][0] = *(secondPtr + count);
+			resultBeforeNorm3[j][0] = *(thirdPtr + count);
+			count++;
+			}
+			firstPtr = MatrixNormalize(resultBeforeNorm1);
+			secondPtr = MatrixNormalize(resultBeforeNorm2);
+			thirdPtr = MatrixNormalize(resultBeforeNorm3);
+
 			count = 0;
 			for (int j = 0; j < 3; j++)
 			{
-				planeNorm[j][0] = *(normPtr + count);
-				count++;
-			} // 법선벡터 정규화
-
-			  //점 하나 (a, b, c): originVector[0][0];
+			result1[j] = *(firstPtr + count);
+			result2[j] = *(secondPtr + count);
+			result3[j] = *(thirdPtr + count);
+			count++;
+			}*/
 			for (int k = 0; k < 3; k++)
 			{
-				float planeVertex[3][1] = { { originVector[i][k].x },{ originVector[i][k].y },{ originVector[i][k].z } }; // 여기도 for문으로 묶을 수 있을듯
-																														  //평면의 방정식 => n1(x - a) + n2(y - b) + n3(z - c) = 0;
-																														  //az[4][1]에 들어있는 월드 좌표계의 점에대한 방향 벡터 -> 카메라에서 나오는 광선임 
-																														  //=> (i, j, k) => (i * x, j * x, k * x)로 볼 수 있음
-				float normalizedClickedPoint[3][1] = {};
-				normPtr = MatrixNormalize(az10);
+				vertexToVertex1[0][0] = planeVector[i][k].x; vertexToVertex1[1][0] = planeVector[i][k].y;
+				vertexToPoint1[0][0] = (-1) * originVector[i][k].x + az10[0][0]; vertexToPoint1[1][0] = (-1) * originVector[i][k].y + az10[1][0];
+
+				crsPtr = CrossProduct2X2(vertexToVertex1, vertexToPoint1);
 				count = 0;
 				for (int j = 0; j < 3; j++)
 				{
-					normalizedClickedPoint[j][0] = *(normPtr + count);
-					count++;
-				} // 스크린좌표를 월드좌표로 변환한 az10의 방향 벡터 생성
-				  //평면의 방정식에 대입 => (n1 * i + n2 * j + n3 * k) * x = ( n1 * a + n2 * b + n3 * c);
-				  //x = ( n1 * a + n2 * b + n3 * c) / (n1 * i + n2 * j + n3 * k);
-				float pointOnPlane = ((planeNorm[0][0] * planeVertex[0][0]) + (planeNorm[1][0] * planeVertex[1][0]) + (planeNorm[2][0] * planeVertex[2][0])) / ((planeNorm[0][0] * normalizedClickedPoint[0][0]) + (planeNorm[1][0] * normalizedClickedPoint[1][0]) + (planeNorm[2][0] * normalizedClickedPoint[2][0]));
-				//따라서 평면 위의 점을 구할 수 있음 = (i, j, k) * x;
-				float clickedPointOnPlane[4][1] = { { normalizedClickedPoint[0][0] * pointOnPlane },{ normalizedClickedPoint[1][0] * pointOnPlane },{ normalizedClickedPoint[2][0] * pointOnPlane },{ 1 } };
-				//originVector를 활용해 점 p1, p2, p3를 얻을 수 있을 때, p1 -> p2 벡터와 p1 -> (i, j, k) * x 벡터를 외적하면 
-				//외적해서 얻은 벡터의 단위벡터를 얻을 수 있음(Normalize)
-				float vertexToPointOnPlane[4][1] = {};
-				vertexToPointOnPlane[0][0] = -originVector[i][k].x + clickedPointOnPlane[0][0];
-				vertexToPointOnPlane[1][0] = -originVector[i][k].y + clickedPointOnPlane[1][0];
-				vertexToPointOnPlane[2][0] = -originVector[i][k].z + clickedPointOnPlane[2][0];
-				vertexToPointOnPlane[3][0] = 1;
-
-				float vertexToVertex[4][1] = {};
-				vertexToVertex[0][0] = planeVector[i][k].x; vertexToVertex[1][0] = planeVector[i][k].y; vertexToVertex[2][0] = planeVector[i][k].z;
-
-				float* crsPtr = CrossProduct(vertexToVertex, vertexToPointOnPlane);
-
-				float crsProductOfVectorOnPlane[4][1] = {}; // p1 -> p2 벡터랑 p1 -> planePoint 벡터랑 외적 => plane 기준 위로 수직인지 아래로 수직인지
-				count = 0;
-				for (int j = 0; j < 4; j++)
-				{
-					crsProductOfVectorOnPlane[j][0] = *(crsPtr + count);
+					resultBeforeNorm1[j][0] = *(crsPtr + count);
 					count++;
 				}
-
-				normPtr = MatrixNormalize(crsProductOfVectorOnPlane);
+				normPtr = MatrixNormalize(resultBeforeNorm1);
 				count = 0;
-				for (int j = 0; j < 4; j++)
+				for (int j = 0; j < 3; j++)
 				{
-					crsProductOfVectorOnPlane[j][0] = *(normPtr + count);
+					result1[j][0] = *(normPtr + count);
 					count++;
-				} // 정규화까지 완료
-
-				  // result 배열에 모아두기 -> 나중에 한번에 비교할 것
-				result[k].x = crsProductOfVectorOnPlane[0][0];
-				result[k].y = crsProductOfVectorOnPlane[1][0];
-				result[k].z = crsProductOfVectorOnPlane[2][0];
-				////////////////////////////// 테스트용
-				resultCheck[i][k].x = crsProductOfVectorOnPlane[0][0];
-				resultCheck[i][k].y = crsProductOfVectorOnPlane[1][0];
-				resultCheck[i][k].z = crsProductOfVectorOnPlane[2][0];
-				///////////////////////////////////////
+				}
+				finalResult[k][0] = result1[0][0];  finalResult[k][1] = result1[1][0]; finalResult[k][2] = result1[2][0];
 			}
-			//해당 단위벡터들의 방향이 모두 같으면, 해당 점은 삼각형 메쉬 안쪽에 있다고 판정할 수 있음
-			if (result[0].x == result[1].x && result[0].x == result[2].x && result[1].x == result[2].x)
+
+			if (finalResult[0][0] == finalResult[1][0] && finalResult[0][0] == finalResult[2][0])
 			{
-				if (result[0].y == result[1].y && result[0].y == result[2].y && result[1].y == result[2].y)
+				if (finalResult[0][1] == finalResult[1][1] && finalResult[0][1] == finalResult[2][1])
 				{
-					if (result[0].z == result[1].z && result[0].z == result[2].z && result[1].z == result[2].z)
+					if (finalResult[0][2] == finalResult[1][2] && finalResult[0][2] == finalResult[2][2])
 					{
-						if (figure.isClicked) figure.isClicked = FALSE;
-						else figure.isClicked = TRUE;
+						figure.isClicked = TRUE;
+						oneFigureChecked = TRUE;
 						break;
 					}
 					else
 					{
 						if (i != 11) continue;
-						else
-						{
-							if (figure.isClicked) figure.isClicked = FALSE;
-						}
+						else figure.isClicked = FALSE;
 					}
 				}
 				else
 				{
 					if (i != 11) continue;
-					else
-					{
-						if (figure.isClicked) figure.isClicked = FALSE;
-					}
+					else figure.isClicked = FALSE;
 				}
 			}
 			else
 			{
 				if (i != 11) continue;
-				else
-				{
-					if (figure.isClicked) figure.isClicked = FALSE;
-				}
+				else figure.isClicked = FALSE;
 			}
 		}
 	}
 
-
-	/*for (auto figure : v_sphereFigure)
+	for (auto& figure : v_sphereFigure)
 	{
+		figure.isClicked = FALSE;
+		if (oneFigureChecked) continue;
 
+		MyVertex sph[230] = {};
+		float vertexSample[4][1] = {};
+		int viewCount = 0;
+		float* viewPtr;
+		// 뷰 좌표로 변환시킴
+		for (int i = 0; i < 230; i++)
+		{
+			vertexSample[0][0] = figure.sphere_justForClick[i].x;
+			vertexSample[1][0] = figure.sphere_justForClick[i].y;
+			vertexSample[2][0] = figure.sphere_justForClick[i].z;
+			vertexSample[3][0] = 1;
+			viewPtr = MatrixMulti(view, vertexSample);
+			viewCount = 0;
+			for (int i = 0; i < 4; i++)
+			{
+				vertexSample[i][0] = *(viewPtr + viewCount);
+				viewCount++;
+			}
+			sph[i].x = vertexSample[0][0];
+			sph[i].y = vertexSample[1][0];
+			sph[i].z = vertexSample[2][0];
+		}
+
+		//int pCount = 0;
+		//float* pPtr;
+		// 투영 좌표로 변환시킴
+		for (int i = 0; i < 230; i++)
+		{
+			vertexSample[0][0] = sph[i].x;
+			vertexSample[1][0] = sph[i].y;
+			vertexSample[2][0] = sph[i].z;
+			vertexSample[3][0] = 1;
+			viewPtr = MatrixMulti(proj, vertexSample);
+			viewCount = 0;
+			for (int i = 0; i < 4; i++)
+			{
+				vertexSample[i][0] = *(viewPtr + viewCount);
+				viewCount++;
+			}
+			sph[i].z = vertexSample[2][0] / vertexSample[2][0];
+			sph[i].x = vertexSample[0][0] / vertexSample[2][0];
+			sph[i].y = vertexSample[1][0] / vertexSample[2][0];
+		}
+
+		MyVertex p1 = {};
+		MyVertex p2 = {};
+		MyVertex p3 = {};
+		MyVertex p4 = {};
+		MyVertex planeVector3[24][3] = {};
+		MyVertex planeVector4[216][4] = {};
+		MyVertex originVector3[24][3] = {};
+		MyVertex originVector4[216][4] = {};
+
+#pragma region 정점과 벡터들 확인
+		// 끝점으로 만들어지는 삼각형 면
+		for (int i = 1; i < 13; i++)
+		{
+			if ((i % 12) == 0)
+			{
+				p1.x = sph[0].x; p1.y = sph[0].y;
+				p2.x = sph[i].x; p2.y = sph[i].y;
+				p3.x = sph[i - 11].x; p3.y = sph[i - 11].y;
+			}
+			else
+			{
+				p1.x = sph[0].x; p1.y = sph[0].y;
+				p2.x = sph[i].x; p2.y = sph[i].y;
+				p3.x = sph[i + 1].x; p3.y = sph[i + 1].y;
+			}
+			planeVector3[i][0].x = -p1.x + p2.x; planeVector3[i][0].y = -p1.y + p2.y; planeVector3[i][0].z = -p1.z + p2.z;
+			planeVector3[i][1].x = -p2.x + p3.x; planeVector3[i][1].y = -p2.y + p3.y; planeVector3[i][1].z = -p2.z + p3.z;
+			planeVector3[i][2].x = -p3.x + p1.x; planeVector3[i][2].y = -p3.y + p1.y; planeVector3[i][2].z = -p3.z + p1.z;
+			originVector3[i][0] = p1; originVector3[i][1] = p2; originVector3[i][2] = p3;
+		}
+		for (int i = 217; i < 229; i++)
+		{
+			if ((i % 12) == 0)
+			{
+				p1.x = sph[229].x; p1.y = sph[229].y;
+				p2.x = sph[i - 11].x; p2.y = sph[i - 11].y;
+				p3.x = sph[i].x; p3.y = sph[i].y;
+			}
+			else
+			{
+				p1.x = sph[229].x; p1.y = sph[229].y;
+				p2.x = sph[i + 1].x; p2.y = sph[i + 1].y;
+				p3.x = sph[i].x; p3.y = sph[i].y;
+			}
+			planeVector3[i - 205][0].x = -p1.x + p2.x; planeVector3[i - 205][0].y = -p1.y + p2.y; planeVector3[i - 205][0].z = -p1.z + p2.z;
+			planeVector3[i - 205][1].x = -p2.x + p3.x; planeVector3[i - 205][1].y = -p2.y + p3.y; planeVector3[i - 205][1].z = -p2.z + p3.z;
+			planeVector3[i - 205][2].x = -p3.x + p1.x; planeVector3[i - 205][2].y = -p3.y + p1.y; planeVector3[i - 205][2].z = -p3.z + p1.z;
+			originVector3[i - 205][0] = p1; originVector3[i - 205][1] = p2; originVector3[i - 205][2] = p3;
+		}
+		// 사각형 면들
+		for (int i = 1; i < 217; i++)
+		{
+			if (i % 12 == 0)
+			{
+				p1.x = sph[i].x; p1.y = sph[i].y;
+				p2.x = sph[i + 12].x; p2.y = sph[i + 12].y;
+				p3.x = sph[i + 1].x; p3.y = sph[i + 1].y;
+				p4.x = sph[i - 11].x; p4.y = sph[i - 11].y;
+			}
+			else
+			{
+				p1.x = sph[i].x; p1.y = sph[i].y;
+				p2.x = sph[i + 12].x; p2.y = sph[i + 12].y;
+				p3.x = sph[i + 13].x; p3.y = sph[i + 13].y;
+				p4.x = sph[i + 1].x; p4.y = sph[i + 1].y;
+			}
+			planeVector4[i - 1][0].x = -p1.x + p2.x; planeVector4[i - 1][0].y = -p1.y + p2.y; planeVector4[i - 1][0].z = -p1.z + p2.z;
+			planeVector4[i - 1][1].x = -p2.x + p3.x; planeVector4[i - 1][1].y = -p2.y + p3.y; planeVector4[i - 1][1].z = -p2.z + p3.z;
+			planeVector4[i - 1][2].x = -p3.x + p4.x; planeVector4[i - 1][2].y = -p3.y + p4.y; planeVector4[i - 1][2].z = -p3.z + p4.z;
+			planeVector4[i - 1][3].x = -p4.x + p1.x; planeVector4[i - 1][3].y = -p4.y + p1.y; planeVector4[i - 1][3].z = -p4.z + p1.z;
+			originVector4[i - 1][0] = p1; originVector4[i - 1][1] = p2; originVector4[i - 1][2] = p3; originVector4[i - 1][3] = p4;
+		}
+#pragma endregion
+
+		float vertexToVertex1[2][1] = {};
+		float vertexToPoint1[2][1] = {};
+		float resultBeforeNorm1[4][1] = {};
+		float result1[4][1] = {};
+		float* crsPtr;
+		float* normPtr;
+		int count;
+		float finalResultTri[3][3] = {};
+		float finalResultRec[4][3] = {};
+
+		for (int i = 0; i < 24; i++)
+		{
+			for (int k = 0; k < 3; k++)
+			{
+				vertexToVertex1[0][0] = planeVector3[i][k].x; vertexToVertex1[1][0] = planeVector3[i][k].y;
+				vertexToPoint1[0][0] = -originVector3[i][k].x + az10[0][0]; vertexToPoint1[1][0] = -originVector3[i][k].y + az10[1][0];
+
+				crsPtr = CrossProduct2X2(vertexToPoint1, vertexToPoint1);
+				count = 0;
+				for (int j = 0; j < 3; j++)
+				{
+					resultBeforeNorm1[j][0] = *(crsPtr + count);
+					count++;
+				}
+				normPtr = MatrixNormalize(resultBeforeNorm1);
+				count = 0;
+				for (int j = 0; j < 4; j++)
+				{
+					result1[j][0] = *(normPtr + count);
+					count++;
+				}
+				finalResultTri[k][0] = result1[0][0]; finalResultTri[k][1] = result1[1][0]; finalResultTri[k][2] = result1[2][0];
+			}
+			if (finalResultTri[0][0] == finalResultTri[1][0] && finalResultTri[0][0] == finalResultTri[2][0])
+			{
+				if (finalResultTri[0][1] == finalResultTri[1][1] && finalResultTri[0][1] == finalResultTri[2][1])
+				{
+					if (finalResultTri[0][2] == finalResultTri[1][2] && finalResultTri[0][2] == finalResultTri[2][2])
+					{
+						figure.isClicked = TRUE;
+						oneFigureChecked = TRUE;
+						break;
+					}
+					else
+					{
+						if (i != 23) continue;
+						else figure.isClicked = FALSE;
+					}
+				}
+				else
+				{
+					if (i != 23) continue;
+					else figure.isClicked = FALSE;
+				}
+			}
+			else
+			{
+				if (i != 23) continue;
+				else figure.isClicked = FALSE;
+			}
+		}
+		for (int i = 0; i < 216; i++)
+		{
+			for (int k = 0; k < 4; k++)
+			{
+				vertexToVertex1[0][0] = planeVector4[i][k].x; vertexToVertex1[1][0] = planeVector4[i][k].y;
+				vertexToPoint1[0][0] = -originVector4[i][k].x + az10[0][0]; vertexToPoint1[1][0] = -originVector4[i][k].y + az10[1][0];
+
+				crsPtr = CrossProduct2X2(vertexToVertex1, vertexToPoint1);
+				count = 0;
+				for (int j = 0; j < 3; j++)
+				{
+					resultBeforeNorm1[j][0] = *(crsPtr + count);
+					count++;
+				}
+				normPtr = MatrixNormalize(resultBeforeNorm1);
+				count = 0;
+				for (int j = 0; j < 4; j++)
+				{
+					result1[j][0] = *(normPtr + count);
+					count++;
+				}
+				finalResultRec[k][0] = result1[0][0]; finalResultRec[k][1] = result1[1][0]; finalResultRec[k][2] = result1[2][0];
+			}
+			if (finalResultRec[0][0] == finalResultRec[1][0] && finalResultRec[1][0] == finalResultRec[2][0] && finalResultRec[2][0] == finalResultRec[3][0])
+			{
+				if (finalResultRec[0][1] == finalResultRec[1][1] && finalResultRec[1][1] == finalResultRec[2][1] && finalResultRec[2][1] == finalResultRec[3][1])
+				{
+					if (finalResultRec[0][2] == finalResultRec[1][2] && finalResultRec[1][2] == finalResultRec[2][2] && finalResultRec[2][2] == finalResultRec[3][2])
+					{
+						figure.isClicked = TRUE;
+						oneFigureChecked = TRUE;
+						break;
+					}
+					else
+					{
+						if (i != 215) continue;
+						else figure.isClicked = FALSE;
+					}
+				}
+				else
+				{
+					if (i != 215) continue;
+					else figure.isClicked = FALSE;
+				}
+			}
+			else
+			{
+				if (i != 215) continue;
+				else figure.isClicked = FALSE;
+			}
+		}
 	}
-	for (auto figure : v_torusFigure)
-	{
 
-	}*/
+	for (auto& figure : v_torusFigure)
+	{
+		figure.isClicked = FALSE;
+		if (oneFigureChecked) continue;
+
+		MyVertex tor[144] = {};
+		float vertexSample[4][1] = {};
+		int viewCount = 0;
+		float* viewPtr;
+		// 투영 좌표를 기준으로 해보자.
+		for (int i = 0; i < 144; i++)
+		{
+			vertexSample[0][0] = figure.torus_justForClick[i].x;
+			vertexSample[1][0] = figure.torus_justForClick[i].y;
+			vertexSample[2][0] = figure.torus_justForClick[i].z;
+			vertexSample[3][0] = 1;
+			viewPtr = MatrixMulti(view, vertexSample);
+			viewCount = 0;
+			for (int i = 0; i < 4; i++)
+			{
+				vertexSample[i][0] = *(viewPtr + viewCount);
+				viewCount++;
+			}
+			tor[i].x = vertexSample[0][0];
+			tor[i].y = vertexSample[1][0];
+			tor[i].z = vertexSample[2][0];
+		} // 뷰 좌표로 변환시킴
+
+		  //int pCount = 0;
+		  //float* pPtr;
+		for (int i = 0; i < 144; i++)
+		{
+			vertexSample[0][0] = tor[i].x;
+			vertexSample[1][0] = tor[i].y;
+			vertexSample[2][0] = tor[i].z;
+			vertexSample[3][0] = 1;
+			viewPtr = MatrixMulti(proj, vertexSample);
+			viewCount = 0;
+			for (int i = 0; i < 4; i++)
+			{
+				vertexSample[i][0] = *(viewPtr + viewCount);
+				viewCount++;
+			}
+			tor[i].z = vertexSample[2][0] / vertexSample[2][0];
+			tor[i].x = vertexSample[0][0] / vertexSample[2][0];
+			tor[i].y = vertexSample[1][0] / vertexSample[2][0];
+		} // 투영 좌표로 변환시킴
+
+
+		MyVertex p1 = {};
+		MyVertex p2 = {};
+		MyVertex p3 = {};
+		MyVertex p4 = {};
+		MyVertex planeVector[144][4] = {};
+		MyVertex originVector[144][4] = {};
+
+#pragma region 정점들과 벡터
+		for (int i = 0; i < 144; i++)
+		{
+			if ((i + 1) % 12 == 0)
+			{
+				if (i >= 132) // i == 143
+				{
+					p1.x = tor[i].x; p1.y = tor[i].y; p1.z = tor[i].z;
+					p2.x = tor[i - 132].x; p2.y = tor[i - 132].y; p2.z = tor[i - 132].z;
+					p3.x = tor[i - 143].x; p3.y = tor[i - 143].y; p3.z = tor[i - 143].z;
+					p4.x = tor[i - 11].x; p4.y = tor[i - 11].y; p4.z = tor[i - 11].z;
+				}
+				else
+				{
+					p1.x = tor[i].x; p1.y = tor[i].y; p1.z = tor[i].z;
+					p2.x = tor[i + 12].x; p2.y = tor[i + 12].y; p2.z = tor[i + 12].z;
+					p3.x = tor[i + 1].x; p3.y = tor[i + 1].y; p3.z = tor[i + 1].z;
+					p4.x = tor[i - 11].x; p4.y = tor[i - 11].y; p4.z = tor[i - 11].z;
+				}
+			}
+			else
+			{
+				if (i >= 132)
+				{
+					p1.x = tor[i].x; p1.y = tor[i].y; p1.z = tor[i].z;
+					p2.x = tor[i - 132].x; p2.y = tor[i - 132].y; p2.z = tor[i - 132].z;
+					p3.x = tor[i - 131].x; p3.y = tor[i - 131].y; p3.z = tor[i - 131].z;
+					p4.x = tor[i + 1].x; p4.y = tor[i + 1].y; p4.z = tor[i + 1].z;
+				}
+				else
+				{
+					p1.x = tor[i].x; p1.y = tor[i].y; p1.z = tor[i].z;
+					p2.x = tor[i + 12].x; p2.y = tor[i + 12].y; p2.z = tor[i + 12].z;
+					p3.x = tor[i + 13].x; p3.y = tor[i + 13].y; p3.z = tor[i + 13].z;
+					p4.x = tor[i + 1].x; p4.y = tor[i + 1].y; p4.z = tor[i + 1].z;
+				}
+
+			}
+			planeVector[i][0].x = -p1.x + p2.x; planeVector[i][0].y = -p1.y + p2.y; planeVector[i][0].z = -p1.z + p2.z;
+			planeVector[i][1].x = -p2.x + p3.x; planeVector[i][1].y = -p2.y + p3.y; planeVector[i][1].z = -p2.z + p3.z;
+			planeVector[i][2].x = -p3.x + p4.x; planeVector[i][2].y = -p3.y + p4.y; planeVector[i][2].z = -p3.z + p4.z;
+			planeVector[i][3].x = -p4.x + p1.x; planeVector[i][3].y = -p4.y + p1.y; planeVector[i][3].z = -p4.z + p1.z;
+			originVector[i][0] = p1; originVector[i][1] = p2; originVector[i][2] = p3; originVector[i][3] = p4;
+		}
+#pragma endregion
+
+		float vertexToVertex[2][1] = {};
+		float vertexToPoint[2][1] = {};
+		float resultBeforeNorm[4][1] = {};
+		float result[4][1] = {};
+		float* crsPtr;
+		float* normPtr;
+		int count;
+		float finalResultRec[4][3] = {};
+		for (int i = 0; i < 144; i++)
+		{
+			for (int j = 0; j < 4; j++)
+			{
+				vertexToVertex[0][0] = planeVector[i][j].x; vertexToVertex[1][0] = planeVector[i][j].y;
+				vertexToPoint[0][0] = -originVector[i][j].x + az10[0][0]; vertexToPoint[1][0] = -originVector[i][j].y + az10[1][0];
+				crsPtr = CrossProduct2X2(vertexToVertex, vertexToPoint);
+				count = 0;
+				for (int k = 0; k < 4; k++)
+				{
+					resultBeforeNorm[k][0] = *(crsPtr + count);
+					count++;
+				}
+				normPtr = MatrixNormalize(resultBeforeNorm);
+				count = 0;
+				for (int k = 0; k < 4; k++)
+				{
+					result[k][0] = *(normPtr + count);
+					count++;
+				}
+				finalResultRec[j][0] = result[0][0]; finalResultRec[j][1] = result[1][0]; finalResultRec[j][2] = result[2][0];
+			}
+			if (finalResultRec[0][0] == finalResultRec[1][0] && finalResultRec[1][0] == finalResultRec[2][0] && finalResultRec[2][0] == finalResultRec[3][0])
+			{
+				if (finalResultRec[0][1] == finalResultRec[1][1] && finalResultRec[1][1] == finalResultRec[2][1] && finalResultRec[2][1] == finalResultRec[3][1])
+				{
+					if (finalResultRec[0][2] == finalResultRec[1][2] && finalResultRec[1][2] == finalResultRec[2][2] && finalResultRec[2][2] == finalResultRec[3][2])
+					{
+						figure.isClicked = TRUE;
+						oneFigureChecked = TRUE;
+						break;
+					}
+					else
+					{
+						if (i != 143)continue;
+						else figure.isClicked = FALSE;
+					}
+				}
+				else
+				{
+					if (i != 143)continue;
+					else figure.isClicked = FALSE;
+				}
+			}
+			else
+			{
+				if (i != 143)continue;
+				else figure.isClicked = FALSE;
+			}
+		}
+	}
 
 	Invalidate();
 
@@ -2239,7 +2985,355 @@ BOOL CMFCApplication3View::PreTranslateMessage(MSG* pMsg)
 		if (pMsg->wParam == VK_LEFT) cameraZ += 5;
 		if (pMsg->wParam == VK_UP) cameraY += 5;
 		if (pMsg->wParam == VK_DOWN) cameraY -= 5;
+		// 카메라 아래로 이동시 경계면에 있는 물체가 조금 이상하게 찍힘
+		if (pMsg->wParam == 'W')
+		{
+			if (rotateXCount < 12)
+			{
+				////// 카메라 방향 회전
+				float camLookDirection[4][1] = { { lookX },{ lookY },{ lookZ },{ 1 } };
+				float* lookPtr = MatrixRotate(camLookDirection, 0, 0, -cameraRotateX);
+				int lookCount = 0;
+				for (int i = 0; i < 4; i++)
+				{
+					camLookDirection[i][0] = *(lookPtr + lookCount);
+					lookCount++;
+				}
+				lookX = camLookDirection[0][0]; lookY = camLookDirection[1][0]; lookZ = camLookDirection[2][0];
+				rotateXCount++;
+				//////
+			}
+		}
+		if (pMsg->wParam == 'S')
+		{
+			if (rotateXCount > -12)
+			{
+				////// 카메라 방향 회전
+				float camLookDirection[4][1] = { { lookX },{ lookY },{ lookZ },{ 1 } };
+				float* lookPtr = MatrixRotate(camLookDirection, 0, 0, cameraRotateX);
+				int lookCount = 0;
+				for (int i = 0; i < 4; i++)
+				{
+					camLookDirection[i][0] = *(lookPtr + lookCount);
+					lookCount++;
+				}
+				lookX = camLookDirection[0][0]; lookY = camLookDirection[1][0]; lookZ = camLookDirection[2][0];
+				rotateXCount--;
+				//////
+			}
+		}
+		if (pMsg->wParam == 'A')
+		{
+			if (rotateYCount < 18)
+			{
+				////// 카메라 방향 회전
+				float camLookDirection[4][1] = { { lookX },{ lookY },{ lookZ },{ 1 } };
+				float* lookPtr = MatrixRotate(camLookDirection, 0, cameraRotateY, 0);
+				int lookCount = 0;
+				for (int i = 0; i < 4; i++)
+				{
+					camLookDirection[i][0] = *(lookPtr + lookCount);
+					lookCount++;
+				}
+				lookX = camLookDirection[0][0]; lookY = camLookDirection[1][0]; lookZ = camLookDirection[2][0];
+				rotateYCount++;
+				//////
+			}
 
+		}
+		if (pMsg->wParam == 'D')
+		{
+			if (rotateYCount > -18)
+			{
+				////// 카메라 방향 회전
+				float camLookDirection[4][1] = { { lookX },{ lookY },{ lookZ },{ 1 } };
+				float* lookPtr = MatrixRotate(camLookDirection, 0, -cameraRotateY, 0);
+				int lookCount = 0;
+				for (int i = 0; i < 4; i++)
+				{
+					camLookDirection[i][0] = *(lookPtr + lookCount);
+					lookCount++;
+				}
+				lookX = camLookDirection[0][0]; lookY = camLookDirection[1][0]; lookZ = camLookDirection[2][0];
+				rotateYCount--;
+				//////
+			}
+		}
+		// 선택된 물체 크기 변화
+		if (pMsg->wParam == 'P')
+		{
+			BOOL isChecked = FALSE;
+			for (auto& figure : v_cubeFigure)
+			{
+				if (!figure.isClicked) continue;
+				isChecked = TRUE;
+				figure.length += 5;
+				break;
+			}
+			for (auto& figure : v_sphereFigure)
+			{
+				if (isChecked) break;
+				if (!figure.isClicked) continue;
+				isChecked = TRUE;
+				figure.radius += 4;
+				break;
+			}
+			for (auto& figure : v_torusFigure)
+			{
+				if (isChecked) break;
+				if (!figure.isClicked) continue;
+				isChecked = TRUE;
+				figure.torusLongRadius += 5;
+				figure.torusRadius += 3;
+				break;
+			}
+		}
+		if (pMsg->wParam == 'M')
+		{
+			BOOL isChecked = FALSE;
+			for (auto& figure : v_cubeFigure)
+			{
+				if (!figure.isClicked) continue;
+				isChecked = TRUE;
+				figure.length -= 5;
+				break;
+			}
+			for (auto& figure : v_sphereFigure)
+			{
+				if (isChecked) break;
+				if (!figure.isClicked) continue;
+				isChecked = TRUE;
+				figure.radius -= 4;
+				break;
+			}
+			for (auto& figure : v_torusFigure)
+			{
+				if (isChecked) break;
+				if (!figure.isClicked) continue;
+				isChecked = TRUE;
+				figure.torusLongRadius -= 5;
+				figure.torusRadius -= 3;
+				break;
+			}
+		}
+		// 선택된 물체 이동
+		if (pMsg->wParam == 'T')
+		{
+			BOOL isChecked = FALSE;
+			for (auto& figure : v_cubeFigure)
+			{
+				if (!figure.isClicked) continue;
+				isChecked = TRUE;
+				figure.moveY += 4;
+				break;
+			}
+			for (auto& figure : v_sphereFigure)
+			{
+				if (isChecked) break;
+				if (!figure.isClicked) continue;
+				isChecked = TRUE;
+				figure.moveY += 4;
+				break;
+			}
+			for (auto& figure : v_torusFigure)
+			{
+				if (isChecked) break;
+				if (!figure.isClicked) continue;
+				isChecked = TRUE;
+				figure.moveY += 4;
+				break;
+			}
+		}
+		if (pMsg->wParam == 'G')
+		{
+			BOOL isChecked = FALSE;
+			for (auto& figure : v_cubeFigure)
+			{
+				if (!figure.isClicked) continue;
+				isChecked = TRUE;
+				figure.moveY -= 4;
+				break;
+			}
+			for (auto& figure : v_sphereFigure)
+			{
+				if (isChecked) break;
+				if (!figure.isClicked) continue;
+				isChecked = TRUE;
+				figure.moveY -= 4;
+				break;
+			}
+			for (auto& figure : v_torusFigure)
+			{
+				if (isChecked) break;
+				if (!figure.isClicked) continue;
+				isChecked = TRUE;
+				figure.moveY -= 4;
+				break;
+			}
+		}
+		if (pMsg->wParam == 'F')
+		{
+			BOOL isChecked = FALSE;
+			for (auto& figure : v_cubeFigure)
+			{
+				if (!figure.isClicked) continue;
+				isChecked = TRUE;
+				figure.moveX -= 4;
+				break;
+			}
+			for (auto& figure : v_sphereFigure)
+			{
+				if (isChecked) break;
+				if (!figure.isClicked) continue;
+				isChecked = TRUE;
+				figure.moveX -= 4;
+				break;
+			}
+			for (auto& figure : v_torusFigure)
+			{
+				if (isChecked) break;
+				if (!figure.isClicked) continue;
+				isChecked = TRUE;
+				figure.moveX -= 4;
+				break;
+			}
+		}
+		if (pMsg->wParam == 'H')
+		{
+			BOOL isChecked = FALSE;
+			for (auto& figure : v_cubeFigure)
+			{
+				if (!figure.isClicked) continue;
+				isChecked = TRUE;
+				figure.moveX += 4;
+				break;
+			}
+			for (auto& figure : v_sphereFigure)
+			{
+				if (isChecked) break;
+				if (!figure.isClicked) continue;
+				isChecked = TRUE;
+				figure.moveX += 4;
+				break;
+			}
+			for (auto& figure : v_torusFigure)
+			{
+				if (isChecked) break;
+				if (!figure.isClicked) continue;
+				isChecked = TRUE;
+				figure.moveX += 4;
+				break;
+			}
+		}
+		// 선택된 물체 회전
+		if (pMsg->wParam == 'I')
+		{
+			BOOL isChecked = FALSE;
+			for (auto& figure : v_cubeFigure)
+			{
+				if (!figure.isClicked) continue;
+				isChecked = TRUE;
+				figure.rotX += 15;
+				break;
+			}
+			for (auto& figure : v_sphereFigure)
+			{
+				if (isChecked) break;
+				if (!figure.isClicked) continue;
+				isChecked = TRUE;
+				figure.rotX += 15;
+				break;
+			}
+			for (auto& figure : v_torusFigure)
+			{
+				if (isChecked) break;
+				if (!figure.isClicked) continue;
+				isChecked = TRUE;
+				figure.rotX += 15;
+				break;
+			}
+		}
+		if (pMsg->wParam == 'K')
+		{
+			BOOL isChecked = FALSE;
+			for (auto& figure : v_cubeFigure)
+			{
+				if (!figure.isClicked) continue;
+				isChecked = TRUE;
+				figure.rotX -= 15;
+				break;
+			}
+			for (auto& figure : v_sphereFigure)
+			{
+				if (isChecked) break;
+				if (!figure.isClicked) continue;
+				isChecked = TRUE;
+				figure.rotX -= 15;
+				break;
+			}
+			for (auto& figure : v_torusFigure)
+			{
+				if (isChecked) break;
+				if (!figure.isClicked) continue;
+				isChecked = TRUE;
+				figure.rotX -= 15;
+				break;
+			}
+		}
+		if (pMsg->wParam == 'J')
+		{
+			BOOL isChecked = FALSE;
+			for (auto& figure : v_cubeFigure)
+			{
+				if (!figure.isClicked) continue;
+				isChecked = TRUE;
+				figure.rotY -= 15;
+				break;
+			}
+			for (auto& figure : v_sphereFigure)
+			{
+				if (isChecked) break;
+				if (!figure.isClicked) continue;
+				isChecked = TRUE;
+				figure.rotY -= 15;
+				break;
+			}
+			for (auto& figure : v_torusFigure)
+			{
+				if (isChecked) break;
+				if (!figure.isClicked) continue;
+				isChecked = TRUE;
+				figure.rotY -= 15;
+				break;
+			}
+		}
+		if (pMsg->wParam == 'L')
+		{
+			BOOL isChecked = FALSE;
+			for (auto& figure : v_cubeFigure)
+			{
+				if (!figure.isClicked) continue;
+				isChecked = TRUE;
+				figure.rotY += 15;
+				break;
+			}
+			for (auto& figure : v_sphereFigure)
+			{
+				if (isChecked) break;
+				if (!figure.isClicked) continue;
+				isChecked = TRUE;
+				figure.rotY += 15;
+				break;
+			}
+			for (auto& figure : v_torusFigure)
+			{
+				if (isChecked) break;
+				if (!figure.isClicked) continue;
+				isChecked = TRUE;
+				figure.rotY += 15;
+				break;
+			}
+		}
 		Invalidate();
 	}
 

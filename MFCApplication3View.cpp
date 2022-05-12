@@ -52,6 +52,13 @@ CMFCApplication3View::CMFCApplication3View()
 	cameraX = -40;
 	cameraY = 40;
 	cameraZ = 0;
+	cameraRotateX = 5;
+	cameraRotateY = 5;
+	rotateXCount = 0;
+	rotateYCount = 0;
+	lookX = 1;
+	lookY = -1;
+	lookZ = 0;
 	moveDirX.x = 0;
 	moveDirX.y = 0;
 	width = 0;
@@ -61,6 +68,9 @@ CMFCApplication3View::CMFCApplication3View()
 	camera[0][0] = cameraX;
 	camera[1][0] = cameraY;
 	camera[2][0] = cameraZ;
+	look[0][0] = lookX;
+	look[1][0] = lookY;
+	look[2][0] = lookZ;
 }
 
 CMFCApplication3View::~CMFCApplication3View()
@@ -164,8 +174,8 @@ void CMFCApplication3View::OnPaint()
 
 	CBrush newBrush(RGB(255, 0, 0));
 	CBrush* oldBrush = memDC.SelectObject(&newBrush);
-#pragma region 뷰 & 투영행렬 만들기
-	float look[3][1] = { { 1 },{ -1 },{ 0 } };
+#pragma region 뷰 & 투영행렬 만들기 + 역행렬까지
+	look[0][0] = lookX; look[1][0] = lookY; look[2][0] = lookZ;
 	float view[4][4] = {};
 	camera[0][0] = cameraX; camera[1][0] = cameraY; camera[2][0] = cameraZ;
 	float* viewPtr = ViewMatrix(camera, look/*뷰 행렬 만드는데 물체 위치가 크게 중요하지 않은 것 같아서 나중에 지울 예정*/, look);
@@ -178,6 +188,19 @@ void CMFCApplication3View::OnPaint()
 			viewCount++;
 		}
 	}
+	// 뷰 역행렬
+	float viewReverse[4][4] = {};
+	viewPtr = MatrixReverse(view);
+	viewCount = 0;
+	for (int i = 0; i < 4; i++) 
+	{
+		for (int j = 0; j < 4; j++)
+		{
+			viewReverse[i][j] = *(viewPtr + viewCount);
+			viewCount++;
+		}
+	}
+	////////////
 	// 투영 행렬
 	float proj[4][4] = {};
 	float* pPtr = ProjectionMatrix(width, height, 90, 2, 15);
@@ -190,9 +213,22 @@ void CMFCApplication3View::OnPaint()
 			prjCount++;
 		}
 	}
+	// 투영 역행렬
+	float projReverse[4][4] = {};
+	pPtr = MatrixReverse(proj);
+	prjCount = 0;
+	for (int i = 0; i < 4; i++)
+	{
+		for (int j = 0; j < 4; j++)
+		{
+			projReverse[i][j] = *(pPtr + prjCount);
+			prjCount++;
+		}
+	}
+	//////////////
 #pragma endregion
 
-	for (auto figure : v_cubeFigure)
+	for (auto& figure : v_cubeFigure)
 	{
 		int count = 0;
 		MyVertex cub[8] = {};
@@ -201,6 +237,18 @@ void CMFCApplication3View::OnPaint()
 			cub[i] = figure.cube[i];
 			count++;
 		}
+
+		if (figure.length != figure.originLength) // 크기 변경이 된 친구라면?
+		{
+			MyVertex* makingCube = pCube(figure.length, figure.cubeOrigin.x, figure.cubeOrigin.y, figure.cubeOrigin.z); // 다시 만들어서 넣어줌
+			int cubeCount = 0;
+			for (int i = 0; i < 8; i++)
+			{
+				cub[i] = *(makingCube + cubeCount);
+				cubeCount++;
+			}
+		}
+
 
 		float* fPtr;
 		float sample[4][1] = {};
@@ -221,6 +269,63 @@ void CMFCApplication3View::OnPaint()
 			cub[i].z = *(fPtr + cubCount);
 			cubCount++;
 		}
+
+		////// 테스트 : 카메라 좌표계에서 회전시키기
+		float originInView[4][1] = {};
+		originInView[0][0] = figure.cubeOrigin.x; originInView[1][0] = figure.cubeOrigin.y; originInView[2][0] = figure.cubeOrigin.z; originInView[3][0] = 1;
+		fPtr = MatrixMulti(view, originInView);
+		int sampleCount = 0;
+		for (int i = 0; i < 3; i++) // 뷰 좌표계에서의 큐브의 중심을 구하기
+		{
+			originInView[i][0] = *(fPtr + sampleCount);
+			sampleCount++;
+		}
+
+		for (int i = 0; i < 8; i++) // 뷰 좌표계에서의 큐브 중심을 원점으로 옮기면서 나머지 점들도 다 동일하게 옮겨줌
+		{
+			cub[i].x -= originInView[0][0];
+			cub[i].y -= originInView[1][0];
+			cub[i].z -= originInView[2][0];
+		}
+
+		for (int i = 0; i < 8; i++) // 해당 점들을 축을 기준으로 회전
+		{
+			float sample[4][1] = { {cub[i].x}, {cub[i].y}, {cub[i].z}, {1} };
+			float* rotPtr = MatrixRotate(sample, figure.rotX, figure.rotY, 0);
+			sampleCount = 0;
+			for (int j = 0; j < 4; j++)
+			{
+				sample[j][0] = *(rotPtr + sampleCount);
+				sampleCount++;
+			}
+			cub[i].x = sample[0][0]; cub[i].y = sample[1][0]; cub[i].z = sample[2][0];
+		}
+
+		for (int i = 0; i < 8; i++) // 다시 큐브의 중심을 원점에서 원래의 중심으로 복구
+		{
+			cub[i].x += originInView[0][0];
+			cub[i].y += originInView[1][0];
+			cub[i].z += originInView[2][0];
+		}
+
+
+		////////////////////////////////////////////
+		////// 테스트 : 카메라 좌표계에서 x, y축으로 평행이동 시키기
+		if (figure.moveY != 0)
+		{
+			for (int i = 0; i < 8; i++)
+			{
+				cub[i].y += figure.moveY;
+			}
+		}
+		if (figure.moveX != 0)
+		{
+			for (int i = 0; i < 8; i++)
+			{
+				cub[i].x += figure.moveX;
+			}
+		}
+		////////////////////////////////////////////////////////////
 
 		// sphere 각 점들을 투영 시킴
 		for (int i = 0; i < 8; i++)
@@ -244,7 +349,55 @@ void CMFCApplication3View::OnPaint()
 			cub[i].z /= cub[i].z;
 
 		}
+		/////////// 테스트 : 화면 밖으로 모든 점이 나가버리면 안그리게 할 것
+		float pointOfView[2][1] = {};
+		bool outOfView[8] = {};
+		for (int i = 0; i < 8; i++)
+		{
+			pointOfView[0][0] = ToScreenX(width, left, cub[i].x); pointOfView[1][0] = ToScreenY(height, top, cub[i].y);
+			if (pointOfView[0][0] < 0 || pointOfView[0][0] > width || pointOfView[1][0] < 0 || pointOfView[1][0] > height)
+				outOfView[i] = TRUE;
+			else outOfView[i] = FALSE;
+		}
+		bool totalOut = FALSE;
+		for (int i = 0; i < 8; i++)
+		{
+			if (outOfView[i]) totalOut = TRUE;
+			else
+			{
+				totalOut = FALSE;
+				break;
+			}
+		}
+		if (totalOut) continue;
+		////////////////////////////////////////////////////////////////////
 
+		//위치가 이동되었으니 월드좌표계의 좌표들도 변했을 것-> 현재 받아둔 좌표를 다 뒤로 돌려서 새로운 월드좌표를 받아야 함
+		MyVertex newCubeWC[8] = {};
+		float tempVertex[4][1] = {};
+		for (int i = 0; i < 8; i++)
+		{
+			tempVertex[0][0] = cub[i].x * cub[i].z; tempVertex[1][0] = cub[i].y * cub[i].z; tempVertex[2][0] = cub[i].z; tempVertex[3][0] = 1;
+			float* tempPtr = MatrixMulti(projReverse, tempVertex);
+			int tempCount = 0;
+			for (int j = 0; j < 4; j++) // 투영 역행렬 = 카메라 좌표계
+			{
+				tempVertex[j][0] = *(tempPtr + tempCount);
+				tempCount++;
+			}
+			tempPtr = MatrixMulti(viewReverse, tempVertex);
+			tempCount = 0;
+			for (int j = 0; j < 4; j++) // 뷰 역행렬 = 월드 좌표계
+			{
+				tempVertex[j][0] = *(tempPtr + tempCount);
+				tempCount++;
+			}
+			// 새로운 월드 좌표계 저장
+			newCubeWC[i].x = tempVertex[0][0]; newCubeWC[i].y = tempVertex[1][0]; newCubeWC[i].z = tempVertex[2][0];
+			figure.cube_justForClick[i].x = tempVertex[0][0]; figure.cube_justForClick[i].y = tempVertex[1][0]; figure.cube_justForClick[i].z = tempVertex[2][0];
+		}
+		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		
 		if (figure.isClicked)
 		{
 #pragma region 1번 꼭짓점
@@ -417,7 +570,7 @@ void CMFCApplication3View::OnPaint()
 		}
 	}
 
-	for (auto figure : v_sphereFigure)
+	for (auto& figure : v_sphereFigure)
 	{
 		// vector로부터 구 좌표 받아오기
 		int count = 0;
@@ -425,6 +578,17 @@ void CMFCApplication3View::OnPaint()
 		for (int i = 0; i < 230; i++) {
 			sph[i] = figure.sphere[i];
 			count++;
+		}
+
+		if (figure.radius != figure.originRadius) // 크기 변경이 된 친구라면?
+		{ // 다시 만들어서 넣어줌
+			MyVertex* makingSphere = pSphere(figure.radius, figure.sphereOrigin.x, figure.sphereOrigin.y, figure.sphereOrigin.z); 
+			int sphereCount = 0;
+			for (int i = 0; i < 230; i++)
+			{
+				sph[i] = *(makingSphere + sphereCount);
+				sphereCount++;
+			}
 		}
 
 		float* fPtr;
@@ -447,6 +611,61 @@ void CMFCApplication3View::OnPaint()
 			sphCount++;
 		}
 
+		////// 테스트 : 카메라 좌표계에서 회전시키기
+		float originInView[4][1] = {};
+		originInView[0][0] = figure.sphereOrigin.x; originInView[1][0] = figure.sphereOrigin.y; originInView[2][0] = figure.sphereOrigin.z; originInView[3][0] = 1;
+		fPtr = MatrixMulti(view, originInView);
+		int sampleCount = 0;
+		for (int i = 0; i < 3; i++) // 뷰 좌표계에서의 큐브의 중심을 구하기
+		{
+			originInView[i][0] = *(fPtr + sampleCount);
+			sampleCount++;
+		}
+
+		for (int i = 0; i < 230; i++) // 뷰 좌표계에서의 큐브 중심을 원점으로 옮기면서 나머지 점들도 다 동일하게 옮겨줌
+		{
+			sph[i].x -= originInView[0][0];
+			sph[i].y -= originInView[1][0];
+			sph[i].z -= originInView[2][0];
+		}
+
+		for (int i = 0; i < 230; i++) // 해당 점들을 축을 기준으로 회전
+		{
+			float sample[4][1] = { { sph[i].x },{ sph[i].y },{ sph[i].z },{ 1 } };
+			float* rotPtr = MatrixRotate(sample, figure.rotX, figure.rotY, 0);
+			sampleCount = 0;
+			for (int j = 0; j < 4; j++)
+			{
+				sample[j][0] = *(rotPtr + sampleCount);
+				sampleCount++;
+			}
+			sph[i].x = sample[0][0]; sph[i].y = sample[1][0]; sph[i].z = sample[2][0];
+		}
+
+		for (int i = 0; i < 230; i++) // 다시 큐브의 중심을 원점에서 원래의 중심으로 복구
+		{
+			sph[i].x += originInView[0][0];
+			sph[i].y += originInView[1][0];
+			sph[i].z += originInView[2][0];
+		}
+
+		////// 테스트 : 카메라 좌표계에서 x, y축으로 평행이동 시키기
+		if (figure.moveY != 0)
+		{
+			for (int i = 0; i < 230; i++)
+			{
+				sph[i].y += figure.moveY;
+			}
+		}
+		if (figure.moveX != 0)
+		{
+			for (int i = 0; i < 230; i++)
+			{
+				sph[i].x += figure.moveX;
+			}
+		}
+		////////////////////////////////////////////////////////////
+
 		// sphere 각 점들을 투영 시킴
 		for (int i = 0; i < 230; i++)
 		{
@@ -466,9 +685,57 @@ void CMFCApplication3View::OnPaint()
 
 			sph[i].x /= sph[i].z;
 			sph[i].y /= sph[i].z;
-			sph[i].z /= sph[i].z;
-
+			//sph[i].z /= sph[i].z;
 		}
+
+#pragma region /////////// 테스트 : 화면 밖으로 모든 점이 나가버리면 안그리게 할 것
+		float pointOfView[2][1] = {};
+		bool outOfView[230] = {};
+		for (int i = 0; i < 230; i++)
+		{
+			pointOfView[0][0] = ToScreenX(width, left, sph[i].x); pointOfView[1][0] = ToScreenY(height, top, sph[i].y);
+			if (pointOfView[0][0] < 0 || pointOfView[0][0] > width || pointOfView[1][0] < 0 || pointOfView[1][0] > height)
+				outOfView[i] = TRUE;
+			else outOfView[i] = FALSE;
+		}
+		bool totalOut = FALSE;
+		for (int i = 0; i < 230; i++)
+		{
+			if (outOfView[i]) totalOut = TRUE;
+			else
+			{
+				totalOut = FALSE;
+				break;
+			}
+		}
+		if (totalOut) continue;
+#pragma endregion ////////////////////////////////////////////////////////////////////
+
+		//위치가 이동되었으니 월드좌표계의 좌표들도 변했을 것-> 현재 받아둔 좌표를 다 뒤로 돌려서 새로운 월드좌표를 받아야 함
+		MyVertex newSphereWC[230] = {};
+		float tempVertex[4][1] = {};
+		for (int i = 0; i < 230; i++)
+		{
+			tempVertex[0][0] = sph[i].x * sph[i].z; tempVertex[1][0] = sph[i].y * sph[i].z; tempVertex[2][0] = sph[i].z; tempVertex[3][0] = 1;
+			float* tempPtr = MatrixMulti(projReverse, tempVertex);
+			int tempCount = 0;
+			for (int j = 0; j < 4; j++) // 투영 역행렬 = 카메라 좌표계
+			{
+				tempVertex[j][0] = *(tempPtr + tempCount);
+				tempCount++;
+			}
+			tempPtr = MatrixMulti(viewReverse, tempVertex);
+			tempCount = 0;
+			for (int j = 0; j < 4; j++) // 뷰 역행렬 = 월드 좌표계
+			{
+				tempVertex[j][0] = *(tempPtr + tempCount);
+				tempCount++;
+			}
+			// 새로운 월드 좌표계 저장
+			newSphereWC[i].x = tempVertex[0][0]; newSphereWC[i].y = tempVertex[1][0]; newSphereWC[i].z = tempVertex[2][0];
+			figure.sphere_justForClick[i].x = tempVertex[0][0]; figure.sphere_justForClick[i].y = tempVertex[1][0]; figure.sphere_justForClick[i].z = tempVertex[2][0];
+		}
+		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 		// 뒷면 잘라내기
 		float vFst[4][1] = {}; // 계산에 쓸 방향 저장용 벡터
@@ -488,39 +755,39 @@ void CMFCApplication3View::OnPaint()
 		{
 			if ((i % 12) != 0)
 			{
-				vFst[0][0] = -figure.sphere[0].x + figure.sphere[i].x;
-				vFst[1][0] = -figure.sphere[0].y + figure.sphere[i].y;
-				vFst[2][0] = -figure.sphere[0].z + figure.sphere[i].z;
-				vSec[0][0] = -figure.sphere[i].x + figure.sphere[i + 1].x;
-				vSec[1][0] = -figure.sphere[i].y + figure.sphere[i + 1].y;
-				vSec[2][0] = -figure.sphere[i].z + figure.sphere[i + 1].z;
-				cameraToPolygon1[0][0] = figure.sphere[0].x;
-				cameraToPolygon1[1][0] = figure.sphere[0].y;
-				cameraToPolygon1[2][0] = figure.sphere[0].z;
-				cameraToPolygon2[0][0] = figure.sphere[i].x;
-				cameraToPolygon2[1][0] = figure.sphere[i].y;
-				cameraToPolygon2[2][0] = figure.sphere[i].z;
-				cameraToPolygon3[0][0] = figure.sphere[i + 1].x;
-				cameraToPolygon3[1][0] = figure.sphere[i + 1].y;
-				cameraToPolygon3[2][0] = figure.sphere[i + 1].z;
+				vFst[0][0] = -newSphereWC[0].x + newSphereWC[i].x;
+				vFst[1][0] = -newSphereWC[0].y + newSphereWC[i].y;
+				vFst[2][0] = -newSphereWC[0].z + newSphereWC[i].z;
+				vSec[0][0] = -newSphereWC[i].x + newSphereWC[i + 1].x;
+				vSec[1][0] = -newSphereWC[i].y + newSphereWC[i + 1].y;
+				vSec[2][0] = -newSphereWC[i].z + newSphereWC[i + 1].z;
+				cameraToPolygon1[0][0] = newSphereWC[0].x;
+				cameraToPolygon1[1][0] = newSphereWC[0].y;
+				cameraToPolygon1[2][0] = newSphereWC[0].z;
+				cameraToPolygon2[0][0] = newSphereWC[i].x;
+				cameraToPolygon2[1][0] = newSphereWC[i].y;
+				cameraToPolygon2[2][0] = newSphereWC[i].z;
+				cameraToPolygon3[0][0] = newSphereWC[i + 1].x;
+				cameraToPolygon3[1][0] = newSphereWC[i + 1].y;
+				cameraToPolygon3[2][0] = newSphereWC[i + 1].z;
 			}
 			else
 			{
-				vFst[0][0] = -figure.sphere[0].x + figure.sphere[i].x;
-				vFst[1][0] = -figure.sphere[0].y + figure.sphere[i].y;
-				vFst[2][0] = -figure.sphere[0].z + figure.sphere[i].z;
-				vSec[0][0] = -figure.sphere[i].x + figure.sphere[i - 11].x;
-				vSec[1][0] = -figure.sphere[i].y + figure.sphere[i - 11].y;
-				vSec[2][0] = -figure.sphere[i].z + figure.sphere[i - 11].z;
-				cameraToPolygon1[0][0] = figure.sphere[0].x;
-				cameraToPolygon1[1][0] = figure.sphere[0].y;
-				cameraToPolygon1[2][0] = figure.sphere[0].z;
-				cameraToPolygon2[0][0] = figure.sphere[i].x;
-				cameraToPolygon2[1][0] = figure.sphere[i].y;
-				cameraToPolygon2[2][0] = figure.sphere[i].z;
-				cameraToPolygon3[0][0] = figure.sphere[i - 11].x;
-				cameraToPolygon3[1][0] = figure.sphere[i - 11].y;
-				cameraToPolygon3[2][0] = figure.sphere[i - 11].z;
+				vFst[0][0] = -newSphereWC[0].x + newSphereWC[i].x;
+				vFst[1][0] = -newSphereWC[0].y + newSphereWC[i].y;
+				vFst[2][0] = -newSphereWC[0].z + newSphereWC[i].z;
+				vSec[0][0] = -newSphereWC[i].x + newSphereWC[i - 11].x;
+				vSec[1][0] = -newSphereWC[i].y + newSphereWC[i - 11].y;
+				vSec[2][0] = -newSphereWC[i].z + newSphereWC[i - 11].z;
+				cameraToPolygon1[0][0] = newSphereWC[0].x;
+				cameraToPolygon1[1][0] = newSphereWC[0].y;
+				cameraToPolygon1[2][0] = newSphereWC[0].z;
+				cameraToPolygon2[0][0] = newSphereWC[i].x;
+				cameraToPolygon2[1][0] = newSphereWC[i].y;
+				cameraToPolygon2[2][0] = newSphereWC[i].z;
+				cameraToPolygon3[0][0] = newSphereWC[i - 11].x;
+				cameraToPolygon3[1][0] = newSphereWC[i - 11].y;
+				cameraToPolygon3[2][0] = newSphereWC[i - 11].z;
 			}
 			vFst[3][0] = 1; vSec[3][0] = 1;
 
@@ -559,39 +826,39 @@ void CMFCApplication3View::OnPaint()
 		{
 			if ((i % 12) == 0)
 			{
-				vFst[0][0] = -figure.sphere[i].x + figure.sphere[i + 12].x;
-				vFst[1][0] = -figure.sphere[i].y + figure.sphere[i + 12].y;
-				vFst[2][0] = -figure.sphere[i].z + figure.sphere[i + 12].z;
-				vSec[0][0] = -figure.sphere[i + 12].x + figure.sphere[i + 1].x;
-				vSec[1][0] = -figure.sphere[i + 12].y + figure.sphere[i + 1].y;
-				vSec[2][0] = -figure.sphere[i + 12].z + figure.sphere[i + 1].z;
-				cameraToPolygon1[0][0] = figure.sphere[i].x;
-				cameraToPolygon1[1][0] = figure.sphere[i].y;
-				cameraToPolygon1[2][0] = figure.sphere[i].z;
-				cameraToPolygon2[0][0] = figure.sphere[i + 12].x;
-				cameraToPolygon2[1][0] = figure.sphere[i + 12].y;
-				cameraToPolygon2[2][0] = figure.sphere[i + 12].z;
-				cameraToPolygon3[0][0] = figure.sphere[i + 1].x;
-				cameraToPolygon3[1][0] = figure.sphere[i + 1].y;
-				cameraToPolygon3[2][0] = figure.sphere[i + 1].z;
+				vFst[0][0] = -newSphereWC[i].x + newSphereWC[i + 12].x;
+				vFst[1][0] = -newSphereWC[i].y + newSphereWC[i + 12].y;
+				vFst[2][0] = -newSphereWC[i].z + newSphereWC[i + 12].z;
+				vSec[0][0] = -newSphereWC[i + 12].x + newSphereWC[i + 1].x;
+				vSec[1][0] = -newSphereWC[i + 12].y + newSphereWC[i + 1].y;
+				vSec[2][0] = -newSphereWC[i + 12].z + newSphereWC[i + 1].z;
+				cameraToPolygon1[0][0] = newSphereWC[i].x;
+				cameraToPolygon1[1][0] = newSphereWC[i].y;
+				cameraToPolygon1[2][0] = newSphereWC[i].z;
+				cameraToPolygon2[0][0] = newSphereWC[i + 12].x;
+				cameraToPolygon2[1][0] = newSphereWC[i + 12].y;
+				cameraToPolygon2[2][0] = newSphereWC[i + 12].z;
+				cameraToPolygon3[0][0] = newSphereWC[i + 1].x;
+				cameraToPolygon3[1][0] = newSphereWC[i + 1].y;
+				cameraToPolygon3[2][0] = newSphereWC[i + 1].z;
 			}
 			else
 			{
-				vFst[0][0] = -figure.sphere[i].x + figure.sphere[i + 12].x;
-				vFst[1][0] = -figure.sphere[i].y + figure.sphere[i + 12].y;
-				vFst[2][0] = -figure.sphere[i].z + figure.sphere[i + 12].z;
-				vSec[0][0] = -figure.sphere[i + 12].x + figure.sphere[i + 13].x;
-				vSec[1][0] = -figure.sphere[i + 12].y + figure.sphere[i + 13].y;
-				vSec[2][0] = -figure.sphere[i + 12].z + figure.sphere[i + 13].z;
-				cameraToPolygon1[0][0] = figure.sphere[i].x;
-				cameraToPolygon1[1][0] = figure.sphere[i].y;
-				cameraToPolygon1[2][0] = figure.sphere[i].z;
-				cameraToPolygon2[0][0] = figure.sphere[i + 12].x;
-				cameraToPolygon2[1][0] = figure.sphere[i + 12].y;
-				cameraToPolygon2[2][0] = figure.sphere[i + 12].z;
-				cameraToPolygon3[0][0] = figure.sphere[i + 13].x;
-				cameraToPolygon3[1][0] = figure.sphere[i + 13].y;
-				cameraToPolygon3[2][0] = figure.sphere[i + 13].z;
+				vFst[0][0] = -newSphereWC[i].x + newSphereWC[i + 12].x;
+				vFst[1][0] = -newSphereWC[i].y + newSphereWC[i + 12].y;
+				vFst[2][0] = -newSphereWC[i].z + newSphereWC[i + 12].z;
+				vSec[0][0] = -newSphereWC[i + 12].x + newSphereWC[i + 13].x;
+				vSec[1][0] = -newSphereWC[i + 12].y + newSphereWC[i + 13].y;
+				vSec[2][0] = -newSphereWC[i + 12].z + newSphereWC[i + 13].z;
+				cameraToPolygon1[0][0] = newSphereWC[i].x;
+				cameraToPolygon1[1][0] = newSphereWC[i].y;
+				cameraToPolygon1[2][0] = newSphereWC[i].z;
+				cameraToPolygon2[0][0] = newSphereWC[i + 12].x;
+				cameraToPolygon2[1][0] = newSphereWC[i + 12].y;
+				cameraToPolygon2[2][0] = newSphereWC[i + 12].z;
+				cameraToPolygon3[0][0] = newSphereWC[i + 13].x;
+				cameraToPolygon3[1][0] = newSphereWC[i + 13].y;
+				cameraToPolygon3[2][0] = newSphereWC[i + 13].z;
 			}
 			vFst[3][0] = 1; vSec[3][0] = 1;
 
@@ -630,39 +897,39 @@ void CMFCApplication3View::OnPaint()
 		{
 			if ((i % 12) != 0)
 			{
-				vFst[0][0] = -figure.sphere[i].x + figure.sphere[229].x;
-				vFst[1][0] = -figure.sphere[i].y + figure.sphere[229].y;
-				vFst[2][0] = -figure.sphere[i].z + figure.sphere[229].z;
-				vSec[0][0] = -figure.sphere[i].x + figure.sphere[i + 1].x;
-				vSec[1][0] = -figure.sphere[i].y + figure.sphere[i + 1].y;
-				vSec[2][0] = -figure.sphere[i].z + figure.sphere[i + 1].z;
-				cameraToPolygon1[0][0] = figure.sphere[i].x;
-				cameraToPolygon1[1][0] = figure.sphere[i].y;
-				cameraToPolygon1[2][0] = figure.sphere[i].z;
-				cameraToPolygon2[0][0] = figure.sphere[229].x;
-				cameraToPolygon2[1][0] = figure.sphere[229].y;
-				cameraToPolygon2[2][0] = figure.sphere[229].z;
-				cameraToPolygon3[0][0] = figure.sphere[i + 1].x;
-				cameraToPolygon3[1][0] = figure.sphere[i + 1].y;
-				cameraToPolygon3[2][0] = figure.sphere[i + 1].z;
+				vFst[0][0] = -newSphereWC[i].x + newSphereWC[229].x;
+				vFst[1][0] = -newSphereWC[i].y + newSphereWC[229].y;
+				vFst[2][0] = -newSphereWC[i].z + newSphereWC[229].z;
+				vSec[0][0] = -newSphereWC[i].x + newSphereWC[i + 1].x;
+				vSec[1][0] = -newSphereWC[i].y + newSphereWC[i + 1].y;
+				vSec[2][0] = -newSphereWC[i].z + newSphereWC[i + 1].z;
+				cameraToPolygon1[0][0] = newSphereWC[i].x;
+				cameraToPolygon1[1][0] = newSphereWC[i].y;
+				cameraToPolygon1[2][0] = newSphereWC[i].z;
+				cameraToPolygon2[0][0] = newSphereWC[229].x;
+				cameraToPolygon2[1][0] = newSphereWC[229].y;
+				cameraToPolygon2[2][0] = newSphereWC[229].z;
+				cameraToPolygon3[0][0] = newSphereWC[i + 1].x;
+				cameraToPolygon3[1][0] = newSphereWC[i + 1].y;
+				cameraToPolygon3[2][0] = newSphereWC[i + 1].z;
 			}
 			else
 			{
-				vFst[0][0] = -figure.sphere[i].x + figure.sphere[229].x;
-				vFst[1][0] = -figure.sphere[i].y + figure.sphere[229].y;
-				vFst[2][0] = -figure.sphere[i].z + figure.sphere[229].z;
-				vSec[0][0] = -figure.sphere[i].x + figure.sphere[i - 11].x;
-				vSec[1][0] = -figure.sphere[i].y + figure.sphere[i - 11].y;
-				vSec[2][0] = -figure.sphere[i].z + figure.sphere[i - 11].z;
-				cameraToPolygon1[0][0] = figure.sphere[i].x;
-				cameraToPolygon1[1][0] = figure.sphere[i].y;
-				cameraToPolygon1[2][0] = figure.sphere[i].z;
-				cameraToPolygon2[0][0] = figure.sphere[229].x;
-				cameraToPolygon2[1][0] = figure.sphere[229].y;
-				cameraToPolygon2[2][0] = figure.sphere[229].z;
-				cameraToPolygon3[0][0] = figure.sphere[i - 11].x;
-				cameraToPolygon3[1][0] = figure.sphere[i - 11].y;
-				cameraToPolygon3[2][0] = figure.sphere[i - 11].z;
+				vFst[0][0] = -newSphereWC[i].x + newSphereWC[229].x;
+				vFst[1][0] = -newSphereWC[i].y + newSphereWC[229].y;
+				vFst[2][0] = -newSphereWC[i].z + newSphereWC[229].z;
+				vSec[0][0] = -newSphereWC[i].x + newSphereWC[i - 11].x;
+				vSec[1][0] = -newSphereWC[i].y + newSphereWC[i - 11].y;
+				vSec[2][0] = -newSphereWC[i].z + newSphereWC[i - 11].z;
+				cameraToPolygon1[0][0] = newSphereWC[i].x;
+				cameraToPolygon1[1][0] = newSphereWC[i].y;
+				cameraToPolygon1[2][0] = newSphereWC[i].z;
+				cameraToPolygon2[0][0] = newSphereWC[229].x;
+				cameraToPolygon2[1][0] = newSphereWC[229].y;
+				cameraToPolygon2[2][0] = newSphereWC[229].z;
+				cameraToPolygon3[0][0] = newSphereWC[i - 11].x;
+				cameraToPolygon3[1][0] = newSphereWC[i - 11].y;
+				cameraToPolygon3[2][0] = newSphereWC[i - 11].z;
 			}
 			vFst[3][0] = 1; vSec[3][0] = 1;
 
@@ -811,39 +1078,39 @@ void CMFCApplication3View::OnPaint()
 		{
 			if ((i % 12) == 0)
 			{
-				vFst[0][0] = -figure.sphere[i + 1].x + figure.sphere[i - 11].x;
-				vFst[1][0] = -figure.sphere[i + 1].y + figure.sphere[i - 11].y;
-				vFst[2][0] = -figure.sphere[i + 1].z + figure.sphere[i - 11].z;
-				vSec[0][0] = -figure.sphere[i - 11].x + figure.sphere[i].x;
-				vSec[1][0] = -figure.sphere[i - 11].y + figure.sphere[i].y;
-				vSec[2][0] = -figure.sphere[i - 11].z + figure.sphere[i].z;
-				cameraToPolygon1[0][0] = figure.sphere[i].x;
-				cameraToPolygon1[1][0] = figure.sphere[i].y;
-				cameraToPolygon1[2][0] = figure.sphere[i].z;
-				cameraToPolygon2[0][0] = figure.sphere[i - 11].x;
-				cameraToPolygon2[1][0] = figure.sphere[i - 11].y;
-				cameraToPolygon2[2][0] = figure.sphere[i - 11].z;
-				cameraToPolygon3[0][0] = figure.sphere[i + 1].x;
-				cameraToPolygon3[1][0] = figure.sphere[i + 1].y;
-				cameraToPolygon3[2][0] = figure.sphere[i + 1].z;
+				vFst[0][0] = -newSphereWC[i + 1].x + newSphereWC[i - 11].x;
+				vFst[1][0] = -newSphereWC[i + 1].y + newSphereWC[i - 11].y;
+				vFst[2][0] = -newSphereWC[i + 1].z + newSphereWC[i - 11].z;
+				vSec[0][0] = -newSphereWC[i - 11].x + newSphereWC[i].x;
+				vSec[1][0] = -newSphereWC[i - 11].y + newSphereWC[i].y;
+				vSec[2][0] = -newSphereWC[i - 11].z + newSphereWC[i].z;
+				cameraToPolygon1[0][0] = newSphereWC[i].x;
+				cameraToPolygon1[1][0] = newSphereWC[i].y;
+				cameraToPolygon1[2][0] = newSphereWC[i].z;
+				cameraToPolygon2[0][0] = newSphereWC[i - 11].x;
+				cameraToPolygon2[1][0] = newSphereWC[i - 11].y;
+				cameraToPolygon2[2][0] = newSphereWC[i - 11].z;
+				cameraToPolygon3[0][0] = newSphereWC[i + 1].x;
+				cameraToPolygon3[1][0] = newSphereWC[i + 1].y;
+				cameraToPolygon3[2][0] = newSphereWC[i + 1].z;
 			}
 			else
 			{
-				vFst[0][0] = -figure.sphere[i + 13].x + figure.sphere[i + 1].x;
-				vFst[1][0] = -figure.sphere[i + 13].y + figure.sphere[i + 1].y;
-				vFst[2][0] = -figure.sphere[i + 13].z + figure.sphere[i + 1].z;
-				vSec[0][0] = -figure.sphere[i + 1].x + figure.sphere[i].x;
-				vSec[1][0] = -figure.sphere[i + 1].y + figure.sphere[i].y;
-				vSec[2][0] = -figure.sphere[i + 1].z + figure.sphere[i].z;
-				cameraToPolygon1[0][0] = figure.sphere[i].x;
-				cameraToPolygon1[1][0] = figure.sphere[i].y;
-				cameraToPolygon1[2][0] = figure.sphere[i].z;
-				cameraToPolygon2[0][0] = figure.sphere[i + 1].x;
-				cameraToPolygon2[1][0] = figure.sphere[i + 1].y;
-				cameraToPolygon2[2][0] = figure.sphere[i + 1].z;
-				cameraToPolygon3[0][0] = figure.sphere[i + 13].x;
-				cameraToPolygon3[1][0] = figure.sphere[i + 13].y;
-				cameraToPolygon3[2][0] = figure.sphere[i + 13].z;
+				vFst[0][0] = -newSphereWC[i + 13].x + newSphereWC[i + 1].x;
+				vFst[1][0] = -newSphereWC[i + 13].y + newSphereWC[i + 1].y;
+				vFst[2][0] = -newSphereWC[i + 13].z + newSphereWC[i + 1].z;
+				vSec[0][0] = -newSphereWC[i + 1].x + newSphereWC[i].x;
+				vSec[1][0] = -newSphereWC[i + 1].y + newSphereWC[i].y;
+				vSec[2][0] = -newSphereWC[i + 1].z + newSphereWC[i].z;
+				cameraToPolygon1[0][0] = newSphereWC[i].x;
+				cameraToPolygon1[1][0] = newSphereWC[i].y;
+				cameraToPolygon1[2][0] = newSphereWC[i].z;
+				cameraToPolygon2[0][0] = newSphereWC[i + 1].x;
+				cameraToPolygon2[1][0] = newSphereWC[i + 1].y;
+				cameraToPolygon2[2][0] = newSphereWC[i + 1].z;
+				cameraToPolygon3[0][0] = newSphereWC[i + 13].x;
+				cameraToPolygon3[1][0] = newSphereWC[i + 13].y;
+				cameraToPolygon3[2][0] = newSphereWC[i + 13].z;
 			}
 			vFst[3][0] = 1; vSec[3][0] = 1;
 
@@ -919,7 +1186,7 @@ void CMFCApplication3View::OnPaint()
 #pragma endregion
 	}
 
-	for (auto figure : v_torusFigure)
+	for (auto& figure : v_torusFigure)
 	{
 #pragma region 좌표계 변환 후 그리기
 		// 원들끼리 그리기
@@ -944,6 +1211,17 @@ void CMFCApplication3View::OnPaint()
 			count++;
 		}
 
+		if (figure.torusRadius != figure.originTorusRadius) // 크기 변경이 된 친구라면?
+		{ // 다시 만들어서 넣어줌
+			MyVertex* makingTorus = pTorus(figure.torusOrigin.x, figure.torusOrigin.y, figure.torusOrigin.z, figure.torusLongRadius, figure.torusRadius);
+			int torusCount = 0;
+			for (int i = 0; i < 144; i++)
+			{
+				tor[i] = *(makingTorus + torusCount);
+				torusCount++;
+			}
+		}
+
 #pragma region 뷰 행렬 변환
 
 		float* fPtr;
@@ -966,6 +1244,62 @@ void CMFCApplication3View::OnPaint()
 			torCount++;
 		}
 #pragma endregion
+
+		 ////// 테스트 : 카메라 좌표계에서 회전시키기
+		float originInView[4][1] = {};
+		originInView[0][0] = figure.torusOrigin.x; originInView[1][0] = figure.torusOrigin.y; originInView[2][0] = figure.torusOrigin.z; originInView[3][0] = 1;
+		fPtr = MatrixMulti(view, originInView);
+		int sampleCount = 0;
+		for (int i = 0; i < 3; i++) // 뷰 좌표계에서의 큐브의 중심을 구하기
+		{
+			originInView[i][0] = *(fPtr + sampleCount);
+			sampleCount++;
+		}
+
+		for (int i = 0; i < 144; i++) // 뷰 좌표계에서의 큐브 중심을 원점으로 옮기면서 나머지 점들도 다 동일하게 옮겨줌
+		{
+			tor[i].x -= originInView[0][0];
+			tor[i].y -= originInView[1][0];
+			tor[i].z -= originInView[2][0];
+		}
+
+		for (int i = 0; i < 144; i++) // 해당 점들을 축을 기준으로 회전
+		{
+			float sample[4][1] = { { tor[i].x },{ tor[i].y },{ tor[i].z },{ 1 } };
+			float* rotPtr = MatrixRotate(sample, figure.rotX, figure.rotY, 0);
+			sampleCount = 0;
+			for (int j = 0; j < 4; j++)
+			{
+				sample[j][0] = *(rotPtr + sampleCount);
+				sampleCount++;
+			}
+			tor[i].x = sample[0][0]; tor[i].y = sample[1][0]; tor[i].z = sample[2][0];
+		}
+
+		for (int i = 0; i < 144; i++) // 다시 큐브의 중심을 원점에서 원래의 중심으로 복구
+		{
+			tor[i].x += originInView[0][0];
+			tor[i].y += originInView[1][0];
+			tor[i].z += originInView[2][0];
+		}
+
+		////// 테스트 : 카메라 좌표계에서 x, y축으로 평행이동 시키기
+		if (figure.moveY != 0)
+		{
+			for (int i = 0; i < 144; i++)
+			{
+				tor[i].y += figure.moveY;
+			}
+		}
+		if (figure.moveX != 0)
+		{
+			for (int i = 0; i < 144; i++)
+			{
+				tor[i].x += figure.moveX;
+			}
+		}
+		////////////////////////////////////////////////////////////
+
 #pragma region 투영 행렬 변환
 		// 뷰 변환 한 점들 투영 변환
 		for (int i = 0; i < 144; i++)
@@ -991,6 +1325,55 @@ void CMFCApplication3View::OnPaint()
 		}
 #pragma endregion
 
+		/////////// 테스트 : 화면 밖으로 모든 점이 나가버리면 안그리게 할 것
+		float pointOfView[2][1] = {};
+		bool outOfView[144] = {};
+		for (int i = 0; i < 144; i++)
+		{
+			pointOfView[0][0] = ToScreenX(width, left, tor[i].x); pointOfView[1][0] = ToScreenY(height, top, tor[i].y);
+			if (pointOfView[0][0] < 0 || pointOfView[0][0] > width || pointOfView[1][0] < 0 || pointOfView[1][0] > height)
+				outOfView[i] = TRUE;
+			else outOfView[i] = FALSE;
+		}
+		bool totalOut = FALSE;
+		for (int i = 0; i < 144; i++)
+		{
+			if (outOfView[i]) totalOut = TRUE;
+			else
+			{
+				totalOut = FALSE;
+				break;
+			}
+		}
+		if (totalOut) continue;
+		////////////////////////////////////////////////////////////////////
+
+		//위치가 이동되었으니 월드좌표계의 좌표들도 변했을 것-> 현재 받아둔 좌표를 다 뒤로 돌려서 새로운 월드좌표를 받아야 함
+		MyVertex newTorusWC[144] = {};
+		float tempVertex[4][1] = {};
+		for (int i = 0; i < 144; i++)
+		{
+			tempVertex[0][0] = tor[i].x * tor[i].z; tempVertex[1][0] = tor[i].y * tor[i].z; tempVertex[2][0] = tor[i].z; tempVertex[3][0] = 1;
+			float* tempPtr = MatrixMulti(projReverse, tempVertex);
+			int tempCount = 0;
+			for (int j = 0; j < 4; j++) // 투영 역행렬 = 카메라 좌표계
+			{
+				tempVertex[j][0] = *(tempPtr + tempCount);
+				tempCount++;
+			}
+			tempPtr = MatrixMulti(viewReverse, tempVertex);
+			tempCount = 0;
+			for (int j = 0; j < 4; j++) // 뷰 역행렬 = 월드 좌표계
+			{
+				tempVertex[j][0] = *(tempPtr + tempCount);
+				tempCount++;
+			}
+			// 새로운 월드 좌표계 저장
+			newTorusWC[i].x = tempVertex[0][0]; newTorusWC[i].y = tempVertex[1][0]; newTorusWC[i].z = tempVertex[2][0];
+			figure.torus_justForClick[i].x = tempVertex[0][0]; figure.torus_justForClick[i].y = tempVertex[1][0]; figure.torus_justForClick[i].z = tempVertex[2][0];
+		}
+		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 #pragma region 첫번째 삼각 폴리곤 
 		for (int i = 0; i < 144; i++)
 		{
@@ -998,78 +1381,78 @@ void CMFCApplication3View::OnPaint()
 			{
 				if (i >= 132)
 				{
-					dotFst[0][0] = -figure.torus[i].x + figure.torus[i - 132].x;
-					dotSec[0][0] = -figure.torus[i].x + figure.torus[i - 11].x;
-					dotFst[1][0] = -figure.torus[i].y + figure.torus[i - 132].y;
-					dotSec[1][0] = -figure.torus[i].y + figure.torus[i - 11].y;
-					dotFst[2][0] = -figure.torus[i].z + figure.torus[i - 132].z;
-					dotSec[2][0] = -figure.torus[i].z + figure.torus[i - 11].z;
-					cameraToPolygon1[0][0] = figure.torus[i].x;
-					cameraToPolygon1[1][0] = figure.torus[i].y;
-					cameraToPolygon1[2][0] = figure.torus[i].z;
-					cameraToPolygon2[0][0] = figure.torus[i - 132].x;
-					cameraToPolygon2[1][0] = figure.torus[i - 132].y;
-					cameraToPolygon2[2][0] = figure.torus[i - 132].z;
-					cameraToPolygon3[0][0] = figure.torus[i - 11].x;
-					cameraToPolygon3[1][0] = figure.torus[i - 11].y;
-					cameraToPolygon3[2][0] = figure.torus[i - 11].z;
+					dotFst[0][0] = -newTorusWC[i].x + newTorusWC[i - 132].x;
+					dotSec[0][0] = -newTorusWC[i].x + newTorusWC[i - 11].x;
+					dotFst[1][0] = -newTorusWC[i].y + newTorusWC[i - 132].y;
+					dotSec[1][0] = -newTorusWC[i].y + newTorusWC[i - 11].y;
+					dotFst[2][0] = -newTorusWC[i].z + newTorusWC[i - 132].z;
+					dotSec[2][0] = -newTorusWC[i].z + newTorusWC[i - 11].z;
+					cameraToPolygon1[0][0] = newTorusWC[i].x;
+					cameraToPolygon1[1][0] = newTorusWC[i].y;
+					cameraToPolygon1[2][0] = newTorusWC[i].z;
+					cameraToPolygon2[0][0] = newTorusWC[i - 132].x;
+					cameraToPolygon2[1][0] = newTorusWC[i - 132].y;
+					cameraToPolygon2[2][0] = newTorusWC[i - 132].z;
+					cameraToPolygon3[0][0] = newTorusWC[i - 11].x;
+					cameraToPolygon3[1][0] = newTorusWC[i - 11].y;
+					cameraToPolygon3[2][0] = newTorusWC[i - 11].z;
 				}
 				else
 				{
-					dotFst[0][0] = -figure.torus[i].x + figure.torus[i + 12].x;
-					dotSec[0][0] = -figure.torus[i].x + figure.torus[i - 11].x;
-					dotFst[1][0] = -figure.torus[i].y + figure.torus[i + 12].y;
-					dotSec[1][0] = -figure.torus[i].y + figure.torus[i - 11].y;
-					dotFst[2][0] = -figure.torus[i].z + figure.torus[i + 12].z;
-					dotSec[2][0] = -figure.torus[i].z + figure.torus[i - 11].z;
-					cameraToPolygon1[0][0] = figure.torus[i].x;
-					cameraToPolygon1[1][0] = figure.torus[i].y;
-					cameraToPolygon1[2][0] = figure.torus[i].z;
-					cameraToPolygon2[0][0] = figure.torus[i + 12].x;
-					cameraToPolygon2[1][0] = figure.torus[i + 12].y;
-					cameraToPolygon2[2][0] = figure.torus[i + 12].z;
-					cameraToPolygon3[0][0] = figure.torus[i - 11].x;
-					cameraToPolygon3[1][0] = figure.torus[i - 11].y;
-					cameraToPolygon3[2][0] = figure.torus[i - 11].z;
+					dotFst[0][0] = -newTorusWC[i].x + newTorusWC[i + 12].x;
+					dotSec[0][0] = -newTorusWC[i].x + newTorusWC[i - 11].x;
+					dotFst[1][0] = -newTorusWC[i].y + newTorusWC[i + 12].y;
+					dotSec[1][0] = -newTorusWC[i].y + newTorusWC[i - 11].y;
+					dotFst[2][0] = -newTorusWC[i].z + newTorusWC[i + 12].z;
+					dotSec[2][0] = -newTorusWC[i].z + newTorusWC[i - 11].z;
+					cameraToPolygon1[0][0] = newTorusWC[i].x;
+					cameraToPolygon1[1][0] = newTorusWC[i].y;
+					cameraToPolygon1[2][0] = newTorusWC[i].z;
+					cameraToPolygon2[0][0] = newTorusWC[i + 12].x;
+					cameraToPolygon2[1][0] = newTorusWC[i + 12].y;
+					cameraToPolygon2[2][0] = newTorusWC[i + 12].z;
+					cameraToPolygon3[0][0] = newTorusWC[i - 11].x;
+					cameraToPolygon3[1][0] = newTorusWC[i - 11].y;
+					cameraToPolygon3[2][0] = newTorusWC[i - 11].z;
 				}
 			}
 			else
 			{
 				if (i >= 132)
 				{
-					dotFst[0][0] = -figure.torus[i].x + figure.torus[i - 132].x;
-					dotSec[0][0] = -figure.torus[i].x + figure.torus[i + 1].x;
-					dotFst[1][0] = -figure.torus[i].y + figure.torus[i - 132].y;
-					dotSec[1][0] = -figure.torus[i].y + figure.torus[i + 1].y;
-					dotFst[2][0] = -figure.torus[i].z + figure.torus[i - 132].z;
-					dotSec[2][0] = -figure.torus[i].z + figure.torus[i + 1].z;
-					cameraToPolygon1[0][0] = figure.torus[i].x;
-					cameraToPolygon1[1][0] = figure.torus[i].y;
-					cameraToPolygon1[2][0] = figure.torus[i].z;
-					cameraToPolygon2[0][0] = figure.torus[i - 132].x;
-					cameraToPolygon2[1][0] = figure.torus[i - 132].y;
-					cameraToPolygon2[2][0] = figure.torus[i - 132].z;
-					cameraToPolygon3[0][0] = figure.torus[i + 1].x;
-					cameraToPolygon3[1][0] = figure.torus[i + 1].y;
-					cameraToPolygon3[2][0] = figure.torus[i + 1].z;
+					dotFst[0][0] = -newTorusWC[i].x + newTorusWC[i - 132].x;
+					dotSec[0][0] = -newTorusWC[i].x + newTorusWC[i + 1].x;
+					dotFst[1][0] = -newTorusWC[i].y + newTorusWC[i - 132].y;
+					dotSec[1][0] = -newTorusWC[i].y + newTorusWC[i + 1].y;
+					dotFst[2][0] = -newTorusWC[i].z + newTorusWC[i - 132].z;
+					dotSec[2][0] = -newTorusWC[i].z + newTorusWC[i + 1].z;
+					cameraToPolygon1[0][0] = newTorusWC[i].x;
+					cameraToPolygon1[1][0] = newTorusWC[i].y;
+					cameraToPolygon1[2][0] = newTorusWC[i].z;
+					cameraToPolygon2[0][0] = newTorusWC[i - 132].x;
+					cameraToPolygon2[1][0] = newTorusWC[i - 132].y;
+					cameraToPolygon2[2][0] = newTorusWC[i - 132].z;
+					cameraToPolygon3[0][0] = newTorusWC[i + 1].x;
+					cameraToPolygon3[1][0] = newTorusWC[i + 1].y;
+					cameraToPolygon3[2][0] = newTorusWC[i + 1].z;
 				}
 				else
 				{
-					dotFst[0][0] = -figure.torus[i].x + figure.torus[i + 12].x;
-					dotSec[0][0] = -figure.torus[i].x + figure.torus[i + 1].x;
-					dotFst[1][0] = -figure.torus[i].y + figure.torus[i + 12].y;
-					dotSec[1][0] = -figure.torus[i].y + figure.torus[i + 1].y;
-					dotFst[2][0] = -figure.torus[i].z + figure.torus[i + 12].z;
-					dotSec[2][0] = -figure.torus[i].z + figure.torus[i + 1].z;
-					cameraToPolygon1[0][0] = figure.torus[i].x;
-					cameraToPolygon1[1][0] = figure.torus[i].y;
-					cameraToPolygon1[2][0] = figure.torus[i].z;
-					cameraToPolygon2[0][0] = figure.torus[i + 12].x;
-					cameraToPolygon2[1][0] = figure.torus[i + 12].y;
-					cameraToPolygon2[2][0] = figure.torus[i + 12].z;
-					cameraToPolygon3[0][0] = figure.torus[i + 1].x;
-					cameraToPolygon3[1][0] = figure.torus[i + 1].y;
-					cameraToPolygon3[2][0] = figure.torus[i + 1].z;
+					dotFst[0][0] = -newTorusWC[i].x + newTorusWC[i + 12].x;
+					dotSec[0][0] = -newTorusWC[i].x + newTorusWC[i + 1].x;
+					dotFst[1][0] = -newTorusWC[i].y + newTorusWC[i + 12].y;
+					dotSec[1][0] = -newTorusWC[i].y + newTorusWC[i + 1].y;
+					dotFst[2][0] = -newTorusWC[i].z + newTorusWC[i + 12].z;
+					dotSec[2][0] = -newTorusWC[i].z + newTorusWC[i + 1].z;
+					cameraToPolygon1[0][0] = newTorusWC[i].x;
+					cameraToPolygon1[1][0] = newTorusWC[i].y;
+					cameraToPolygon1[2][0] = newTorusWC[i].z;
+					cameraToPolygon2[0][0] = newTorusWC[i + 12].x;
+					cameraToPolygon2[1][0] = newTorusWC[i + 12].y;
+					cameraToPolygon2[2][0] = newTorusWC[i + 12].z;
+					cameraToPolygon3[0][0] = newTorusWC[i + 1].x;
+					cameraToPolygon3[1][0] = newTorusWC[i + 1].y;
+					cameraToPolygon3[2][0] = newTorusWC[i + 1].z;
 				}
 			}
 			dotFst[3][0] = 1;
@@ -1246,78 +1629,78 @@ void CMFCApplication3View::OnPaint()
 			{
 				if (i == 0)
 				{
-					dotFst[0][0] = -figure.torus[i].x + figure.torus[i + 132].x;
-					dotSec[0][0] = -figure.torus[i].x + figure.torus[i + 11].x;
-					dotFst[1][0] = -figure.torus[i].y + figure.torus[i + 132].y;
-					dotSec[1][0] = -figure.torus[i].y + figure.torus[i + 11].y;
-					dotFst[2][0] = -figure.torus[i].z + figure.torus[i + 132].z;
-					dotSec[2][0] = -figure.torus[i].z + figure.torus[i + 11].z;
-					cameraToPolygon1[0][0] = figure.torus[i].x;
-					cameraToPolygon1[1][0] = figure.torus[i].y;
-					cameraToPolygon1[2][0] = figure.torus[i].z;
-					cameraToPolygon2[0][0] = figure.torus[i + 132].x;
-					cameraToPolygon2[1][0] = figure.torus[i + 132].y;
-					cameraToPolygon2[2][0] = figure.torus[i + 132].z;
-					cameraToPolygon3[0][0] = figure.torus[i + 11].x;
-					cameraToPolygon3[1][0] = figure.torus[i + 11].y;
-					cameraToPolygon3[2][0] = figure.torus[i + 11].z;
+					dotFst[0][0] = -newTorusWC[i].x + newTorusWC[i + 132].x;
+					dotSec[0][0] = -newTorusWC[i].x + newTorusWC[i + 11].x;
+					dotFst[1][0] = -newTorusWC[i].y + newTorusWC[i + 132].y;
+					dotSec[1][0] = -newTorusWC[i].y + newTorusWC[i + 11].y;
+					dotFst[2][0] = -newTorusWC[i].z + newTorusWC[i + 132].z;
+					dotSec[2][0] = -newTorusWC[i].z + newTorusWC[i + 11].z;
+					cameraToPolygon1[0][0] = newTorusWC[i].x;
+					cameraToPolygon1[1][0] = newTorusWC[i].y;
+					cameraToPolygon1[2][0] = newTorusWC[i].z;
+					cameraToPolygon2[0][0] = newTorusWC[i + 132].x;
+					cameraToPolygon2[1][0] = newTorusWC[i + 132].y;
+					cameraToPolygon2[2][0] = newTorusWC[i + 132].z;
+					cameraToPolygon3[0][0] = newTorusWC[i + 11].x;
+					cameraToPolygon3[1][0] = newTorusWC[i + 11].y;
+					cameraToPolygon3[2][0] = newTorusWC[i + 11].z;
 				}
 				else
 				{
-					dotFst[0][0] = -figure.torus[i].x + figure.torus[i - 12].x;
-					dotSec[0][0] = -figure.torus[i].x + figure.torus[i + 11].x;
-					dotFst[1][0] = -figure.torus[i].y + figure.torus[i - 12].y;
-					dotSec[1][0] = -figure.torus[i].y + figure.torus[i + 11].y;
-					dotFst[2][0] = -figure.torus[i].z + figure.torus[i - 12].z;
-					dotSec[2][0] = -figure.torus[i].z + figure.torus[i + 11].z;
-					cameraToPolygon1[0][0] = figure.torus[i].x;
-					cameraToPolygon1[1][0] = figure.torus[i].y;
-					cameraToPolygon1[2][0] = figure.torus[i].z;
-					cameraToPolygon2[0][0] = figure.torus[i - 12].x;
-					cameraToPolygon2[1][0] = figure.torus[i - 12].y;
-					cameraToPolygon2[2][0] = figure.torus[i - 12].z;
-					cameraToPolygon3[0][0] = figure.torus[i + 11].x;
-					cameraToPolygon3[1][0] = figure.torus[i + 11].y;
-					cameraToPolygon3[2][0] = figure.torus[i + 11].z;
+					dotFst[0][0] = -newTorusWC[i].x + newTorusWC[i - 12].x;
+					dotSec[0][0] = -newTorusWC[i].x + newTorusWC[i + 11].x;
+					dotFst[1][0] = -newTorusWC[i].y + newTorusWC[i - 12].y;
+					dotSec[1][0] = -newTorusWC[i].y + newTorusWC[i + 11].y;
+					dotFst[2][0] = -newTorusWC[i].z + newTorusWC[i - 12].z;
+					dotSec[2][0] = -newTorusWC[i].z + newTorusWC[i + 11].z;
+					cameraToPolygon1[0][0] = newTorusWC[i].x;
+					cameraToPolygon1[1][0] = newTorusWC[i].y;
+					cameraToPolygon1[2][0] = newTorusWC[i].z;
+					cameraToPolygon2[0][0] = newTorusWC[i - 12].x;
+					cameraToPolygon2[1][0] = newTorusWC[i - 12].y;
+					cameraToPolygon2[2][0] = newTorusWC[i - 12].z;
+					cameraToPolygon3[0][0] = newTorusWC[i + 11].x;
+					cameraToPolygon3[1][0] = newTorusWC[i + 11].y;
+					cameraToPolygon3[2][0] = newTorusWC[i + 11].z;
 				}
 			}
 			else
 			{
 				if (i < 12)
 				{
-					dotFst[0][0] = -figure.torus[i].x + figure.torus[i + 132].x;
-					dotSec[0][0] = -figure.torus[i].x + figure.torus[i - 1].x;
-					dotFst[1][0] = -figure.torus[i].y + figure.torus[i + 132].y;
-					dotSec[1][0] = -figure.torus[i].y + figure.torus[i - 1].y;
-					dotFst[2][0] = -figure.torus[i].z + figure.torus[i + 132].z;
-					dotSec[2][0] = -figure.torus[i].z + figure.torus[i - 1].z;
-					cameraToPolygon1[0][0] = figure.torus[i].x;
-					cameraToPolygon1[1][0] = figure.torus[i].y;
-					cameraToPolygon1[2][0] = figure.torus[i].z;
-					cameraToPolygon2[0][0] = figure.torus[i + 132].x;
-					cameraToPolygon2[1][0] = figure.torus[i + 132].y;
-					cameraToPolygon2[2][0] = figure.torus[i + 132].z;
-					cameraToPolygon3[0][0] = figure.torus[i - 1].x;
-					cameraToPolygon3[1][0] = figure.torus[i - 1].y;
-					cameraToPolygon3[2][0] = figure.torus[i - 1].z;
+					dotFst[0][0] = -newTorusWC[i].x + newTorusWC[i + 132].x;
+					dotSec[0][0] = -newTorusWC[i].x + newTorusWC[i - 1].x;
+					dotFst[1][0] = -newTorusWC[i].y + newTorusWC[i + 132].y;
+					dotSec[1][0] = -newTorusWC[i].y + newTorusWC[i - 1].y;
+					dotFst[2][0] = -newTorusWC[i].z + newTorusWC[i + 132].z;
+					dotSec[2][0] = -newTorusWC[i].z + newTorusWC[i - 1].z;
+					cameraToPolygon1[0][0] = newTorusWC[i].x;
+					cameraToPolygon1[1][0] = newTorusWC[i].y;
+					cameraToPolygon1[2][0] = newTorusWC[i].z;
+					cameraToPolygon2[0][0] = newTorusWC[i + 132].x;
+					cameraToPolygon2[1][0] = newTorusWC[i + 132].y;
+					cameraToPolygon2[2][0] = newTorusWC[i + 132].z;
+					cameraToPolygon3[0][0] = newTorusWC[i - 1].x;
+					cameraToPolygon3[1][0] = newTorusWC[i - 1].y;
+					cameraToPolygon3[2][0] = newTorusWC[i - 1].z;
 				}
 				else
 				{
-					dotFst[0][0] = -figure.torus[i].x + figure.torus[i - 12].x;
-					dotSec[0][0] = -figure.torus[i].x + figure.torus[i - 1].x;
-					dotFst[1][0] = -figure.torus[i].y + figure.torus[i - 12].y;
-					dotSec[1][0] = -figure.torus[i].y + figure.torus[i - 1].y;
-					dotFst[2][0] = -figure.torus[i].z + figure.torus[i - 12].z;
-					dotSec[2][0] = -figure.torus[i].z + figure.torus[i - 1].z;
-					cameraToPolygon1[0][0] = figure.torus[i].x;
-					cameraToPolygon1[1][0] = figure.torus[i].y;
-					cameraToPolygon1[2][0] = figure.torus[i].z;
-					cameraToPolygon2[0][0] = figure.torus[i - 12].x;
-					cameraToPolygon2[1][0] = figure.torus[i - 12].y;
-					cameraToPolygon2[2][0] = figure.torus[i - 12].z;
-					cameraToPolygon3[0][0] = figure.torus[i - 1].x;
-					cameraToPolygon3[1][0] = figure.torus[i - 1].y;
-					cameraToPolygon3[2][0] = figure.torus[i - 1].z;
+					dotFst[0][0] = -newTorusWC[i].x + newTorusWC[i - 12].x;
+					dotSec[0][0] = -newTorusWC[i].x + newTorusWC[i - 1].x;
+					dotFst[1][0] = -newTorusWC[i].y + newTorusWC[i - 12].y;
+					dotSec[1][0] = -newTorusWC[i].y + newTorusWC[i - 1].y;
+					dotFst[2][0] = -newTorusWC[i].z + newTorusWC[i - 12].z;
+					dotSec[2][0] = -newTorusWC[i].z + newTorusWC[i - 1].z;
+					cameraToPolygon1[0][0] = newTorusWC[i].x;
+					cameraToPolygon1[1][0] = newTorusWC[i].y;
+					cameraToPolygon1[2][0] = newTorusWC[i].z;
+					cameraToPolygon2[0][0] = newTorusWC[i - 12].x;
+					cameraToPolygon2[1][0] = newTorusWC[i - 12].y;
+					cameraToPolygon2[2][0] = newTorusWC[i - 12].z;
+					cameraToPolygon3[0][0] = newTorusWC[i - 1].x;
+					cameraToPolygon3[1][0] = newTorusWC[i - 1].y;
+					cameraToPolygon3[2][0] = newTorusWC[i - 1].z;
 				}
 			}
 			dotFst[3][0] = 1;
@@ -1544,8 +1927,9 @@ void CMFCApplication3View::OnLButtonDown(UINT nFlags, CPoint point)
 	az10[1][0] = (point.y - top - height / 2) * (-1) / (height / 2) * az10[2][0];
 	az10[3][0] = 1; // 화면을 클릭했을 때 얻어지는 투영면에서의 한 지점
 	// 뷰 행렬
-	float look[3][1] = { { 1 },{ -1 },{ 0 } };
+	look[0][0] = lookX; look[1][0] = lookY; look[2][0] = lookZ;
 	float view[4][4] = {};
+	camera[0][0] = cameraX; camera[1][0] = cameraY; camera[2][0] = cameraZ;
 	float* viewPtr = ViewMatrix(camera, look/*뷰 행렬 만드는데 물체 위치가 크게 중요하지 않은 것 같아서 나중에 지울 예정*/, look);
 	int viewCount = 0;
 	for (int i = 0; i < 4; i++)
@@ -1622,7 +2006,7 @@ void CMFCApplication3View::OnLButtonDown(UINT nFlags, CPoint point)
 	case 1:
 	{
 		float x = az10[0][0]; float y = az10[1][0]; float z = az10[2][0];
-		MyVertex* vPtr = pCube(x, y, z);
+		MyVertex* vPtr = pCube(20, x, y, z);
 		MyVertex cub[8] = {};
 		int count = 0;
 		for (int i = 0; i < 8; i++)
@@ -1638,6 +2022,8 @@ void CMFCApplication3View::OnLButtonDown(UINT nFlags, CPoint point)
 			Ci.cube[i] = cub[i];
 		}
 		Ci.vertexCount = sizeof(cub) / sizeof(MyVertex);
+		Ci.originLength = 20; Ci.length = 20;
+		Ci.cubeOrigin.x = x; Ci.cubeOrigin.y = y; Ci.cubeOrigin.z = z;
 		v_cubeFigure.push_back(Ci);
 #pragma endregion
 		break;
@@ -1647,7 +2033,7 @@ void CMFCApplication3View::OnLButtonDown(UINT nFlags, CPoint point)
 	case 2:
 	{
 		float x = az10[0][0]; float y = az10[1][0]; float z = az10[2][0];
-		MyVertex* vPtr = pSphere(x, y, z);
+		MyVertex* vPtr = pSphere(20, x, y, z);
 		MyVertex sph[230] = {};
 		int count = 0;
 		for (int i = 0; i < 230; i++)
@@ -1663,6 +2049,8 @@ void CMFCApplication3View::OnLButtonDown(UINT nFlags, CPoint point)
 			Si.sphere[i] = sph[i];
 		}
 		Si.vertexCount = sizeof(sph) / sizeof(MyVertex);
+		Si.radius = 20; Si.originRadius = 20;
+		Si.sphereOrigin.x = x; Si.sphereOrigin.y = y; Si.sphereOrigin.z = z;
 		v_sphereFigure.push_back(Si);
 #pragma endregion
 		break;
@@ -1690,6 +2078,9 @@ void CMFCApplication3View::OnLButtonDown(UINT nFlags, CPoint point)
 			ti.torus[i] = tor[i];
 		}
 		ti.vertexCount = sizeof(tor) / sizeof(MyVertex);
+		ti.torusLongRadius = 15; ti.originTorusLongRadius = 15;
+		ti.torusRadius = 8; ti.originTorusRadius = 8;
+		ti.torusOrigin.x = x; ti.torusOrigin.y = y; ti.torusOrigin.z = z;
 		v_torusFigure.push_back(ti);
 #pragma endregion
 		break;
@@ -1838,7 +2229,8 @@ void CMFCApplication3View::OnRButtonUp(UINT nFlags, CPoint point)
 	az10[1][0] = (point.y - top - height / 2) * (-1) / (height / 2);
 	az10[3][0] = 1; // 화면을 클릭했을 때 얻어지는 투영면에서의 한 지점
 	// 뷰 행렬
-	float look[3][1] = { { 1 },{ -1 },{ 0 } };
+	
+	look[0][0] = lookX; look[1][0] = lookY; look[2][0] = lookZ;
 	float view[4][4] = {};
 	camera[0][0] = cameraX; camera[1][0] = cameraY; camera[2][0] = cameraZ;
 	float* viewPtr = ViewMatrix(camera, look/*뷰 행렬 만드는데 물체 위치가 크게 중요하지 않은 것 같아서 나중에 지울 예정*/, look);
@@ -1921,9 +2313,9 @@ void CMFCApplication3View::OnRButtonUp(UINT nFlags, CPoint point)
 		// 투영 좌표를 기준으로 해보자.
 		for (int i = 0; i < 8; i++)
 		{
-			vertexSample[0][0] = figure.cube[i].x;
-			vertexSample[1][0] = figure.cube[i].y;
-			vertexSample[2][0] = figure.cube[i].z;
+			vertexSample[0][0] = figure.cube_justForClick[i].x;
+			vertexSample[1][0] = figure.cube_justForClick[i].y;
+			vertexSample[2][0] = figure.cube_justForClick[i].z;
 			vertexSample[3][0] = 1;
 			viewPtr = MatrixMulti(view, vertexSample);
 			viewCount = 0;
@@ -2193,9 +2585,9 @@ void CMFCApplication3View::OnRButtonUp(UINT nFlags, CPoint point)
 		// 뷰 좌표로 변환시킴
 		for (int i = 0; i < 230; i++)
 		{
-			vertexSample[0][0] = figure.sphere[i].x;
-			vertexSample[1][0] = figure.sphere[i].y;
-			vertexSample[2][0] = figure.sphere[i].z;
+			vertexSample[0][0] = figure.sphere_justForClick[i].x;
+			vertexSample[1][0] = figure.sphere_justForClick[i].y;
+			vertexSample[2][0] = figure.sphere_justForClick[i].z;
 			vertexSample[3][0] = 1;
 			viewPtr = MatrixMulti(view, vertexSample);
 			viewCount = 0;
@@ -2430,9 +2822,9 @@ void CMFCApplication3View::OnRButtonUp(UINT nFlags, CPoint point)
 		// 투영 좌표를 기준으로 해보자.
 		for (int i = 0; i < 144; i++)
 		{
-			vertexSample[0][0] = figure.torus[i].x;
-			vertexSample[1][0] = figure.torus[i].y;
-			vertexSample[2][0] = figure.torus[i].z;
+			vertexSample[0][0] = figure.torus_justForClick[i].x;
+			vertexSample[1][0] = figure.torus_justForClick[i].y;
+			vertexSample[2][0] = figure.torus_justForClick[i].z;
 			vertexSample[3][0] = 1;
 			viewPtr = MatrixMulti(view, vertexSample);
 			viewCount = 0;
@@ -2593,7 +2985,355 @@ BOOL CMFCApplication3View::PreTranslateMessage(MSG* pMsg)
 		if (pMsg->wParam == VK_LEFT) cameraZ += 5;
 		if (pMsg->wParam == VK_UP) cameraY += 5;
 		if (pMsg->wParam == VK_DOWN) cameraY -= 5;
-
+		// 카메라 아래로 이동시 경계면에 있는 물체가 조금 이상하게 찍힘
+		if (pMsg->wParam == 'W')
+		{
+			if(rotateXCount < 12)
+			{
+				////// 카메라 방향 회전
+				float camLookDirection[4][1] = { { lookX },{ lookY },{ lookZ },{ 1 } };
+				float* lookPtr = MatrixRotate(camLookDirection, 0, 0, -cameraRotateX);
+				int lookCount = 0;
+				for (int i = 0; i < 4; i++)
+				{
+					camLookDirection[i][0] = *(lookPtr + lookCount);
+					lookCount++;
+				}
+				lookX = camLookDirection[0][0]; lookY = camLookDirection[1][0]; lookZ = camLookDirection[2][0];
+				rotateXCount++;
+				//////
+			}
+		}
+		if (pMsg->wParam == 'S')
+		{
+			if (rotateXCount > -12)
+			{
+				////// 카메라 방향 회전
+				float camLookDirection[4][1] = { { lookX },{ lookY },{ lookZ },{ 1 } };
+				float* lookPtr = MatrixRotate(camLookDirection, 0, 0, cameraRotateX);
+				int lookCount = 0;
+				for (int i = 0; i < 4; i++)
+				{
+					camLookDirection[i][0] = *(lookPtr + lookCount);
+					lookCount++;
+				}
+				lookX = camLookDirection[0][0]; lookY = camLookDirection[1][0]; lookZ = camLookDirection[2][0];
+				rotateXCount--;
+				//////
+			}
+		}
+		if (pMsg->wParam == 'A')
+		{
+			if (rotateYCount < 18)
+			{
+				////// 카메라 방향 회전
+				float camLookDirection[4][1] = { { lookX },{ lookY },{ lookZ },{ 1 } };
+				float* lookPtr = MatrixRotate(camLookDirection, 0, cameraRotateY, 0);
+				int lookCount = 0;
+				for (int i = 0; i < 4; i++)
+				{
+					camLookDirection[i][0] = *(lookPtr + lookCount);
+					lookCount++;
+				}
+				lookX = camLookDirection[0][0]; lookY = camLookDirection[1][0]; lookZ = camLookDirection[2][0];
+				rotateYCount++;
+				//////
+			}
+			
+		}
+		if (pMsg->wParam == 'D')
+		{
+			if (rotateYCount > -18)
+			{
+				////// 카메라 방향 회전
+				float camLookDirection[4][1] = { { lookX },{ lookY },{ lookZ },{ 1 } };
+				float* lookPtr = MatrixRotate(camLookDirection, 0, -cameraRotateY, 0);
+				int lookCount = 0;
+				for (int i = 0; i < 4; i++)
+				{
+					camLookDirection[i][0] = *(lookPtr + lookCount);
+					lookCount++;
+				}
+				lookX = camLookDirection[0][0]; lookY = camLookDirection[1][0]; lookZ = camLookDirection[2][0];
+				rotateYCount--;
+				//////
+			}
+		}
+		// 선택된 물체 크기 변화
+		if (pMsg->wParam == 'P')
+		{
+			BOOL isChecked = FALSE;
+			for (auto& figure : v_cubeFigure)
+			{
+				if (!figure.isClicked) continue;
+				isChecked = TRUE;
+				figure.length += 5;
+				break;
+			}
+			for (auto& figure : v_sphereFigure)
+			{
+				if (isChecked) break;
+				if (!figure.isClicked) continue;
+				isChecked = TRUE;
+				figure.radius += 4;
+				break;
+			}
+			for (auto& figure : v_torusFigure)
+			{
+				if (isChecked) break;
+				if (!figure.isClicked) continue;
+				isChecked = TRUE;
+				figure.torusLongRadius += 5;
+				figure.torusRadius += 3;
+				break;
+			}
+		}
+		if (pMsg->wParam == 'M')
+		{
+			BOOL isChecked = FALSE;
+			for (auto& figure : v_cubeFigure)
+			{
+				if (!figure.isClicked) continue;
+				isChecked = TRUE;
+				figure.length -= 5;
+				break;
+			}
+			for (auto& figure : v_sphereFigure)
+			{
+				if (isChecked) break;
+				if (!figure.isClicked) continue;
+				isChecked = TRUE;
+				figure.radius -= 4;
+				break;
+			}
+			for (auto& figure : v_torusFigure)
+			{
+				if (isChecked) break;
+				if (!figure.isClicked) continue;
+				isChecked = TRUE;
+				figure.torusLongRadius -= 5;
+				figure.torusRadius -= 3;
+				break;
+			}
+		}
+		// 선택된 물체 이동
+		if (pMsg->wParam == 'T')
+		{
+			BOOL isChecked = FALSE;
+			for (auto& figure : v_cubeFigure)
+			{
+				if (!figure.isClicked) continue;
+				isChecked = TRUE;
+				figure.moveY += 4;
+				break;
+			}
+			for (auto& figure : v_sphereFigure)
+			{
+				if (isChecked) break;
+				if (!figure.isClicked) continue;
+				isChecked = TRUE;
+				figure.moveY += 4;
+				break;
+			}
+			for (auto& figure : v_torusFigure)
+			{
+				if (isChecked) break;
+				if (!figure.isClicked) continue;
+				isChecked = TRUE;
+				figure.moveY += 4;
+				break;
+			}
+		}
+		if (pMsg->wParam == 'G')
+		{
+			BOOL isChecked = FALSE;
+			for (auto& figure : v_cubeFigure)
+			{
+				if (!figure.isClicked) continue;
+				isChecked = TRUE;
+				figure.moveY -= 4;
+				break;
+			}
+			for (auto& figure : v_sphereFigure)
+			{
+				if (isChecked) break;
+				if (!figure.isClicked) continue;
+				isChecked = TRUE;
+				figure.moveY -= 4;
+				break;
+			}
+			for (auto& figure : v_torusFigure)
+			{
+				if (isChecked) break;
+				if (!figure.isClicked) continue;
+				isChecked = TRUE;
+				figure.moveY -= 4;
+				break;
+			}
+		}
+		if (pMsg->wParam == 'F')
+		{
+			BOOL isChecked = FALSE;
+			for (auto& figure : v_cubeFigure)
+			{
+				if (!figure.isClicked) continue;
+				isChecked = TRUE;
+				figure.moveX -= 4;
+				break;
+			}
+			for (auto& figure : v_sphereFigure)
+			{
+				if (isChecked) break;
+				if (!figure.isClicked) continue;
+				isChecked = TRUE;
+				figure.moveX -= 4;
+				break;
+			}
+			for (auto& figure : v_torusFigure)
+			{
+				if (isChecked) break;
+				if (!figure.isClicked) continue;
+				isChecked = TRUE;
+				figure.moveX -= 4;
+				break;
+			}
+		}
+		if (pMsg->wParam == 'H')
+		{
+			BOOL isChecked = FALSE;
+			for (auto& figure : v_cubeFigure)
+			{
+				if (!figure.isClicked) continue;
+				isChecked = TRUE;
+				figure.moveX += 4;
+				break;
+			}
+			for (auto& figure : v_sphereFigure)
+			{
+				if (isChecked) break;
+				if (!figure.isClicked) continue;
+				isChecked = TRUE;
+				figure.moveX += 4;
+				break;
+			}
+			for (auto& figure : v_torusFigure)
+			{
+				if (isChecked) break;
+				if (!figure.isClicked) continue;
+				isChecked = TRUE;
+				figure.moveX += 4;
+				break;
+			}
+		}
+		// 선택된 물체 회전
+		if (pMsg->wParam == 'I')
+		{
+			BOOL isChecked = FALSE;
+			for (auto& figure : v_cubeFigure)
+			{
+				if (!figure.isClicked) continue;
+				isChecked = TRUE;
+				figure.rotX += 15;
+				break;
+			}
+			for (auto& figure : v_sphereFigure)
+			{
+				if (isChecked) break;
+				if (!figure.isClicked) continue;
+				isChecked = TRUE;
+				figure.rotX += 15;
+				break;
+			}
+			for (auto& figure : v_torusFigure)
+			{
+				if (isChecked) break;
+				if (!figure.isClicked) continue;
+				isChecked = TRUE;
+				figure.rotX += 15;
+				break;
+			}
+		}
+		if (pMsg->wParam == 'K')
+		{
+			BOOL isChecked = FALSE;
+			for (auto& figure : v_cubeFigure)
+			{
+				if (!figure.isClicked) continue;
+				isChecked = TRUE;
+				figure.rotX -= 15;
+				break;
+			}
+			for (auto& figure : v_sphereFigure)
+			{
+				if (isChecked) break;
+				if (!figure.isClicked) continue;
+				isChecked = TRUE;
+				figure.rotX -= 15;
+				break;
+			}
+			for (auto& figure : v_torusFigure)
+			{
+				if (isChecked) break;
+				if (!figure.isClicked) continue;
+				isChecked = TRUE;
+				figure.rotX -= 15;
+				break;
+			}
+		}
+		if (pMsg->wParam == 'J')
+		{
+			BOOL isChecked = FALSE;
+			for (auto& figure : v_cubeFigure)
+			{
+				if (!figure.isClicked) continue;
+				isChecked = TRUE;
+				figure.rotY -= 15;
+				break;
+			}
+			for (auto& figure : v_sphereFigure)
+			{
+				if (isChecked) break;
+				if (!figure.isClicked) continue;
+				isChecked = TRUE;
+				figure.rotY -= 15;
+				break;
+			}
+			for (auto& figure : v_torusFigure)
+			{
+				if (isChecked) break;
+				if (!figure.isClicked) continue;
+				isChecked = TRUE;
+				figure.rotY -= 15;
+				break;
+			}
+		}
+		if (pMsg->wParam == 'L')
+		{
+			BOOL isChecked = FALSE;
+			for (auto& figure : v_cubeFigure)
+			{
+				if (!figure.isClicked) continue;
+				isChecked = TRUE;
+				figure.rotY += 15;
+				break;
+			}
+			for (auto& figure : v_sphereFigure)
+			{
+				if (isChecked) break;
+				if (!figure.isClicked) continue;
+				isChecked = TRUE;
+				figure.rotY += 15;
+				break;
+			}
+			for (auto& figure : v_torusFigure)
+			{
+				if (isChecked) break;
+				if (!figure.isClicked) continue;
+				isChecked = TRUE;
+				figure.rotY += 15;
+				break;
+			}
+		}
 		Invalidate();
 	}
 
