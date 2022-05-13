@@ -15,7 +15,6 @@
 #define ID_BUTTON_Tri                   32777
 #define ID_BUTTON_Cube                  32778
 #define ID_BUTTON_Sphe                  32779
-#define ID_BUTTON_                      32780
 #define ID_BUTTON_Toroid                32780
 
 // Next default values for new objects

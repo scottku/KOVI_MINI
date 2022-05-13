@@ -137,7 +137,7 @@ BEGIN
     END
     POPUP "타입"
     BEGIN
-        MENUITEM "LINE_LIST",                   ID_MENU_TYPE
+        MENUITEM "Solid <-> Wire",              ID_MENU_TYPE
     END
     POPUP "투영"
     BEGIN

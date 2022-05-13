@@ -31,6 +31,7 @@ typedef struct TorusInfo
 	float torusRadius;
 	int moveX = 0;
 	int moveY = 0;
+	int moveZ = 0;
 	int rotX = 0;
 	int rotY = 0;
 	int rotZ = 0;
@@ -47,6 +48,7 @@ typedef struct SphereInfo
 	float radius;
 	int moveX = 0;
 	int moveY = 0;
+	int moveZ = 0;
 	int rotX = 0;
 	int rotY = 0;
 	int rotZ = 0;
@@ -63,6 +65,7 @@ typedef struct CubeInfo
 	float length;
 	int moveX = 0;
 	int moveY = 0;
+	int moveZ = 0;
 	int rotX = 0;
 	int rotY = 0;
 	int rotZ = 0;

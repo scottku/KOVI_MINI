@@ -68,7 +68,13 @@
     <ClCompile Include="Figure.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="View기존꺼복사본.cpp">
+    <ClCompile Include="View_평행투영전.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="View_평행+선택_클립핑작업전.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="View_평행투영끝.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>

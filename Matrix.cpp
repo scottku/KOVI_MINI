@@ -2,6 +2,7 @@
 #include <cmath>
 #include "stdafx.h"
 #include "Matrix.h"
+#include "Figure.h"
 
 const double pi = 3.14159265358979;
 float* arrayReturnPtr;
@@ -601,4 +602,206 @@ float ToScreenY(int height, long top, float y)
 	result = (-1) * y * (height / 2) + top + height / 2;
 
 	return result;
+}
+
+float ProjectionParallel(float look[3][1], //카메라 시야 방향 = 투영 평면의 노멀벡터
+						float position[3][1], //월드 내 도형의 점 위치
+						float pointOnPlane[3][1]) // 투영면 위 임의의 점
+{
+	BOOL up = FALSE;
+	float upOrDown = look[0][0] * (position[0][0] - pointOnPlane[0][0]) + look[1][0] * (position[1][0] - pointOnPlane[1][0]) + look[2][0] * (position[2][0] - pointOnPlane[2][0]);
+	if (upOrDown >= 0) up = TRUE;
+	
+	float result;
+	if (up) result = -(pow(look[0][0], 2) + pow(look[1][0], 2) + pow(look[2][0], 2));
+	else result = (pow(look[0][0], 2) + pow(look[1][0], 2) + pow(look[2][0], 2));
+
+	return result;
+}
+
+float LightingCos(MyVertex p1, MyVertex p2, MyVertex p3)
+{
+	float testVector1[4][1] = {};
+	float testVector2[4][1] = {};
+	float testNorm[4][1] = {};
+	float testA = (p1.x + p2.x + p3.x) / 3;
+	float testB = (p1.y + p2.y + p3.y) / 3;
+	float testC = (p1.z + p2.z + p3.z) / 3;
+	float lightOrigin[4][1] = { { testA },{ testB },{ testC },{ 1 } };
+	testVector1[0][0] = -p1.x + p2.x; testVector1[1][0] = -p1.y + p2.y; testVector1[2][0] = -p1.z + p2.z;
+	testVector2[0][0] = -p2.x + p3.x; testVector2[1][0] = -p2.y + p3.y; testVector2[2][0] = -p2.z + p3.z;
+	float* testPtr = CrossProduct(testVector1, testVector2);
+	int testCount = 0;
+	for (int k = 0; k < 4; k++)
+	{
+		testNorm[k][0] = *(testPtr + testCount);
+		testCount++;
+	}
+	testPtr = MatrixNormalize(testNorm);
+	testCount = 0;
+	for (int k = 0; k < 4; k++)
+	{
+		testNorm[k][0] = *(testPtr + testCount);
+		testCount++;
+	}
+	testPtr = MatrixNormalize(lightOrigin);
+	testCount = 0;
+	for (int k = 0; k < 4; k++)
+	{
+		lightOrigin[k][0] = *(testPtr + testCount);
+		testCount++;
+	}
+
+	float lightOrigin3X3[3][1] = { { lightOrigin[0][0] },{ lightOrigin[1][0] },{ lightOrigin[2][0] } };
+	float testNorm3X3[3][1] = { { testNorm[0][0] },{ testNorm[1][0] },{ testNorm[2][0] } };
+
+	float testResult = DotProduct(testNorm3X3, lightOrigin3X3);
+	if (testResult > 0) testResult = 0;
+
+	return testResult;
+}
+
+float* MakeNewCoordinate(float c[3][1]) // 현재 카메라가 보고있는 방향
+{
+#pragma region 현재 카메라가 바라보고있는 방향을 카메라좌표계의 z축이라고 할 때, xyz 축의 방향벡터 구하기
+	float axisZ[4][1] = { { c[0][0] },{ c[1][0] },{ c[2][0] },{ 0 } }; // 카메라 시야 방향 -> 새로운 z축
+	float* normZ = MatrixNormalize(axisZ); // z축 정규화
+	int count = 0;
+	for (int i = 0; i < 4; i++)
+	{
+		axisZ[i][0] = *(normZ + count);
+		count++;
+	}
+	float Up[4][1] = { { 0 },{ 1 },{ 0 },{ 1 } };
+	float bParallel[3][1] = {};
+	float* ifParallel = CrossProduct(axisZ, Up);
+	count = 0;
+	for (int i = 0; i < 3; i++)
+	{
+		bParallel[i][0] = *(ifParallel + count);
+		count++;
+	}
+
+	float axisX[4][1] = {};
+	float axisY[4][1] = {};
+	if (bParallel[0][0] != 0 || bParallel[1][0] != 0 || bParallel[2][0] != 0) // 만약 카메라 방황과 up벡터가 평행이 아니라면
+	{
+		axisX[0][0] = c[2][0];
+		axisX[1][0] = 0;
+		axisX[2][0] = -c[0][0];
+
+		float* normX = MatrixNormalize(axisX); // x축 정규화
+		count = 0;
+		for (int i = 0; i < 4; i++)
+		{
+			axisX[i][0] = *(normX + count);
+			count++;
+		}
+
+		axisY[0][0] = -(c[0][0] * c[1][0]);
+		axisY[1][0] = (c[0][0] * c[0][0]) + (c[2][0] * c[2][0]);
+		axisY[2][0] = -(c[1][0] * c[2][0]);
+
+		float* normY = MatrixNormalize(axisY); // y축 정규화
+		count = 0;
+		for (int i = 0; i < 4; i++)
+		{
+			axisY[i][0] = *(normY + count);
+			count++;
+		}
+	}
+	else
+	{
+		float newUp[4][1] = { { 0 },{ 0 },{ 1 },{ 1 } };
+		ifParallel = CrossProduct(newUp, axisZ);
+		count = 0;
+		for (int i = 0; i < 4; i++)
+		{
+			axisX[i][0] = *(ifParallel + count);
+			count++;
+		}
+
+		float* normX = MatrixNormalize(axisX); // x축 정규화
+		count = 0;
+		for (int i = 0; i < 4; i++)
+		{
+			axisX[i][0] = *(normX + count);
+			count++;
+		}
+
+		ifParallel = CrossProduct(axisZ, axisX);
+		count = 0;
+		for (int i = 0; i < 4; i++)
+		{
+			axisY[i][0] = *(ifParallel + count);
+			count++;
+		}
+
+		float* normY = MatrixNormalize(axisY); // y축 정규화
+		count = 0;
+		for (int i = 0; i < 4; i++)
+		{
+			axisY[i][0] = *(normY + count);
+			count++;
+		}
+	}
+#pragma endregion
+	//axisX, axisY, axisZ
+	float axis[3][3] = { { axisX[0][0], axisX[1][0], axisX[2][0] },
+						{axisY[0][0], axisY[1][0], axisY[2][0]},
+						{axisZ[0][0], axisZ[1][0], axisZ[2][0]} };
+	return (float*)axis;
+}
+
+float* vectorRotation(float rv[3][1], float sv[3][1], int angle) //(회전할 벡터, 회전의 기준선, 각도)
+{
+	// rv = (0, v1), sv = (0, v2) ->쿼터니언
+	float cosAngle = (float)cos((angle/2)*pi/180);
+	float sinAngle = (float)sin((angle/2)*pi/180);
+
+	float tv[4][1] = {};
+	/* sv = 기준축, rv = 회전할 벡터
+	(cosAngle, sinAngle x sv) . (0, rv) . (cosAngle, -sinAngle x sv)
+		= [(cosAngle X 0) - DotProduct(sinAngle x sv, rv), -> 0 - Dot
+			cosAngle X rv + 0 x sinAngle x sv + CrossProduct(sinAngle x sv, rv)] -> cosAngle x rv + Crs
+			. (((cosAngle, -sinAngle x sv)))
+		= [(-DotProduct(sinAngle x sv, rv) x cosAngle - (DotProduct(-sinAngle x sv, CrossProduct(sinAngle x sv, rv))), -> 0
+			-DotProduct(sinAngle x sv, rv) x -sinAngle x sv + cosAngle x (cosAngle x rv + CrossProduct(sinAngle x sv, rv))
+			+CrossProduct(cosAngle x rv + CrossProduct(sinAngle x sv, rv), -sinAngle x sv)]
+		= ""rv + cosAngle x tv + CrossProduct(rv, tv); ==> {tv = 2 x (CrossPruduct(sinAngle x sv, rv))}""
+	*/
+	float rv41[4][1] = { {rv[0][0]}, {rv[1][0]}, {rv[2][0]}, 1 };
+	float sv41[4][1] = { {sv[0][0] * sinAngle}, {sv[1][0] * sinAngle}, {sv[2][0] * sinAngle}, 1 };
+	float* tvPtr = CrossProduct(sv41, rv41);
+	int tvCount = 0;
+	for (int i = 0; i < 4; i++)
+	{
+		tv[i][0] = *(tvPtr + tvCount);
+		tv[i][0] *= 2;
+		tvCount++;
+	}
+	float crsPrdRvTv[4][1] = {};
+	tvPtr = CrossProduct(sv41, tv);
+	tvCount = 0;
+	for (int i = 0; i < 4; i++)
+	{
+		crsPrdRvTv[i][0] = *(tvPtr + tvCount);
+		tvCount++;
+	}
+
+	float result[4][1] = {};
+	for (int i = 0; i < 4; i++)
+	{
+		result[i][0] = rv[i][0] + cosAngle * tv[i][0] + crsPrdRvTv[i][0];
+	}
+
+	tvCount = 0;
+	tvPtr = MatrixNormalize(result);
+	for (int i = 0; i < 4; i++)
+	{
+		result[i][0] = *(tvPtr + tvCount);
+		tvCount++;
+	}
+
+	return (float*)result;
 }
