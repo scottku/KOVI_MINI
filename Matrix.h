@@ -59,3 +59,4 @@ float ProjectionParallel(float look[3][1], //카메라 시야 방향 = 투영 평면의 노멀
 float LightingCos(MyVertex p1, MyVertex p2, MyVertex p3);
 float* MakeNewCoordinate(float c[3][1]);
 float* vectorRotation(float rv[3][1], float sv[3][1], int angle);
+float vectorLength(float a[3][1]);

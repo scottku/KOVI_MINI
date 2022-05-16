@@ -4,6 +4,8 @@
 #include "Figure.h"
 #include "Matrix.h"
 
+MyVertex* returnPtr;
+
 MyVertex* pCube(float length, float x, float y, float z)
 {
 	MyVertex result[8] = {};
@@ -16,7 +18,9 @@ MyVertex* pCube(float length, float x, float y, float z)
 	result[6].x = x + length; result[6].y = y - length; result[6].z = z - length;
 	result[7].x = x + length; result[7].y = y + length; result[7].z = z - length;
 	
-	return (MyVertex*)result;
+	returnPtr = (MyVertex*)result;
+
+	return returnPtr;
 }
 
 MyVertex* pSphere(float radius, float x, float y, float z)

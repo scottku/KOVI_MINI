@@ -98,6 +98,9 @@ public:
 	float height;
 	float left;
 	float top;
+	float lightDirX;
+	float lightDirY;
+	float lightDirZ;
 	int cameraRotateX;
 	int cameraRotateY;
 	int rotateXCount;

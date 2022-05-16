@@ -77,6 +77,12 @@
     <ClCompile Include="View_평행투영끝.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="View_간단한컬링_조명전.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="한번 망함.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="MFCApplication3.rc">

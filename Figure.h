@@ -4,7 +4,7 @@ using namespace std;
 typedef struct Vertex
 {
 	float x, y, z;
-	float vertexNormal[4][1];
+	float lightStrength1, lightStrength2, lightStrength3;
 } MyVertex;
 
 MyVertex* pCube(float length, float x, float y, float z);

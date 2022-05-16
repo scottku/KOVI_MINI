@@ -805,3 +805,12 @@ float* vectorRotation(float rv[3][1], float sv[3][1], int angle) //(회전할 벡터,
 
 	return (float*)result;
 }
+
+float vectorLength(float a[3][1])
+{
+	float x = pow(a[0][0], 2);
+	float y = pow(a[1][0], 2);
+	float z = pow(a[2][0], 2);
+
+	return sqrt(x + y + z);
+}
