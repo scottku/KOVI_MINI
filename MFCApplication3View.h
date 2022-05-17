@@ -36,6 +36,7 @@ typedef struct TorusInfo
 	int rotY = 0;
 	int rotZ = 0;
 	MyVertex torusOrigin;
+	MyVertex torusOrigin_moved;
 	bool isClicked = FALSE;
 } TorusInfo;
 
@@ -53,6 +54,7 @@ typedef struct SphereInfo
 	int rotY = 0;
 	int rotZ = 0;
 	MyVertex sphereOrigin;
+	MyVertex sphereOrigin_moved;
 	bool isClicked = FALSE;
 } SphereInfo;
 
@@ -70,6 +72,7 @@ typedef struct CubeInfo
 	int rotY = 0;
 	int rotZ = 0;
 	MyVertex cubeOrigin;
+	MyVertex cubeOrigin_moved;
 	bool isClicked = FALSE;
 } CubeInfo;
 

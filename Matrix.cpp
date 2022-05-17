@@ -759,16 +759,6 @@ float* vectorRotation(float rv[3][1], float sv[3][1], int angle) //(회전할 벡터,
 	float sinAngle = (float)sin((angle/2)*pi/180);
 
 	float tv[4][1] = {};
-	/* sv = 기준축, rv = 회전할 벡터
-	(cosAngle, sinAngle x sv) . (0, rv) . (cosAngle, -sinAngle x sv)
-		= [(cosAngle X 0) - DotProduct(sinAngle x sv, rv), -> 0 - Dot
-			cosAngle X rv + 0 x sinAngle x sv + CrossProduct(sinAngle x sv, rv)] -> cosAngle x rv + Crs
-			. (((cosAngle, -sinAngle x sv)))
-		= [(-DotProduct(sinAngle x sv, rv) x cosAngle - (DotProduct(-sinAngle x sv, CrossProduct(sinAngle x sv, rv))), -> 0
-			-DotProduct(sinAngle x sv, rv) x -sinAngle x sv + cosAngle x (cosAngle x rv + CrossProduct(sinAngle x sv, rv))
-			+CrossProduct(cosAngle x rv + CrossProduct(sinAngle x sv, rv), -sinAngle x sv)]
-		= ""rv + cosAngle x tv + CrossProduct(rv, tv); ==> {tv = 2 x (CrossPruduct(sinAngle x sv, rv))}""
-	*/
 	float rv41[4][1] = { {rv[0][0]}, {rv[1][0]}, {rv[2][0]}, 1 };
 	float sv41[4][1] = { {sv[0][0] * sinAngle}, {sv[1][0] * sinAngle}, {sv[2][0] * sinAngle}, 1 };
 	float* tvPtr = CrossProduct(sv41, rv41);

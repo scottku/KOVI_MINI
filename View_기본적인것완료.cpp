@@ -157,8 +157,6 @@ void CMFCApplication3View::OnPaint()
 	left = rect.left;
 	top = rect.top;
 
-	CPoint cp = (10, 10);
-
 	CDC memDC;
 	CBitmap myBitmap;
 	CBitmap* pOldBitmap;
@@ -182,7 +180,7 @@ void CMFCApplication3View::OnPaint()
 	look[0][0] = lookX; look[1][0] = lookY; look[2][0] = lookZ;
 	float view[4][4] = {};
 	camera[0][0] = cameraX; camera[1][0] = cameraY; camera[2][0] = cameraZ;
-	float* viewPtr = ViewMatrix(camera, look/*뷰 행렬 만드는데 물체 위치가 크게 중요하지 않은 것 같아서 나중에 지울 예정*/, look);
+	float* viewPtr = ViewMatrix(camera, look);
 	int viewCount = 0;
 	for (int i = 0; i < 4; i++)
 	{
@@ -293,8 +291,6 @@ void CMFCApplication3View::OnPaint()
 		}
 		////////////////////////////////////////////////////////////
 
-		float planeNorm[12][3] = {};
-
 		float* fPtr;
 		float sample[4][1] = {};
 		// sphere 각 점들을 뷰 행렬 변환 시킴
@@ -366,6 +362,7 @@ void CMFCApplication3View::OnPaint()
 		}
 		if (!insideFrustum) continue;
 		//////////////////////////////////////////////////////
+
 		// sphere 각 점들을 투영 시킴
 		if (projNum == 0)
 		{
@@ -421,7 +418,7 @@ void CMFCApplication3View::OnPaint()
 		if (totalOut) continue;
 		////////////////////////////////////////////////////////////////////
 
-		//위치가 이동되었으니 월드좌표계의 좌표들도 변했을 것-> 현재 받아둔 좌표를 다 뒤로 돌려서 새로운 월드좌표를 받아야 함
+		//위치가 이동되었으니 월드좌표계의 좌표들도 변했을 것-> 현재 받아둔 좌표를 뒤로 돌려서 새로운 월드좌표를 받아야 함
 		MyVertex newCubeWC[8] = {};
 		float tempVertex[4][1] = {};
 		for (int i = 0; i < 8; i++)
@@ -951,70 +948,6 @@ void CMFCApplication3View::OnPaint()
 			}
 			else
 			{
-				//#pragma region 1번 꼭짓점 - 선
-				//				memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[0].x), ToScreenY(rect.Height(), rect.top, cub[0].y));
-				//				memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[3].x), ToScreenY(rect.Height(), rect.top, cub[3].y));
-				//				memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[4].x), ToScreenY(rect.Height(), rect.top, cub[4].y));
-				//				memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[0].x), ToScreenY(rect.Height(), rect.top, cub[0].y));
-				//
-				//				memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[0].x), ToScreenY(rect.Height(), rect.top, cub[0].y));
-				//				memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[4].x), ToScreenY(rect.Height(), rect.top, cub[4].y));
-				//				memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[1].x), ToScreenY(rect.Height(), rect.top, cub[1].y));
-				//				memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[0].x), ToScreenY(rect.Height(), rect.top, cub[0].y));
-				//
-				//				memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[0].x), ToScreenY(rect.Height(), rect.top, cub[0].y));
-				//				memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[3].x), ToScreenY(rect.Height(), rect.top, cub[3].y));
-				//				memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[1].x), ToScreenY(rect.Height(), rect.top, cub[1].y));
-				//				memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[0].x), ToScreenY(rect.Height(), rect.top, cub[0].y));
-				//#pragma endregion
-				//#pragma region 2번 꼭짓점
-				//				memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[7].x), ToScreenY(rect.Height(), rect.top, cub[7].y));
-				//				memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[3].x), ToScreenY(rect.Height(), rect.top, cub[3].y));
-				//				memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[4].x), ToScreenY(rect.Height(), rect.top, cub[4].y));
-				//				memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[7].x), ToScreenY(rect.Height(), rect.top, cub[7].y));
-				//
-				//				memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[7].x), ToScreenY(rect.Height(), rect.top, cub[7].y));
-				//				memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[6].x), ToScreenY(rect.Height(), rect.top, cub[6].y));
-				//				memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[4].x), ToScreenY(rect.Height(), rect.top, cub[4].y));
-				//				memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[7].x), ToScreenY(rect.Height(), rect.top, cub[7].y));
-				//
-				//				memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[7].x), ToScreenY(rect.Height(), rect.top, cub[7].y));
-				//				memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[3].x), ToScreenY(rect.Height(), rect.top, cub[3].y));
-				//				memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[6].x), ToScreenY(rect.Height(), rect.top, cub[6].y));
-				//				memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[7].x), ToScreenY(rect.Height(), rect.top, cub[7].y));
-				//#pragma endregion
-				//#pragma region 3번 꼭짓점
-				//				memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[2].x), ToScreenY(rect.Height(), rect.top, cub[2].y));
-				//				memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[1].x), ToScreenY(rect.Height(), rect.top, cub[1].y));
-				//				memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[6].x), ToScreenY(rect.Height(), rect.top, cub[6].y));
-				//				memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[2].x), ToScreenY(rect.Height(), rect.top, cub[2].y));
-				//
-				//				memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[2].x), ToScreenY(rect.Height(), rect.top, cub[2].y));
-				//				memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[1].x), ToScreenY(rect.Height(), rect.top, cub[1].y));
-				//				memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[3].x), ToScreenY(rect.Height(), rect.top, cub[3].y));
-				//				memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[2].x), ToScreenY(rect.Height(), rect.top, cub[2].y));
-				//
-				//				memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[2].x), ToScreenY(rect.Height(), rect.top, cub[2].y));
-				//				memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[3].x), ToScreenY(rect.Height(), rect.top, cub[3].y));
-				//				memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[6].x), ToScreenY(rect.Height(), rect.top, cub[6].y));
-				//				memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[2].x), ToScreenY(rect.Height(), rect.top, cub[2].y));
-				//#pragma endregion
-				//#pragma region 4번 꼭짓점
-				//				memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[5].x), ToScreenY(rect.Height(), rect.top, cub[5].y));
-				//				memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[1].x), ToScreenY(rect.Height(), rect.top, cub[1].y));
-				//				memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[6].x), ToScreenY(rect.Height(), rect.top, cub[6].y));
-				//				memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[5].x), ToScreenY(rect.Height(), rect.top, cub[5].y));
-				//
-				//				memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[5].x), ToScreenY(rect.Height(), rect.top, cub[5].y));
-				//				memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[1].x), ToScreenY(rect.Height(), rect.top, cub[1].y));
-				//				memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[4].x), ToScreenY(rect.Height(), rect.top, cub[4].y));
-				//				memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[5].x), ToScreenY(rect.Height(), rect.top, cub[5].y));
-				//
-				//				memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[5].x), ToScreenY(rect.Height(), rect.top, cub[5].y));
-				//				memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[6].x), ToScreenY(rect.Height(), rect.top, cub[6].y));
-				//				memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[4].x), ToScreenY(rect.Height(), rect.top, cub[4].y));
-				//				memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[5].x), ToScreenY(rect.Height(), rect.top, cub[5].y));
-				//#pragma endregion
 #pragma region 1번 꼭짓점 - 선
 
 				brightness1[0][0] = -newCubeWC[0].x + newCubeWC[3].x; brightness1[1][0] = -newCubeWC[0].y + newCubeWC[3].y;
@@ -2386,7 +2319,7 @@ void CMFCApplication3View::OnPaint()
 			}
 		}
 
-#pragma region /////////// 테스트 : 화면 밖으로 모든 점이 나가버리면 안그리게 할 것
+#pragma region 화면 밖으로 모든 점이 나가버리면 안그리게 할 것
 		float pointOfView[2][1] = {};
 		bool outOfView[230] = {};
 		for (int i = 0; i < 230; i++)
@@ -2998,8 +2931,6 @@ void CMFCApplication3View::OnPaint()
 				}
 			}
 		}
-
-
 #pragma endregion
 
 #pragma region 두번째 삼각 폴리곤 -> 가장 끝쪽의 꼭짓점들이랑은 더이상 이을 필요 없음
@@ -3324,6 +3255,38 @@ void CMFCApplication3View::OnPaint()
 		if (!insideFrustum) continue;
 		//////////////////////////////////////////////////////
 
+		////// 테스트 : 05.17 -> 카메라 기준 가장 먼 곳의 정점부터 그림 그리기
+		// 뷰 좌표 기준 원점까지의 거리를 순서대로 
+		float originToVertexLength[144] = {};
+		int fromFarToNear[144] = {};
+		float vertexSample[3][1] = {};
+		float distance;
+		for (int i = 0; i < 144; i++)
+		{
+			vertexSample[0][0] = tor[i].x;
+			vertexSample[1][0] = tor[i].y;
+			vertexSample[2][0] = tor[i].z;
+			distance = vectorLength(vertexSample);
+			originToVertexLength[i] = distance;
+		} // 각 정점에서 카메라까지의 거리를 체크
+		int num = 0;
+		for (int i = 0; i < 144; i++) // 가장 큰(먼) 것 부터 배열에 넣음
+		{
+			float biggerOne = -1;
+			for (int j = 0; j < 144; j++)
+			{
+				if (originToVertexLength[j] > biggerOne)
+				{
+					biggerOne = originToVertexLength[j];
+					num = j;
+				}
+			}
+			originToVertexLength[num] = -1;
+			fromFarToNear[i] = num;
+		}
+
+		//////////////////////////////////////////////////////////////////////
+
 #pragma region 투영 행렬 변환
 		// 뷰 변환 한 점들 투영 변환
 		if (projNum == 0)
@@ -3427,7 +3390,8 @@ void CMFCApplication3View::OnPaint()
 		int rgbTemp_2[144];
 
 #pragma region 첫번째 삼각 폴리곤 
-		for (int i = 0; i < 144; i++)
+		//for (int i = 0; i < 144; i++)
+		for (auto i : fromFarToNear)
 		{
 			if ((i + 1) % 12 == 0)
 			{
@@ -3602,10 +3566,8 @@ void CMFCApplication3View::OnPaint()
 					torBrush.DeleteObject();
 				}
 			}
-			rgbCount = -1;
 			for (auto i : myInt)
 			{
-				rgbCount++; //-> count 1부터 시작, 0은 위에서 썼음.
 				if (i == 0) continue;
 				if ((i + 1) % 12 == 0)
 				{
@@ -3622,7 +3584,7 @@ void CMFCApplication3View::OnPaint()
 						else
 						{
 							// 면으로 그리기
-							torBrush.CreateSolidBrush(RGB(0, rgbTemp[rgbCount], 0));
+							torBrush.CreateSolidBrush(RGB(0, rgbTemp[i], 0));
 							prevBrush = memDC.SelectObject(&torBrush);
 							memDC.BeginPath();
 							memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
@@ -3648,7 +3610,7 @@ void CMFCApplication3View::OnPaint()
 						else
 						{
 							// 면으로 그리기
-							torBrush.CreateSolidBrush(RGB(0, rgbTemp[rgbCount], 0));
+							torBrush.CreateSolidBrush(RGB(0, rgbTemp[i], 0));
 							prevBrush = memDC.SelectObject(&torBrush);
 							memDC.BeginPath();
 							memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
@@ -3677,7 +3639,7 @@ void CMFCApplication3View::OnPaint()
 						else
 						{
 							// 면으로 그리기
-							torBrush.CreateSolidBrush(RGB(0, rgbTemp[rgbCount], 0));
+							torBrush.CreateSolidBrush(RGB(0, rgbTemp[i], 0));
 							prevBrush = memDC.SelectObject(&torBrush);
 							memDC.BeginPath();
 							memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
@@ -3703,7 +3665,7 @@ void CMFCApplication3View::OnPaint()
 						else
 						{
 							// 면으로 그리기
-							torBrush.CreateSolidBrush(RGB(0, rgbTemp[rgbCount], 0));
+							torBrush.CreateSolidBrush(RGB(0, rgbTemp[i], 0));
 							prevBrush = memDC.SelectObject(&torBrush);
 							memDC.BeginPath();
 							memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
@@ -3766,7 +3728,7 @@ void CMFCApplication3View::OnPaint()
 						else
 						{
 							// 면으로 그리기
-							torBrush.CreateSolidBrush(RGB(0, rgbTemp[rgbCount], 0));
+							torBrush.CreateSolidBrush(RGB(0, rgbTemp[i], 0));
 							prevBrush = memDC.SelectObject(&torBrush);
 							memDC.BeginPath();
 							memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
@@ -3792,7 +3754,7 @@ void CMFCApplication3View::OnPaint()
 						else
 						{
 							// 면으로 그리기
-							torBrush.CreateSolidBrush(RGB(0, rgbTemp[rgbCount], 0));
+							torBrush.CreateSolidBrush(RGB(0, rgbTemp[i], 0));
 							prevBrush = memDC.SelectObject(&torBrush);
 							memDC.BeginPath();
 							memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
@@ -3821,7 +3783,7 @@ void CMFCApplication3View::OnPaint()
 						else
 						{
 							// 면으로 그리기
-							torBrush.CreateSolidBrush(RGB(0, rgbTemp[rgbCount], 0));
+							torBrush.CreateSolidBrush(RGB(0, rgbTemp[i], 0));
 							prevBrush = memDC.SelectObject(&torBrush);
 							memDC.BeginPath();
 							memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
@@ -3847,7 +3809,7 @@ void CMFCApplication3View::OnPaint()
 						else
 						{
 							// 면으로 그리기
-							torBrush.CreateSolidBrush(RGB(0, rgbTemp[rgbCount], 0));
+							torBrush.CreateSolidBrush(RGB(0, rgbTemp[i], 0));
 							prevBrush = memDC.SelectObject(&torBrush);
 							memDC.BeginPath();
 							memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
@@ -3866,9 +3828,9 @@ void CMFCApplication3View::OnPaint()
 		//////
 #pragma endregion
 #pragma region 두번째 삼각 폴리곤 그리기
-		// 두번째 그리는 삼각형들
 		countInt = 0;
-		for (int i = 0; i < 144; i++)
+		//for (int i = 0; i < 144; i++)
+		for (auto i : fromFarToNear)
 		{
 			if ((i + 12) % 12 == 0) // 0, 12, 24, 36, .... , 120, 132
 			{
@@ -4046,10 +4008,8 @@ void CMFCApplication3View::OnPaint()
 				}
 			}
 			//////
-			rgbCount = -1;
 			for (auto i : mySecInt)
 			{
-				rgbCount++;
 				if (i == 0) continue;
 				if (i % 12 == 0)
 				{
@@ -4064,7 +4024,7 @@ void CMFCApplication3View::OnPaint()
 					else
 					{
 						// 면으로 그리기
-						torBrush.CreateSolidBrush(RGB(0, rgbTemp[rgbCount], 0));
+						torBrush.CreateSolidBrush(RGB(0, rgbTemp[i], 0));
 						prevBrush = memDC.SelectObject(&torBrush);
 						memDC.BeginPath();
 						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
@@ -4092,7 +4052,7 @@ void CMFCApplication3View::OnPaint()
 						else
 						{
 							// 면으로 그리기
-							torBrush.CreateSolidBrush(RGB(0, rgbTemp[rgbCount], 0));
+							torBrush.CreateSolidBrush(RGB(0, rgbTemp[i], 0));
 							prevBrush = memDC.SelectObject(&torBrush);
 							memDC.BeginPath();
 							memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
@@ -4118,7 +4078,7 @@ void CMFCApplication3View::OnPaint()
 						else
 						{
 							// 면으로 그리기
-							torBrush.CreateSolidBrush(RGB(0, rgbTemp[rgbCount], 0));
+							torBrush.CreateSolidBrush(RGB(0, rgbTemp[i], 0));
 							prevBrush = memDC.SelectObject(&torBrush);
 							memDC.BeginPath();
 							memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
@@ -4163,10 +4123,8 @@ void CMFCApplication3View::OnPaint()
 				}
 			}
 			//////
-			rgbCount = -1;
 			for (auto i : mySecInt)
 			{
-				rgbCount++;
 				if (i == 0) continue;
 				if (i % 12 == 0)
 				{
@@ -4181,7 +4139,7 @@ void CMFCApplication3View::OnPaint()
 					else
 					{
 						// 면으로 그리기
-						torBrush.CreateSolidBrush(RGB(0, rgbTemp[rgbCount], 0));
+						torBrush.CreateSolidBrush(RGB(0, rgbTemp[i], 0));
 						prevBrush = memDC.SelectObject(&torBrush);
 						memDC.BeginPath();
 						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
@@ -4209,7 +4167,7 @@ void CMFCApplication3View::OnPaint()
 						else
 						{
 							// 면으로 그리기
-							torBrush.CreateSolidBrush(RGB(0, rgbTemp[rgbCount], 0));
+							torBrush.CreateSolidBrush(RGB(0, rgbTemp[i], 0));
 							prevBrush = memDC.SelectObject(&torBrush);
 							memDC.BeginPath();
 							memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
@@ -4235,7 +4193,7 @@ void CMFCApplication3View::OnPaint()
 						else
 						{
 							// 면으로 그리기
-							torBrush.CreateSolidBrush(RGB(0, rgbTemp[rgbCount], 0));
+							torBrush.CreateSolidBrush(RGB(0, rgbTemp[i], 0));
 							prevBrush = memDC.SelectObject(&torBrush);
 							memDC.BeginPath();
 							memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
@@ -4253,147 +4211,335 @@ void CMFCApplication3View::OnPaint()
 		}
 
 #pragma endregion
+
+#pragma region 면이 겹쳐보이는것을 해결하기 위해 처음 그린부분 중 앞부분만 다시 그려줌
+		int countFor96 = 0;
+		int whereIs0 = 0;
+		if (frameNum == 1)
+		{
+			if (fstResult == 1)
+			{
+				for (int i = 0; i < 144; i++)
+				{
+					if (fromFarToNear[i] == 0)
+					{
+						whereIs0 = i;
+						break;
+					}
+				}
+
+				if (whereIs0 > 95)
+				{
+					if (figure.isClicked == FALSE)
+					{// 선으로 그리기
+						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[0].x), ToScreenY(rect.Height(), rect.top, tor[0].y));
+						memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[1].x), ToScreenY(rect.Height(), rect.top, tor[1].y));
+						memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[12].x), ToScreenY(rect.Height(), rect.top, tor[12].y));
+						memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[0].x), ToScreenY(rect.Height(), rect.top, tor[0].y));
+					}
+					else
+					{
+						// 면으로 그리기
+						torBrush.CreateSolidBrush(RGB(0, rgbTemp[0], 0));
+						prevBrush = memDC.SelectObject(&torBrush);
+						memDC.BeginPath();
+						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[0].x), ToScreenY(rect.Height(), rect.top, tor[0].y));
+						memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[1].x), ToScreenY(rect.Height(), rect.top, tor[1].y));
+						memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[12].x), ToScreenY(rect.Height(), rect.top, tor[12].y));
+						memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[0].x), ToScreenY(rect.Height(), rect.top, tor[0].y));
+						memDC.EndPath();
+						memDC.StrokeAndFillPath();
+						memDC.SelectObject(prevBrush);
+						torBrush.DeleteObject();
+					}
+				}
+			}
+			for (auto i : myInt)
+			{
+				if (countFor96 < 95)
+				{
+					countFor96++;
+					continue;
+				}
+				if (i == 0) continue;
+				if ((i + 1) % 12 == 0)
+				{
+					if (i >= 132)
+					{
+						if (figure.isClicked == FALSE)
+						{
+							// 선으로 그리기
+							memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 11].x), ToScreenY(rect.Height(), rect.top, tor[i - 11].y));
+							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 132].x), ToScreenY(rect.Height(), rect.top, tor[i - 132].y));
+							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+						}
+						else
+						{
+							// 면으로 그리기
+							torBrush.CreateSolidBrush(RGB(0, rgbTemp[i], 0));
+							prevBrush = memDC.SelectObject(&torBrush);
+							memDC.BeginPath();
+							memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 11].x), ToScreenY(rect.Height(), rect.top, tor[i - 11].y));
+							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 132].x), ToScreenY(rect.Height(), rect.top, tor[i - 132].y));
+							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+							memDC.EndPath();
+							memDC.StrokeAndFillPath();
+							memDC.SelectObject(prevBrush);
+							torBrush.DeleteObject();
+						}
+					}
+					else
+					{
+						if (figure.isClicked == FALSE)
+						{
+							// 선으로 그리기
+							memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 11].x), ToScreenY(rect.Height(), rect.top, tor[i - 11].y));
+							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 12].x), ToScreenY(rect.Height(), rect.top, tor[i + 12].y));
+							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+						}
+						else
+						{
+							// 면으로 그리기
+							torBrush.CreateSolidBrush(RGB(0, rgbTemp[i], 0));
+							prevBrush = memDC.SelectObject(&torBrush);
+							memDC.BeginPath();
+							memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 11].x), ToScreenY(rect.Height(), rect.top, tor[i - 11].y));
+							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 12].x), ToScreenY(rect.Height(), rect.top, tor[i + 12].y));
+							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+							memDC.EndPath();
+							memDC.StrokeAndFillPath();
+							memDC.SelectObject(prevBrush);
+							torBrush.DeleteObject();
+						}
+					}
+				}
+				else
+				{
+					if (i >= 132)
+					{
+						if (figure.isClicked == FALSE)
+						{
+							// 선으로 그리기
+							memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 1].x), ToScreenY(rect.Height(), rect.top, tor[i + 1].y));
+							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 132].x), ToScreenY(rect.Height(), rect.top, tor[i - 132].y));
+							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+						}
+						else
+						{
+							// 면으로 그리기
+							torBrush.CreateSolidBrush(RGB(0, rgbTemp[i], 0));
+							prevBrush = memDC.SelectObject(&torBrush);
+							memDC.BeginPath();
+							memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 1].x), ToScreenY(rect.Height(), rect.top, tor[i + 1].y));
+							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 132].x), ToScreenY(rect.Height(), rect.top, tor[i - 132].y));
+							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+							memDC.EndPath();
+							memDC.StrokeAndFillPath();
+							memDC.SelectObject(prevBrush);
+							torBrush.DeleteObject();
+						}
+					}
+					else
+					{
+						if (figure.isClicked == FALSE)
+						{
+							// 선으로 그리기
+							memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 1].x), ToScreenY(rect.Height(), rect.top, tor[i + 1].y));
+							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 12].x), ToScreenY(rect.Height(), rect.top, tor[i + 12].y));
+							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+						}
+						else
+						{
+							// 면으로 그리기
+							torBrush.CreateSolidBrush(RGB(0, rgbTemp[i], 0));
+							prevBrush = memDC.SelectObject(&torBrush);
+							memDC.BeginPath();
+							memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 1].x), ToScreenY(rect.Height(), rect.top, tor[i + 1].y));
+							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 12].x), ToScreenY(rect.Height(), rect.top, tor[i + 12].y));
+							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+							memDC.EndPath();
+							memDC.StrokeAndFillPath();
+							memDC.SelectObject(prevBrush);
+							torBrush.DeleteObject();
+						}
+					}
+				}
+			}
+		}
+		else
+		{
+			if (fstResult == 1)
+			{
+				for (int i = 0; i < 144; i++)
+				{
+					if (fromFarToNear[i] == 0)
+					{
+						whereIs0 = i;
+						break;
+					}
+				}
+
+				if (whereIs0 > 95)
+				{
+					if (figure.isClicked)
+					{// 선으로 그리기
+						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[0].x), ToScreenY(rect.Height(), rect.top, tor[0].y));
+						memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[1].x), ToScreenY(rect.Height(), rect.top, tor[1].y));
+						memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[12].x), ToScreenY(rect.Height(), rect.top, tor[12].y));
+						memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[0].x), ToScreenY(rect.Height(), rect.top, tor[0].y));
+					}
+					else
+					{
+						// 면으로 그리기
+						torBrush.CreateSolidBrush(RGB(0, rgbTemp[0], 0));
+						prevBrush = memDC.SelectObject(&torBrush);
+						memDC.BeginPath();
+						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[0].x), ToScreenY(rect.Height(), rect.top, tor[0].y));
+						memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[1].x), ToScreenY(rect.Height(), rect.top, tor[1].y));
+						memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[12].x), ToScreenY(rect.Height(), rect.top, tor[12].y));
+						memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[0].x), ToScreenY(rect.Height(), rect.top, tor[0].y));
+						memDC.EndPath();
+						memDC.StrokeAndFillPath();
+						memDC.SelectObject(prevBrush);
+						torBrush.DeleteObject();
+					}
+				}
+			}
+			countFor96 = 0;
+			for (auto i : myInt)
+			{
+				if (countFor96 < 95)
+				{
+					countFor96++;
+					continue;
+				}
+				if (i == 0) continue;
+				if ((i + 1) % 12 == 0)
+				{
+					if (i >= 132)
+					{
+						if (figure.isClicked)
+						{
+							// 선으로 그리기
+							memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 11].x), ToScreenY(rect.Height(), rect.top, tor[i - 11].y));
+							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 132].x), ToScreenY(rect.Height(), rect.top, tor[i - 132].y));
+							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+						}
+						else
+						{
+							// 면으로 그리기
+							torBrush.CreateSolidBrush(RGB(0, rgbTemp[i], 0));
+							prevBrush = memDC.SelectObject(&torBrush);
+							memDC.BeginPath();
+							memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 11].x), ToScreenY(rect.Height(), rect.top, tor[i - 11].y));
+							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 132].x), ToScreenY(rect.Height(), rect.top, tor[i - 132].y));
+							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+							memDC.EndPath();
+							memDC.StrokeAndFillPath();
+							memDC.SelectObject(prevBrush);
+							torBrush.DeleteObject();
+						}
+					}
+					else
+					{
+						if (figure.isClicked)
+						{
+							// 선으로 그리기
+							memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 11].x), ToScreenY(rect.Height(), rect.top, tor[i - 11].y));
+							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 12].x), ToScreenY(rect.Height(), rect.top, tor[i + 12].y));
+							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+						}
+						else
+						{
+							// 면으로 그리기
+							torBrush.CreateSolidBrush(RGB(0, rgbTemp[i], 0));
+							prevBrush = memDC.SelectObject(&torBrush);
+							memDC.BeginPath();
+							memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 11].x), ToScreenY(rect.Height(), rect.top, tor[i - 11].y));
+							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 12].x), ToScreenY(rect.Height(), rect.top, tor[i + 12].y));
+							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+							memDC.EndPath();
+							memDC.StrokeAndFillPath();
+							memDC.SelectObject(prevBrush);
+							torBrush.DeleteObject();
+						}
+					}
+				}
+				else
+				{
+					if (i >= 132)
+					{
+						if (figure.isClicked)
+						{
+							// 선으로 그리기
+							memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 1].x), ToScreenY(rect.Height(), rect.top, tor[i + 1].y));
+							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 132].x), ToScreenY(rect.Height(), rect.top, tor[i - 132].y));
+							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+						}
+						else
+						{
+							// 면으로 그리기
+							torBrush.CreateSolidBrush(RGB(0, rgbTemp[i], 0));
+							prevBrush = memDC.SelectObject(&torBrush);
+							memDC.BeginPath();
+							memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 1].x), ToScreenY(rect.Height(), rect.top, tor[i + 1].y));
+							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 132].x), ToScreenY(rect.Height(), rect.top, tor[i - 132].y));
+							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+							memDC.EndPath();
+							memDC.StrokeAndFillPath();
+							memDC.SelectObject(prevBrush);
+							torBrush.DeleteObject();
+						}
+					}
+					else
+					{
+						if (figure.isClicked)
+						{
+							// 선으로 그리기
+							memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 1].x), ToScreenY(rect.Height(), rect.top, tor[i + 1].y));
+							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 12].x), ToScreenY(rect.Height(), rect.top, tor[i + 12].y));
+							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+						}
+						else
+						{
+							// 면으로 그리기
+							torBrush.CreateSolidBrush(RGB(0, rgbTemp[i], 0));
+							prevBrush = memDC.SelectObject(&torBrush);
+							memDC.BeginPath();
+							memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 1].x), ToScreenY(rect.Height(), rect.top, tor[i + 1].y));
+							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 12].x), ToScreenY(rect.Height(), rect.top, tor[i + 12].y));
+							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+							memDC.EndPath();
+							memDC.StrokeAndFillPath();
+							memDC.SelectObject(prevBrush);
+							torBrush.DeleteObject();
+						}
+					}
+				}
+			}
+		}
+#pragma endregion
 #pragma endregion
 	}
 
 	memDC.SelectObject(oldPen);
 	DeleteObject(newPen);
-
-	//#pragma region 조명 제작
-	//	// (0,0,0)에 조명용 구 제작
-	//	MyVertex* vPtr = pSphere(2, 0, 0, 0);
-	//	MyVertex sph[230] = {};
-	//	int count = 0;
-	//	for (int i = 0; i < 230; i++)
-	//	{
-	//		sph[i] = *(vPtr + count);
-	//		count++;
-	//	}//////////////////////////
-	//	// 뷰 변환
-	//	float lightSphere[4][1] = {};
-	//	float* lightPtr;
-	//	int lightCount = 0;
-	//	for (int i = 0; i < 230; i++)
-	//	{
-	//		lightSphere[0][0] = sph[i].x; lightSphere[1][0] = sph[i].y; lightSphere[2][0] = sph[i].z; lightSphere[3][0] = 1;
-	//		lightPtr = MatrixMulti(view, lightSphere);
-	//		lightCount = 0;
-	//		for (int j = 0; j < 4; j++)
-	//		{
-	//			lightSphere[j][0] = *(lightPtr + lightCount);
-	//			lightCount++;
-	//		}
-	//		sph[i].x = lightSphere[0][0]; sph[i].y = lightSphere[1][0]; sph[i].z = lightSphere[2][0];
-	//	}
-	//	/////////////////////////////
-	//	// 투영 변환
-	//	if (projNum == 0)
-	//	{
-	//		for (int i = 0; i < 230; i++)
-	//		{
-	//			lightSphere[0][0] = sph[i].x; lightSphere[1][0] = sph[i].y; lightSphere[2][0] = sph[i].z; lightSphere[3][0] = 1;
-	//			lightPtr = MatrixMulti(proj, lightSphere);
-	//			lightCount = 0;
-	//			for (int j = 0; j < 4; j++)
-	//			{
-	//				lightSphere[j][0] = *(lightPtr + lightCount);
-	//				lightCount++;
-	//			}
-	//			sph[i].x = lightSphere[0][0] / lightSphere[2][0]; sph[i].y = lightSphere[1][0] / lightSphere[2][0]; sph[i].z = lightSphere[2][0];
-	//		}
-	//	}
-	//	else
-	//	{
-	//		for (int i = 0; i < 230; i++)
-	//		{
-	//			sph[i].x /= ((width / height) * 100);
-	//			sph[i].y /= 100;
-	//		}
-	//	}
-	//	/////////////////////////////
-	//	// 해당 도형 그리기 -> 하얀색
-	//	CBrush lightBrush(RGB(255, 255, 255));
-	//	CBrush* lightOldBrush = memDC.SelectObject(&lightBrush);
-	//	CPen lightPen;
-	//	lightPen.CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
-	//	oldPen = memDC.SelectObject(&lightPen);
-	//	// 첫번째 메쉬
-	//	for (int i = 1; i < 13; i++)
-	//	{
-	//		memDC.BeginPath();
-	//		memDC.MoveTo(ToScreenX(rect.Width(), rect.left, sph[0].x), ToScreenY(rect.Height(), rect.top, sph[0].y));
-	//		memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i].x), ToScreenY(rect.Height(), rect.top, sph[i].y));
-	//		if (i % 12 == 0)
-	//		{
-	//			memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i - 11].x), ToScreenY(rect.Height(), rect.top, sph[i - 11].y));
-	//		}
-	//		else
-	//		{
-	//			memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i + 1].x), ToScreenY(rect.Height(), rect.top, sph[i + 1].y));
-	//		}
-	//		memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[0].x), ToScreenY(rect.Height(), rect.top, sph[0].y));
-	//		memDC.EndPath();
-	//		memDC.StrokeAndFillPath();
-	//	}
-	//	for (int i = 1; i < 217; i++)
-	//	{
-	//		memDC.BeginPath();
-	//		memDC.MoveTo(ToScreenX(rect.Width(), rect.left, sph[i].x), ToScreenY(rect.Height(), rect.top, sph[i].y));
-	//		memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i + 12].x), ToScreenY(rect.Height(), rect.top, sph[i + 12].y));
-	//		if (i % 12 == 0)
-	//		{
-	//			memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i + 1].x), ToScreenY(rect.Height(), rect.top, sph[i + 1].y));
-	//		}
-	//		else
-	//		{
-	//			memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i + 13].x), ToScreenY(rect.Height(), rect.top, sph[i + 13].y));
-	//		}
-	//		memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i].x), ToScreenY(rect.Height(), rect.top, sph[i].y));
-	//		memDC.EndPath();
-	//		memDC.StrokeAndFillPath();
-	//	}
-	//	for (int i = 217; i < 229; i++)
-	//	{
-	//		memDC.BeginPath();
-	//		memDC.MoveTo(ToScreenX(rect.Width(), rect.left, sph[i].x), ToScreenY(rect.Height(), rect.top, sph[i].y));
-	//		memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[229].x), ToScreenY(rect.Height(), rect.top, sph[229].y));
-	//		if (i % 12 == 0)
-	//		{
-	//			memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i - 11].x), ToScreenY(rect.Height(), rect.top, sph[i - 11].y));
-	//		}
-	//		else
-	//		{
-	//			memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i + 1].x), ToScreenY(rect.Height(), rect.top, sph[i + 1].y));
-	//		}
-	//		memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i].x), ToScreenY(rect.Height(), rect.top, sph[i].y));
-	//		memDC.EndPath();
-	//		memDC.StrokeAndFillPath();
-	//	}
-	//	// 두번째 메쉬
-	//	for (int i = 1; i < 217; i++)
-	//	{
-	//		memDC.BeginPath();
-	//		memDC.MoveTo(ToScreenX(rect.Width(), rect.left, sph[i].x), ToScreenY(rect.Height(), rect.top, sph[i].y));
-	//		if (i % 12 == 0)
-	//		{
-	//			memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i + 1].x), ToScreenY(rect.Height(), rect.top, sph[i + 1].y));
-	//			memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i - 11].x), ToScreenY(rect.Height(), rect.top, sph[i - 11].y));
-	//		}
-	//		else
-	//		{
-	//			memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i + 13].x), ToScreenY(rect.Height(), rect.top, sph[i + 13].y));
-	//			memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i + 1].x), ToScreenY(rect.Height(), rect.top, sph[i + 1].y));
-	//		}
-	//		memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i].x), ToScreenY(rect.Height(), rect.top, sph[i].y));
-	//		memDC.EndPath();
-	//		memDC.StrokeAndFillPath();
-	//	}
-	//	///////////////////
-	//	memDC.SelectObject(lightOldBrush);
-	//	DeleteObject(lightBrush);
-	//	memDC.SelectObject(oldPen);
-	//	DeleteObject(lightPen);
-	//#pragma endregion
 
 	cdc.BitBlt(0, 0, rect.Width(), rect.Height(), &memDC, 0, 0, SRCCOPY);
 
@@ -4408,7 +4554,7 @@ void CMFCApplication3View::OnLButtonDown(UINT nFlags, CPoint point)
 {
 	// TODO: 여기에 메시지 처리기 코드를 추가 및/또는 기본값을 호출합니다.
 	float az10[4][1];
-	az10[2][0] = 300;
+	az10[2][0] = 200;
 	az10[0][0] = (point.x - left - width / 2) / (width / 2) * az10[2][0];
 	az10[1][0] = (point.y - top - height / 2) * (-1) / (height / 2) * az10[2][0];
 	az10[3][0] = 1; // 화면을 클릭했을 때 얻어지는 투영면에서의 한 지점
@@ -4416,7 +4562,7 @@ void CMFCApplication3View::OnLButtonDown(UINT nFlags, CPoint point)
 	look[0][0] = lookX; look[1][0] = lookY; look[2][0] = lookZ;
 	float view[4][4] = {};
 	camera[0][0] = cameraX; camera[1][0] = cameraY; camera[2][0] = cameraZ;
-	float* viewPtr = ViewMatrix(camera, look/*뷰 행렬 만드는데 물체 위치가 크게 중요하지 않은 것 같아서 나중에 지울 예정*/, look);
+	float* viewPtr = ViewMatrix(camera, look);
 	int viewCount = 0;
 	for (int i = 0; i < 4; i++)
 	{
@@ -4519,7 +4665,7 @@ void CMFCApplication3View::OnLButtonDown(UINT nFlags, CPoint point)
 	case 2:
 	{
 		float x = az10[0][0]; float y = az10[1][0]; float z = az10[2][0];
-		MyVertex* vPtr = pSphere(60, x, y, z);
+		MyVertex* vPtr = pSphere(30, x, y, z);
 		MyVertex sph[230] = {};
 		int count = 0;
 		for (int i = 0; i < 230; i++)
@@ -4535,7 +4681,7 @@ void CMFCApplication3View::OnLButtonDown(UINT nFlags, CPoint point)
 			Si.sphere[i] = sph[i];
 		}
 		Si.vertexCount = sizeof(sph) / sizeof(MyVertex);
-		Si.radius = 20; Si.originRadius = 20;
+		Si.radius = 30; Si.originRadius = 30;
 		Si.sphereOrigin.x = x; Si.sphereOrigin.y = y; Si.sphereOrigin.z = z;
 		v_sphereFigure.push_back(Si);
 #pragma endregion
@@ -4546,7 +4692,7 @@ void CMFCApplication3View::OnLButtonDown(UINT nFlags, CPoint point)
 	{
 		// 해당 점을 넣을 것
 		float x = az10[0][0]; float y = az10[1][0]; float z = az10[2][0];
-		MyVertex* vPtr = pTorus(x, y, z, 60, 8);
+		MyVertex* vPtr = pTorus(x, y, z, 32, 8);
 		MyVertex tor[144] = {};
 
 		int count = 0;
@@ -4564,7 +4710,7 @@ void CMFCApplication3View::OnLButtonDown(UINT nFlags, CPoint point)
 			ti.torus[i] = tor[i];
 		}
 		ti.vertexCount = sizeof(tor) / sizeof(MyVertex);
-		ti.torusLongRadius = 15; ti.originTorusLongRadius = 15;
+		ti.torusLongRadius = 32; ti.originTorusLongRadius = 32;
 		ti.torusRadius = 8; ti.originTorusRadius = 8;
 		ti.torusOrigin.x = x; ti.torusOrigin.y = y; ti.torusOrigin.z = z;
 		v_torusFigure.push_back(ti);
@@ -4624,7 +4770,7 @@ void CMFCApplication3View::OnRButtonUp(UINT nFlags, CPoint point)
 	look[0][0] = lookX; look[1][0] = lookY; look[2][0] = lookZ;
 	float view[4][4] = {};
 	camera[0][0] = cameraX; camera[1][0] = cameraY; camera[2][0] = cameraZ;
-	float* viewPtr = ViewMatrix(camera, look/*뷰 행렬 만드는데 물체 위치가 크게 중요하지 않은 것 같아서 나중에 지울 예정*/, look);
+	float* viewPtr = ViewMatrix(camera, look);
 	int viewCount = 0;
 	for (int i = 0; i < 4; i++)
 	{
@@ -5384,7 +5530,7 @@ BOOL CMFCApplication3View::PreTranslateMessage(MSG* pMsg)
 		float* newAxisPtr;
 		if (pMsg->wParam == 'W')
 		{
-			if (rotateXCount < 12)
+			if (rotateXCount < 120)
 			{
 				newAxisPtr = vectorRotation(camAxisZ, camAxisX, -15);
 				camCount = 0;
@@ -5413,7 +5559,7 @@ BOOL CMFCApplication3View::PreTranslateMessage(MSG* pMsg)
 		}
 		if (pMsg->wParam == 'S')
 		{
-			if (rotateXCount > -12)
+			if (rotateXCount > -120)
 			{
 				newAxisPtr = vectorRotation(camAxisZ, camAxisX, 15);
 				camCount = 0;
@@ -5428,7 +5574,7 @@ BOOL CMFCApplication3View::PreTranslateMessage(MSG* pMsg)
 		}
 		if (pMsg->wParam == 'A')
 		{
-			if (rotateYCount < 12)
+			if (rotateYCount < 120)
 			{
 				////// 카메라 방향 회전
 				newAxisPtr = vectorRotation(camAxisZ, camAxisY, 15);
@@ -5444,7 +5590,7 @@ BOOL CMFCApplication3View::PreTranslateMessage(MSG* pMsg)
 		}
 		if (pMsg->wParam == 'D')
 		{
-			if (rotateYCount > -12)
+			if (rotateYCount > -120)
 			{
 				////// 카메라 방향 회전
 				newAxisPtr = vectorRotation(camAxisZ, camAxisY, -15);
@@ -5483,8 +5629,8 @@ BOOL CMFCApplication3View::PreTranslateMessage(MSG* pMsg)
 				if (isChecked) break;
 				if (!figure.isClicked) continue;
 				isChecked = TRUE;
-				figure.torusLongRadius += 5;
-				figure.torusRadius += 3;
+				figure.torusLongRadius += 8;
+				figure.torusRadius += 4;
 				break;
 			}
 		}
@@ -5511,8 +5657,8 @@ BOOL CMFCApplication3View::PreTranslateMessage(MSG* pMsg)
 				if (isChecked) break;
 				if (!figure.isClicked) continue;
 				isChecked = TRUE;
-				figure.torusLongRadius -= 5;
-				figure.torusRadius -= 3;
+				figure.torusLongRadius -= 8;
+				figure.torusRadius -= 1;
 				break;
 			}
 		}
