@@ -319,7 +319,7 @@ float* MatrixReverse(float a[4][4]) // TODO : for문으로 바꿀만한게 있을까?
 	return arrayReturnPtr;
 }
 
-float* ViewMatrix(float a[3][1] /*카메라 위치*/, float b[3][1]  /*물체 위치*/, float c[3][1] /*카메라 시야 방향*/) // 당장 (x,y,z) 정규화 식 없으므로 일단 1에 맞출것
+float* ViewMatrix(float a[3][1] /*카메라 위치*/, float c[3][1] /*카메라 시야 방향*/) // 당장 (x,y,z) 정규화 식 없으므로 일단 1에 맞출것
 {
 	float axisZ[4][1] = { {c[0][0]}, {c[1][0]}, {c[2][0]}, {0} }; // 카메라 시야 방향 -> 새로운 z축
 	float* normZ = MatrixNormalize(axisZ); // z축 정규화
@@ -329,7 +329,6 @@ float* ViewMatrix(float a[3][1] /*카메라 위치*/, float b[3][1]  /*물체 위치*/, f
 		axisZ[i][0] = *(normZ + count);
 		count++;
 	}
-	float cameraToMaterial[4][1] = { {b[0][0] - a[0][0]}, {b[1][0] - a[1][0]}, {b[2][0] - a[2][0]}, {0} };
 
 	float Up[4][1] = { {0}, {1}, {0}, {1} };
 	float bParallel[3][1] = {};

@@ -42,7 +42,7 @@ float* CrossProduct2X2(float a[2][1], float b[2][1]);
 
 float* MatrixReverse(float a[4][4]); // 역행렬
 
-float* ViewMatrix(float camera[3][1] /*카메라 위치*/, float material[3][1] /*물체 위치*/, float look[3][1] /*카메라 시야 방향*/); // 뷰 행렬
+float* ViewMatrix(float camera[3][1] /*카메라 위치*/, float look[3][1] /*카메라 시야 방향*/); // 뷰 행렬
 
 float* ProjectionMatrix(int width, int height, float angle, float near, float far); // 투영 행렬
 

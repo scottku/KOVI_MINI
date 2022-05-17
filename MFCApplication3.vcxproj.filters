@@ -83,6 +83,9 @@
     <ClCompile Include="한번 망함.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="View_기본적인것완료.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="MFCApplication3.rc">
