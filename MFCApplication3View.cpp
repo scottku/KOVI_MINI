@@ -5557,11 +5557,17 @@ void CMFCApplication3View::OnLButtonDown(UINT nFlags, CPoint point)
 	}
 	// 이제 월드에서의 한 점이 만들어졌다.
 
+	static int cubeCount = 0;
+	static int sphereCount = 0;
+	static int torusCount = 0;
+
 	// TODO: 해당 점을 기준으로 도형을 만든다
 	switch (figureNum)
 	{
 	case 0:
-
+	{
+		break;
+	}
 #pragma region case1-Cube
 	case 1:
 	{
@@ -5584,7 +5590,7 @@ void CMFCApplication3View::OnLButtonDown(UINT nFlags, CPoint point)
 		Ci.vertexCount = sizeof(cub) / sizeof(MyVertex);
 		Ci.originLength = 20; Ci.length = 20;
 		Ci.cubeOrigin.x = x; Ci.cubeOrigin.y = y; Ci.cubeOrigin.z = z;
-		v_cubeFigure.push_back(Ci);
+		v_cubeFigure.push_back(Ci);		
 #pragma endregion
 		break;
 	}
@@ -6406,6 +6412,111 @@ BOOL CMFCApplication3View::PreTranslateMessage(MSG* pMsg)
 {
 	if (pMsg->message == WM_KEYDOWN)
 	{
+	#pragma region cube : 원점으로부터 가장 멀리있는 도형부터 그릴 수 있도록 가장 거리가 먼 도형을 앞으로 배치하기
+		float farFromOrigin_back[3][1] = {};
+		float farFromOrigin_front[3][1] = {};
+		int count = 0;
+		int length = 0;
+		vector<CubeInfo> cube_copy;
+		int cubeSize = v_cubeFigure.size();
+		for (int k = 0; k < cubeSize; k++)
+		{
+			count = 0;
+			for (int i = 1; i < v_cubeFigure.size(); i++)
+			{
+				if (v_cubeFigure.size() == 1) break;
+				farFromOrigin_front[0][0] = v_cubeFigure.at(count).cubeOrigin.x + v_cubeFigure.at(count).moveX - cameraX;
+				farFromOrigin_front[1][0] = v_cubeFigure.at(count).cubeOrigin.y + v_cubeFigure.at(count).moveY - cameraY;
+				farFromOrigin_front[2][0] = v_cubeFigure.at(count).cubeOrigin.z + v_cubeFigure.at(count).moveZ - cameraZ;
+
+				farFromOrigin_back[0][0] = v_cubeFigure.at(i).cubeOrigin.x + v_cubeFigure.at(i).moveX - cameraX;
+				farFromOrigin_back[1][0] = v_cubeFigure.at(i).cubeOrigin.y + v_cubeFigure.at(i).moveY - cameraY;
+				farFromOrigin_back[2][0] = v_cubeFigure.at(i).cubeOrigin.z + v_cubeFigure.at(i).moveZ - cameraZ;
+
+				if (vectorLength(farFromOrigin_back) > vectorLength(farFromOrigin_front))
+				{
+					count = i;
+				}
+			}
+			cube_copy.push_back(v_cubeFigure.at(count));
+			v_cubeFigure.erase(v_cubeFigure.begin() + count);
+		}
+		for (int i = 0; i < cube_copy.size(); i++)
+		{
+			v_cubeFigure.push_back(cube_copy.at(i));
+		}
+		cube_copy.clear();
+		vector<CubeInfo>().swap(cube_copy);
+	#pragma endregion
+	#pragma region sphere : 원점으로부터 가장 멀리있는 도형부터 그릴 수 있도록 가장 거리가 먼 도형을 앞으로 배치하기
+		count = 0;
+		length = 0;
+		vector<SphereInfo> sphere_copy;
+		int sphereSize = v_sphereFigure.size();
+		for (int k = 0; k < sphereSize; k++)
+		{
+			count = 0;
+			for (int i = 1; i < v_sphereFigure.size(); i++)
+			{
+				if (v_sphereFigure.size() == 1) break;
+				farFromOrigin_front[0][0] = v_sphereFigure.at(count).sphereOrigin.x + v_sphereFigure.at(count).moveX - cameraX;
+				farFromOrigin_front[1][0] = v_sphereFigure.at(count).sphereOrigin.y + v_sphereFigure.at(count).moveY - cameraY;
+				farFromOrigin_front[2][0] = v_sphereFigure.at(count).sphereOrigin.z + v_sphereFigure.at(count).moveZ - cameraZ;
+
+				farFromOrigin_back[0][0] = v_sphereFigure.at(i).sphereOrigin.x + v_sphereFigure.at(i).moveX - cameraX;
+				farFromOrigin_back[1][0] = v_sphereFigure.at(i).sphereOrigin.y + v_sphereFigure.at(i).moveY - cameraY;
+				farFromOrigin_back[2][0] = v_sphereFigure.at(i).sphereOrigin.z + v_sphereFigure.at(i).moveZ - cameraZ;
+
+				if (vectorLength(farFromOrigin_back) > vectorLength(farFromOrigin_front))
+				{
+					count = i;
+				}
+			}
+			sphere_copy.push_back(v_sphereFigure.at(count));
+			v_sphereFigure.erase(v_sphereFigure.begin() + count);
+		}
+		for (int i = 0; i < sphere_copy.size(); i++)
+		{
+			v_sphereFigure.push_back(sphere_copy.at(i));
+		}
+		sphere_copy.clear();
+		vector<SphereInfo>().swap(sphere_copy);
+	#pragma endregion
+	#pragma region torus : 원점으로부터 가장 멀리있는 도형부터 그릴 수 있도록 가장 거리가 먼 도형을 앞으로 배치하기
+		count = 0;
+		length = 0;
+		vector<TorusInfo> torus_copy;
+		int torusSize = v_torusFigure.size();
+		for (int k = 0; k < torusSize; k++)
+		{
+			count = 0;
+			for (int i = 1; i < v_torusFigure.size(); i++)
+			{
+				if (v_torusFigure.size() == 1) break;
+				farFromOrigin_front[0][0] = v_torusFigure.at(count).torusOrigin.x + v_torusFigure.at(count).moveX - cameraX;
+				farFromOrigin_front[1][0] = v_torusFigure.at(count).torusOrigin.y + v_torusFigure.at(count).moveY - cameraY;
+				farFromOrigin_front[2][0] = v_torusFigure.at(count).torusOrigin.z + v_torusFigure.at(count).moveZ - cameraZ;
+
+				farFromOrigin_back[0][0] = v_torusFigure.at(i).torusOrigin.x + v_torusFigure.at(i).moveX - cameraX;
+				farFromOrigin_back[1][0] = v_torusFigure.at(i).torusOrigin.y + v_torusFigure.at(i).moveY - cameraY;
+				farFromOrigin_back[2][0] = v_torusFigure.at(i).torusOrigin.z + v_torusFigure.at(i).moveZ - cameraZ;
+
+				if (vectorLength(farFromOrigin_back) > vectorLength(farFromOrigin_front))
+				{
+					count = i;
+				}
+			}
+			torus_copy.push_back(v_torusFigure.at(count));
+			v_torusFigure.erase(v_torusFigure.begin() + count);
+		}
+		for (int i = 0; i < torus_copy.size(); i++)
+		{
+			v_torusFigure.push_back(torus_copy.at(i));
+		}
+		torus_copy.clear();
+		vector<TorusInfo>().swap(torus_copy);
+	#pragma endregion
+
 		float camAxisX[3][1] = {};
 		float camAxisY[3][1] = {};
 		float camAxisZ[3][1] = {};
