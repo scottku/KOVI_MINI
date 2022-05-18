@@ -603,21 +603,6 @@ float ToScreenY(int height, long top, float y)
 	return result;
 }
 
-float ProjectionParallel(float look[3][1], //카메라 시야 방향 = 투영 평면의 노멀벡터
-						float position[3][1], //월드 내 도형의 점 위치
-						float pointOnPlane[3][1]) // 투영면 위 임의의 점
-{
-	BOOL up = FALSE;
-	float upOrDown = look[0][0] * (position[0][0] - pointOnPlane[0][0]) + look[1][0] * (position[1][0] - pointOnPlane[1][0]) + look[2][0] * (position[2][0] - pointOnPlane[2][0]);
-	if (upOrDown >= 0) up = TRUE;
-	
-	float result;
-	if (up) result = -(pow(look[0][0], 2) + pow(look[1][0], 2) + pow(look[2][0], 2));
-	else result = (pow(look[0][0], 2) + pow(look[1][0], 2) + pow(look[2][0], 2));
-
-	return result;
-}
-
 float LightingCos(MyVertex p1, MyVertex p2, MyVertex p3)
 {
 	float testVector1[4][1] = {};
@@ -802,4 +787,120 @@ float vectorLength(float a[3][1])
 	float z = pow(a[2][0], 2);
 
 	return sqrt(x + y + z);
+}
+
+
+float* Cube_isitFront(MyVertex vertex1, MyVertex vertex2, MyVertex vertex3, float camera[3][1], float look[3][1], float lightDirection[3][1])
+{
+	float brightness1[4][1] = {};
+	float brightness2[4][1] = {};
+	float brightNorm[3][1] = {};
+	float dotProd, dotResult1, dotResult2, dotResult3, dotResultParallel;
+	float originToVertex1[3][1], originToVertex2[3][1], originToVertex3[3][1];
+	int rgbRate;
+	float* bPtr;
+	int bCount;
+
+	brightness1[0][0] = -vertex1.x + vertex2.x; brightness1[1][0] = -vertex1.y + vertex2.y;
+	brightness1[2][0] = -vertex1.z + vertex2.z;
+	brightness2[0][0] = -vertex2.x + vertex3.x; brightness2[1][0] = -vertex2.y + vertex3.y;
+	brightness2[2][0] = -vertex2.z + vertex3.z;
+	originToVertex1[0][0] = -camera[0][0] + vertex1.x; originToVertex1[1][0] = -camera[1][0] + vertex1.y;
+	originToVertex1[2][0] = -camera[2][0] + vertex1.z;
+	originToVertex2[0][0] = -camera[0][0] + vertex2.x; originToVertex2[1][0] = -camera[1][0] + vertex2.y;
+	originToVertex2[2][0] = -camera[2][0] + vertex2.z;
+	originToVertex3[0][0] = -camera[0][0] + vertex3.x; originToVertex3[1][0] = -camera[1][0] + vertex3.y;
+	originToVertex3[2][0] = -camera[2][0] + vertex3.z;
+
+	bPtr = CrossProduct(brightness1, brightness2);
+	bCount = 0;
+	for (int i = 0; i < 3; i++)
+	{
+		brightNorm[i][0] = *(bPtr + bCount);
+		bCount++;
+	}
+	dotProd = -DotProduct(brightNorm, lightDirection) / vectorLength(brightNorm);
+	if (dotProd < 0)dotProd = 0;
+	dotResult1 = DotProduct(brightNorm, originToVertex1);
+	dotResult2 = DotProduct(brightNorm, originToVertex2);
+	dotResult3 = DotProduct(brightNorm, originToVertex3);
+	dotResultParallel = DotProduct(brightNorm, look) / vectorLength(look);
+	
+	float result[5] = { dotProd, dotResult1, dotResult2, dotResult3, dotResultParallel };
+
+	return (float*)result;
+}
+void CubeMeshDraw(int projNum, float meshData[5], CDC* memDC, float width, float height, float left, float top, MyVertex p1, MyVertex p2, MyVertex p3)
+{
+	CBrush brush;
+	CBrush* prevBrush;
+	float dotProd, dotResult1, dotResult2, dotResult3, dotResultParallel;
+	int rgbRate;
+	if (projNum == 0)
+	{
+		dotResult1 = meshData[1]; dotResult2 = meshData[2]; dotResult3 = meshData[3];
+
+		if (dotResult1 <= 0 && dotResult2 <= 0 && dotResult3 <= 0)
+		{
+			rgbRate = (int)round(255 * meshData[0]);
+			brush.CreateSolidBrush(RGB(0, rgbRate, 0));
+			prevBrush = memDC->SelectObject(&brush);
+			memDC->BeginPath();
+			memDC->MoveTo(ToScreenX(width, left, p1.x), ToScreenY(height, top, p1.y));
+			memDC->LineTo(ToScreenX(width, left, p2.x), ToScreenY(height, top, p2.y));
+			memDC->LineTo(ToScreenX(width, left, p3.x), ToScreenY(height, top, p3.y));
+			memDC->LineTo(ToScreenX(width, left, p1.x), ToScreenY(height, top, p1.y));
+			memDC->EndPath();
+			memDC->StrokeAndFillPath();
+			memDC->SelectObject(prevBrush);
+			brush.DeleteObject();
+		}
+	}
+	else
+	{
+		dotResultParallel = meshData[4];
+		if (dotResultParallel <= 0)
+		{
+			rgbRate = (int)round(255 * meshData[0]);
+			brush.CreateSolidBrush(RGB(0, rgbRate, 0));
+			prevBrush = memDC->SelectObject(&brush);
+			memDC->BeginPath();
+			memDC->MoveTo(ToScreenX(width, left, p1.x), ToScreenY(height, top, p1.y));
+			memDC->LineTo(ToScreenX(width, left, p2.x), ToScreenY(height, top, p2.y));
+			memDC->LineTo(ToScreenX(width, left, p3.x), ToScreenY(height, top, p3.y));
+			memDC->LineTo(ToScreenX(width, left, p1.x), ToScreenY(height, top, p1.y));
+			memDC->EndPath();
+			memDC->StrokeAndFillPath();
+			memDC->SelectObject(prevBrush);
+			brush.DeleteObject();
+		}
+	}
+}
+void CubeLineDraw(int projNum, float meshData[5], CDC* memDC, float width, float height, float left, float top, MyVertex p1, MyVertex p2, MyVertex p3)
+{
+	float dotResult1, dotResult2, dotResult3, dotResultParallel;
+	if (projNum == 0)
+	{
+		dotResult1 = meshData[1];
+		dotResult2 = meshData[2];
+		dotResult3 = meshData[3];
+		if (dotResult1 <= 0 && dotResult2 <= 0 && dotResult3 <= 0)
+		{
+			memDC->MoveTo(ToScreenX(width, left, p1.x), ToScreenY(height, top, p1.y));
+			memDC->LineTo(ToScreenX(width, left, p2.x), ToScreenY(height, top, p2.y));
+			memDC->LineTo(ToScreenX(width, left, p3.x), ToScreenY(height, top, p3.y));
+			memDC->LineTo(ToScreenX(width, left, p1.x), ToScreenY(height, top, p1.y));
+		}
+	}
+	else
+	{
+		dotResultParallel = meshData[4];
+		if (dotResultParallel <= 0)
+		{
+			memDC->MoveTo(ToScreenX(width, left, p1.x), ToScreenY(height, top, p1.y));
+			memDC->LineTo(ToScreenX(width, left, p2.x), ToScreenY(height, top, p2.y));
+			memDC->LineTo(ToScreenX(width, left, p3.x), ToScreenY(height, top, p3.y));
+			memDC->LineTo(ToScreenX(width, left, p1.x), ToScreenY(height, top, p1.y));
+		}
+	}
 }

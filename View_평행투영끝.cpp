@@ -898,16 +898,6 @@ void CMFCApplication3View::OnPaint()
 				sph[i].x /= ((width / height) * 100);
 				sph[i].y /= 100;
 			}
-			/*float cameraLookDirection[3][1] = { { lookX },{ lookY },{ lookZ } };
-			float tempP[3][1] = { { lookX * 50 },{ lookY * 50 },{ lookZ * 50 } };
-			for (int i = 0; i < 230; i++)
-			{
-			float vertexPosition[3][1] = { { sph[i].x },{ sph[i].y },{ sph[i].z } };
-			float delta = ProjectionParallel(cameraLookDirection, vertexPosition, tempP);
-			sph[i].x += delta * lookX; sph[i].y += delta * lookY; sph[i].z += delta * lookZ;
-			sph[i].x /= (width / height);
-			deltaArray[i] = delta;
-			}*/
 		}
 
 #pragma region /////////// 테스트 : 화면 밖으로 모든 점이 나가버리면 안그리게 할 것

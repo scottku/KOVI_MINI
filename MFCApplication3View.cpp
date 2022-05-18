@@ -157,6 +157,7 @@ void CMFCApplication3View::OnPaint()
 	top = rect.top;
 
 	CDC memDC;
+	CDC* memDCPtr = &memDC;
 	CBitmap myBitmap;
 	CBitmap* pOldBitmap;
 
@@ -243,7 +244,6 @@ void CMFCApplication3View::OnPaint()
 #pragma endregion
 
 	for (auto& figure : v_cubeFigure)
-	//for (auto& num : cubeNumber)
 	{
 		int count = 0;
 		MyVertex cub[8] = {};
@@ -272,11 +272,6 @@ void CMFCApplication3View::OnPaint()
 		originInView[0][0] = figure.cubeOrigin.x; originInView[1][0] = figure.cubeOrigin.y; originInView[2][0] = figure.cubeOrigin.z; originInView[3][0] = 1;
 		float* fPtr = MatrixMulti(view, originInView);
 		int sampleCount = 0;
-		//for (int i = 0; i < 3; i++) // 뷰 좌표계에서의 큐브의 중심을 구하기
-		//{
-		//	originInView[i][0] = *(fPtr + sampleCount);
-		//	sampleCount++;
-		//}
 
 		for (int i = 0; i < 8; i++) // 월드 좌표계에서의 큐브 중심을 원점으로 옮기면서 나머지 점들도 다 동일하게 옮겨줌
 		{
@@ -462,7 +457,7 @@ void CMFCApplication3View::OnPaint()
 		float brightness1[4][1] = {};
 		float brightness2[4][1] = {};
 		float brightNorm[3][1] = {};
-		float dotProd, dotResult1, dotResult2, dotResult3, dotResultParellel;
+		float dotProd, dotResult1, dotResult2, dotResult3, dotResultParallel;
 		float originToVertex1[3][1], originToVertex2[3][1], originToVertex3[3][1];
 		int rgbRate;
 		float* bPtr;
@@ -474,1314 +469,235 @@ void CMFCApplication3View::OnPaint()
 			if (figure.isClicked)
 			{
 #pragma region 1번 꼭짓점 - 면
-				// DrawCubeOnView(MyVertex a, MyVertex b, MyVertex c, float camPosX, float camPosY, float camPosZ, float lightDirection[3][1]); 
-				brightness1[0][0] = -newCubeWC[0].x + newCubeWC[3].x; brightness1[1][0] = -newCubeWC[0].y + newCubeWC[3].y;
-				brightness1[2][0] = -newCubeWC[0].z + newCubeWC[3].z;
-				brightness2[0][0] = -newCubeWC[3].x + newCubeWC[4].x; brightness2[1][0] = -newCubeWC[3].y + newCubeWC[4].y;
-				brightness2[2][0] = -newCubeWC[3].z + newCubeWC[4].z;
-				originToVertex1[0][0] = -cameraX + newCubeWC[0].x; originToVertex1[1][0] = -cameraY + newCubeWC[0].y;
-				originToVertex1[2][0] = -cameraZ + newCubeWC[0].z;
-				originToVertex2[0][0] = -cameraX + newCubeWC[3].x; originToVertex2[1][0] = -cameraY + newCubeWC[3].y;
-				originToVertex2[2][0] = -cameraZ + newCubeWC[3].z;
-				originToVertex3[0][0] = -cameraX + newCubeWC[4].x; originToVertex3[1][0] = -cameraY + newCubeWC[4].y;
-				originToVertex3[2][0] = -cameraZ + newCubeWC[4].z;
-
-				bPtr = CrossProduct(brightness1, brightness2);
-				bCount = 0;
-				for (int i = 0; i < 3; i++)
+				// Cube_isitFront(MyVertex vertex1, MyVertex vertex2, MyVertex vertex3, float camera[3][1], float look[3][1], float lightDirection[3][1], int projNum)
+				// return {dotProd, dotresult1, dotresult2, dotresult3, dotresultparallel}
+				float* frontPtr = Cube_isitFront(newCubeWC[0], newCubeWC[3], newCubeWC[4], camera, look, lightDirection);
+				float meshData[5] = {};
+				int count = 0;
+				for (int i = 0; i < 5; i++)
 				{
-					brightNorm[i][0] = *(bPtr + bCount);
-					bCount++;
+					meshData[i] = *(frontPtr + count);
+					count++;
 				}
-				dotProd = -DotProduct(brightNorm, lightDirection) / vectorLength(brightNorm);
-				if (dotProd < 0)dotProd = 0;
-				if (projNum == 0)
-				{
-					dotResult1 = DotProduct(brightNorm, originToVertex1);
-					dotResult2 = DotProduct(brightNorm, originToVertex2);
-					dotResult3 = DotProduct(brightNorm, originToVertex3);
+				CubeMeshDraw(projNum, meshData, memDCPtr, width, height, left, top, cub[0], cub[3], cub[4]);
 
-					if (dotResult1 <= 0 && dotResult2 <= 0 && dotResult3 <= 0)
-					{
-						rgbRate = (int)round(255 * dotProd);
-						rectBrush.CreateSolidBrush(RGB(0, rgbRate, 0));
-						prevBrush = memDC.SelectObject(&rectBrush);
-						memDC.BeginPath();
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[0].x), ToScreenY(rect.Height(), rect.top, cub[0].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[3].x), ToScreenY(rect.Height(), rect.top, cub[3].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[4].x), ToScreenY(rect.Height(), rect.top, cub[4].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[0].x), ToScreenY(rect.Height(), rect.top, cub[0].y));
-						memDC.EndPath();
-						memDC.StrokeAndFillPath();
-						memDC.SelectObject(prevBrush);
-						rectBrush.DeleteObject();
-					}
-				}
-				else
+				frontPtr = Cube_isitFront(newCubeWC[0], newCubeWC[4], newCubeWC[1], camera, look, lightDirection);
+				count = 0;
+				for (int i = 0; i < 5; i++)
 				{
-					dotResultParellel = DotProduct(brightNorm, look) / vectorLength(look);
-					if (dotResultParellel <= 0)
-					{
-						rgbRate = (int)round(255 * dotProd);
-						rectBrush.CreateSolidBrush(RGB(0, rgbRate, 0));
-						prevBrush = memDC.SelectObject(&rectBrush);
-						memDC.BeginPath();
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[0].x), ToScreenY(rect.Height(), rect.top, cub[0].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[3].x), ToScreenY(rect.Height(), rect.top, cub[3].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[4].x), ToScreenY(rect.Height(), rect.top, cub[4].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[0].x), ToScreenY(rect.Height(), rect.top, cub[0].y));
-						memDC.EndPath();
-						memDC.StrokeAndFillPath();
-						memDC.SelectObject(prevBrush);
-						rectBrush.DeleteObject();
-					}
+					meshData[i] = *(frontPtr + count);
+					count++;
 				}
+				CubeMeshDraw(projNum, meshData, memDCPtr, width, height, left, top, cub[0], cub[4], cub[1]);
 
-				brightness1[0][0] = -newCubeWC[0].x + newCubeWC[4].x; brightness1[1][0] = -newCubeWC[0].y + newCubeWC[4].y;
-				brightness1[2][0] = -newCubeWC[0].z + newCubeWC[4].z;
-				brightness2[0][0] = -newCubeWC[4].x + newCubeWC[1].x; brightness2[1][0] = -newCubeWC[4].y + newCubeWC[1].y;
-				brightness2[2][0] = -newCubeWC[4].z + newCubeWC[1].z;
-				originToVertex1[0][0] = -cameraX + newCubeWC[0].x; originToVertex1[1][0] = -cameraY + newCubeWC[0].y;
-				originToVertex1[2][0] = -cameraZ + newCubeWC[0].z;
-				originToVertex2[0][0] = -cameraX + newCubeWC[1].x; originToVertex2[1][0] = -cameraY + newCubeWC[1].y;
-				originToVertex2[2][0] = -cameraZ + newCubeWC[1].z;
-				originToVertex3[0][0] = -cameraX + newCubeWC[4].x; originToVertex3[1][0] = -cameraY + newCubeWC[4].y;
-				originToVertex3[2][0] = -cameraZ + newCubeWC[4].z;
-
-				bPtr = CrossProduct(brightness1, brightness2);
-				bCount = 0;
-				for (int i = 0; i < 3; i++)
+				frontPtr = Cube_isitFront(newCubeWC[0], newCubeWC[1], newCubeWC[3], camera, look, lightDirection);
+				count = 0;
+				for (int i = 0; i < 5; i++)
 				{
-					brightNorm[i][0] = *(bPtr + bCount);
-					bCount++;
+					meshData[i] = *(frontPtr + count);
+					count++;
 				}
-				dotProd = -DotProduct(brightNorm, lightDirection) / vectorLength(brightNorm);
-				if (dotProd < 0)dotProd = 0;
-
-				if (projNum == 0)
-				{
-					dotResult1 = DotProduct(brightNorm, originToVertex1);
-					dotResult2 = DotProduct(brightNorm, originToVertex2);
-					dotResult3 = DotProduct(brightNorm, originToVertex3);
-					if (dotResult1 <= 0 && dotResult2 <= 0 && dotResult3 <= 0)
-					{
-						rgbRate = (int)round(255 * dotProd);
-						rectBrush.CreateSolidBrush(RGB(0, rgbRate, 0));
-						prevBrush = memDC.SelectObject(&rectBrush);
-						memDC.BeginPath();
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[0].x), ToScreenY(rect.Height(), rect.top, cub[0].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[4].x), ToScreenY(rect.Height(), rect.top, cub[4].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[1].x), ToScreenY(rect.Height(), rect.top, cub[1].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[0].x), ToScreenY(rect.Height(), rect.top, cub[0].y));
-						memDC.EndPath();
-						memDC.StrokeAndFillPath();
-						memDC.SelectObject(prevBrush);
-						rectBrush.DeleteObject();
-					}
-				}
-				else
-				{
-					dotResultParellel = DotProduct(brightNorm, look) / vectorLength(look);
-					if (dotResultParellel <= 0)
-					{
-						rgbRate = (int)round(255 * dotProd);
-						rectBrush.CreateSolidBrush(RGB(0, rgbRate, 0));
-						prevBrush = memDC.SelectObject(&rectBrush);
-						memDC.BeginPath();
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[0].x), ToScreenY(rect.Height(), rect.top, cub[0].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[4].x), ToScreenY(rect.Height(), rect.top, cub[4].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[1].x), ToScreenY(rect.Height(), rect.top, cub[1].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[0].x), ToScreenY(rect.Height(), rect.top, cub[0].y));
-						memDC.EndPath();
-						memDC.StrokeAndFillPath();
-						memDC.SelectObject(prevBrush);
-						rectBrush.DeleteObject();
-					}
-				}
-
-				brightness1[0][0] = -newCubeWC[0].x + newCubeWC[1].x; brightness1[1][0] = -newCubeWC[0].y + newCubeWC[1].y;
-				brightness1[2][0] = -newCubeWC[0].z + newCubeWC[1].z;
-				brightness2[0][0] = -newCubeWC[1].x + newCubeWC[3].x; brightness2[1][0] = -newCubeWC[1].y + newCubeWC[3].y;
-				brightness2[2][0] = -newCubeWC[1].z + newCubeWC[3].z;
-				originToVertex1[0][0] = -cameraX + newCubeWC[0].x; originToVertex1[1][0] = -cameraY + newCubeWC[0].y;
-				originToVertex1[2][0] = -cameraZ + newCubeWC[0].z;
-				originToVertex2[0][0] = -cameraX + newCubeWC[3].x; originToVertex2[1][0] = -cameraY + newCubeWC[3].y;
-				originToVertex2[2][0] = -cameraZ + newCubeWC[3].z;
-				originToVertex3[0][0] = -cameraX + newCubeWC[1].x; originToVertex3[1][0] = -cameraY + newCubeWC[1].y;
-				originToVertex3[2][0] = -cameraZ + newCubeWC[1].z;
-
-				bPtr = CrossProduct(brightness1, brightness2);
-				bCount = 0;
-				for (int i = 0; i < 3; i++)
-				{
-					brightNorm[i][0] = *(bPtr + bCount);
-					bCount++;
-				}
-				dotProd = -DotProduct(brightNorm, lightDirection) / vectorLength(brightNorm);
-				if (dotProd < 0)dotProd = 0;
-
-				if (projNum == 0)
-				{
-					dotResult1 = DotProduct(brightNorm, originToVertex1);
-					dotResult2 = DotProduct(brightNorm, originToVertex2);
-					dotResult3 = DotProduct(brightNorm, originToVertex3);
-					if (dotResult1 <= 0 && dotResult2 <= 0 && dotResult3 <= 0)
-					{
-						rgbRate = (int)round(255 * dotProd);
-						rectBrush.CreateSolidBrush(RGB(0, rgbRate, 0));
-						prevBrush = memDC.SelectObject(&rectBrush);
-						memDC.BeginPath();
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[0].x), ToScreenY(rect.Height(), rect.top, cub[0].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[3].x), ToScreenY(rect.Height(), rect.top, cub[3].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[1].x), ToScreenY(rect.Height(), rect.top, cub[1].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[0].x), ToScreenY(rect.Height(), rect.top, cub[0].y));
-						memDC.EndPath();
-						memDC.StrokeAndFillPath();
-						memDC.SelectObject(prevBrush);
-						rectBrush.DeleteObject();
-					}
-				}
-				else
-				{
-					dotResultParellel = DotProduct(brightNorm, look) / vectorLength(look);
-					if (dotResultParellel <= 0)
-					{
-						rgbRate = (int)round(255 * dotProd);
-						rectBrush.CreateSolidBrush(RGB(0, rgbRate, 0));
-						prevBrush = memDC.SelectObject(&rectBrush);
-						memDC.BeginPath();
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[0].x), ToScreenY(rect.Height(), rect.top, cub[0].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[3].x), ToScreenY(rect.Height(), rect.top, cub[3].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[1].x), ToScreenY(rect.Height(), rect.top, cub[1].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[0].x), ToScreenY(rect.Height(), rect.top, cub[0].y));
-						memDC.EndPath();
-						memDC.StrokeAndFillPath();
-						memDC.SelectObject(prevBrush);
-						rectBrush.DeleteObject();
-					}
-				}
-
+				CubeMeshDraw(projNum, meshData, memDCPtr, width, height, left, top, cub[0], cub[1], cub[3]);
 #pragma endregion
 #pragma region 2번 꼭짓점
-				brightness1[0][0] = -newCubeWC[7].x + newCubeWC[4].x; brightness1[1][0] = -newCubeWC[7].y + newCubeWC[4].y;
-				brightness1[2][0] = -newCubeWC[7].z + newCubeWC[4].z;
-				brightness2[0][0] = -newCubeWC[4].x + newCubeWC[3].x; brightness2[1][0] = -newCubeWC[4].y + newCubeWC[3].y;
-				brightness2[2][0] = -newCubeWC[4].z + newCubeWC[3].z;
-				originToVertex1[0][0] = -cameraX + newCubeWC[7].x; originToVertex1[1][0] = -cameraY + newCubeWC[7].y;
-				originToVertex1[2][0] = -cameraZ + newCubeWC[7].z;
-				originToVertex2[0][0] = -cameraX + newCubeWC[3].x; originToVertex2[1][0] = -cameraY + newCubeWC[3].y;
-				originToVertex2[2][0] = -cameraZ + newCubeWC[3].z;
-				originToVertex3[0][0] = -cameraX + newCubeWC[4].x; originToVertex3[1][0] = -cameraY + newCubeWC[4].y;
-				originToVertex3[2][0] = -cameraZ + newCubeWC[4].z;
-
-				bPtr = CrossProduct(brightness1, brightness2);
-				bCount = 0;
-				for (int i = 0; i < 3; i++)
+				frontPtr = Cube_isitFront(newCubeWC[7], newCubeWC[4], newCubeWC[3], camera, look, lightDirection);
+				count = 0;
+				for (int i = 0; i < 5; i++)
 				{
-					brightNorm[i][0] = *(bPtr + bCount);
-					bCount++;
+					meshData[i] = *(frontPtr + count);
+					count++;
 				}
-				dotProd = -DotProduct(brightNorm, lightDirection) / vectorLength(brightNorm);
-				if (dotProd < 0)dotProd = 0;
+				CubeMeshDraw(projNum, meshData, memDCPtr, width, height, left, top, cub[7], cub[4], cub[3]);
 
-				if (projNum == 0)
+				frontPtr = Cube_isitFront(newCubeWC[7], newCubeWC[6], newCubeWC[4], camera, look, lightDirection);
+				count = 0;
+				for (int i = 0; i < 5; i++)
 				{
-					dotResult1 = DotProduct(brightNorm, originToVertex1);
-					dotResult2 = DotProduct(brightNorm, originToVertex2);
-					dotResult3 = DotProduct(brightNorm, originToVertex3);
-					if (dotResult1 <= 0 && dotResult2 <= 0 && dotResult3 <= 0)
-					{
-						rgbRate = (int)round(255 * dotProd);
-						rectBrush.CreateSolidBrush(RGB(0, rgbRate, 0));
-						prevBrush = memDC.SelectObject(&rectBrush);
-						memDC.BeginPath();
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[7].x), ToScreenY(rect.Height(), rect.top, cub[7].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[3].x), ToScreenY(rect.Height(), rect.top, cub[3].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[4].x), ToScreenY(rect.Height(), rect.top, cub[4].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[7].x), ToScreenY(rect.Height(), rect.top, cub[7].y));
-						memDC.EndPath();
-						memDC.StrokeAndFillPath();
-						memDC.SelectObject(prevBrush);
-						rectBrush.DeleteObject();
-					}
+					meshData[i] = *(frontPtr + count);
+					count++;
 				}
-				else
+				CubeMeshDraw(projNum, meshData, memDCPtr, width, height, left, top, cub[7], cub[6], cub[4]);
+
+				frontPtr = Cube_isitFront(newCubeWC[7], newCubeWC[3], newCubeWC[6], camera, look, lightDirection);
+				count = 0;
+				for (int i = 0; i < 5; i++)
 				{
-					dotResultParellel = DotProduct(brightNorm, look) / vectorLength(look);
-					if (dotResultParellel <= 0)
-					{
-						rgbRate = (int)round(255 * dotProd);
-						rectBrush.CreateSolidBrush(RGB(0, rgbRate, 0));
-						prevBrush = memDC.SelectObject(&rectBrush);
-						memDC.BeginPath();
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[7].x), ToScreenY(rect.Height(), rect.top, cub[7].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[3].x), ToScreenY(rect.Height(), rect.top, cub[3].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[4].x), ToScreenY(rect.Height(), rect.top, cub[4].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[7].x), ToScreenY(rect.Height(), rect.top, cub[7].y));
-						memDC.EndPath();
-						memDC.StrokeAndFillPath();
-						memDC.SelectObject(prevBrush);
-						rectBrush.DeleteObject();
-					}
+					meshData[i] = *(frontPtr + count);
+					count++;
 				}
-
-
-				brightness1[0][0] = -newCubeWC[7].x + newCubeWC[6].x; brightness1[1][0] = -newCubeWC[7].y + newCubeWC[6].y;
-				brightness1[2][0] = -newCubeWC[7].z + newCubeWC[6].z;
-				brightness2[0][0] = -newCubeWC[6].x + newCubeWC[4].x; brightness2[1][0] = -newCubeWC[6].y + newCubeWC[4].y;
-				brightness2[2][0] = -newCubeWC[6].z + newCubeWC[4].z;
-				originToVertex1[0][0] = -cameraX + newCubeWC[7].x; originToVertex1[1][0] = -cameraY + newCubeWC[7].y;
-				originToVertex1[2][0] = -cameraZ + newCubeWC[7].z;
-				originToVertex2[0][0] = -cameraX + newCubeWC[6].x; originToVertex2[1][0] = -cameraY + newCubeWC[6].y;
-				originToVertex2[2][0] = -cameraZ + newCubeWC[6].z;
-				originToVertex3[0][0] = -cameraX + newCubeWC[4].x; originToVertex3[1][0] = -cameraY + newCubeWC[4].y;
-				originToVertex3[2][0] = -cameraZ + newCubeWC[4].z;
-
-				bPtr = CrossProduct(brightness1, brightness2);
-				bCount = 0;
-				for (int i = 0; i < 3; i++)
-				{
-					brightNorm[i][0] = *(bPtr + bCount);
-					bCount++;
-				}
-				dotProd = -DotProduct(brightNorm, lightDirection) / vectorLength(brightNorm);
-				if (dotProd < 0)dotProd = 0;
-
-				if (projNum == 0)
-				{
-					dotResult1 = DotProduct(brightNorm, originToVertex1);
-					dotResult2 = DotProduct(brightNorm, originToVertex2);
-					dotResult3 = DotProduct(brightNorm, originToVertex3);
-					if (dotResult1 <= 0 && dotResult2 <= 0 && dotResult3 <= 0)
-					{
-						rgbRate = (int)round(255 * dotProd);
-						rectBrush.CreateSolidBrush(RGB(0, rgbRate, 0));
-						prevBrush = memDC.SelectObject(&rectBrush);
-						memDC.BeginPath();
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[7].x), ToScreenY(rect.Height(), rect.top, cub[7].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[6].x), ToScreenY(rect.Height(), rect.top, cub[6].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[4].x), ToScreenY(rect.Height(), rect.top, cub[4].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[7].x), ToScreenY(rect.Height(), rect.top, cub[7].y));
-						memDC.EndPath();
-						memDC.StrokeAndFillPath();
-						memDC.SelectObject(prevBrush);
-						rectBrush.DeleteObject();
-					}
-				}
-				else
-				{
-					dotResultParellel = DotProduct(brightNorm, look) / vectorLength(look);
-					if (dotResultParellel <= 0)
-					{
-						rgbRate = (int)round(255 * dotProd);
-						rectBrush.CreateSolidBrush(RGB(0, rgbRate, 0));
-						prevBrush = memDC.SelectObject(&rectBrush);
-						memDC.BeginPath();
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[7].x), ToScreenY(rect.Height(), rect.top, cub[7].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[6].x), ToScreenY(rect.Height(), rect.top, cub[6].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[4].x), ToScreenY(rect.Height(), rect.top, cub[4].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[7].x), ToScreenY(rect.Height(), rect.top, cub[7].y));
-						memDC.EndPath();
-						memDC.StrokeAndFillPath();
-						memDC.SelectObject(prevBrush);
-						rectBrush.DeleteObject();
-					}
-				}
-
-
-				brightness1[0][0] = -newCubeWC[7].x + newCubeWC[3].x; brightness1[1][0] = -newCubeWC[7].y + newCubeWC[3].y;
-				brightness1[2][0] = -newCubeWC[7].z + newCubeWC[3].z;
-				brightness2[0][0] = -newCubeWC[3].x + newCubeWC[6].x; brightness2[1][0] = -newCubeWC[3].y + newCubeWC[6].y;
-				brightness2[2][0] = -newCubeWC[3].z + newCubeWC[6].z;
-				originToVertex1[0][0] = -cameraX + newCubeWC[7].x; originToVertex1[1][0] = -cameraY + newCubeWC[7].y;
-				originToVertex1[2][0] = -cameraZ + newCubeWC[7].z;
-				originToVertex2[0][0] = -cameraX + newCubeWC[6].x; originToVertex2[1][0] = -cameraY + newCubeWC[6].y;
-				originToVertex2[2][0] = -cameraZ + newCubeWC[6].z;
-				originToVertex3[0][0] = -cameraX + newCubeWC[3].x; originToVertex3[1][0] = -cameraY + newCubeWC[3].y;
-				originToVertex3[2][0] = -cameraZ + newCubeWC[3].z;
-
-				bPtr = CrossProduct(brightness1, brightness2);
-				bCount = 0;
-				for (int i = 0; i < 3; i++)
-				{
-					brightNorm[i][0] = *(bPtr + bCount);
-					bCount++;
-				}
-				dotProd = -DotProduct(brightNorm, lightDirection) / vectorLength(brightNorm);
-				if (dotProd < 0)dotProd = 0;
-
-				if (projNum == 0)
-				{
-					dotResult1 = DotProduct(brightNorm, originToVertex1);
-					dotResult2 = DotProduct(brightNorm, originToVertex2);
-					dotResult3 = DotProduct(brightNorm, originToVertex3);
-					if (dotResult1 <= 0 && dotResult2 <= 0 && dotResult3 <= 0)
-					{
-						rgbRate = (int)round(255 * dotProd);
-						rectBrush.CreateSolidBrush(RGB(0, rgbRate, 0));
-						prevBrush = memDC.SelectObject(&rectBrush);
-						memDC.BeginPath();
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[7].x), ToScreenY(rect.Height(), rect.top, cub[7].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[3].x), ToScreenY(rect.Height(), rect.top, cub[3].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[6].x), ToScreenY(rect.Height(), rect.top, cub[6].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[7].x), ToScreenY(rect.Height(), rect.top, cub[7].y));
-						memDC.EndPath();
-						memDC.StrokeAndFillPath();
-						memDC.SelectObject(prevBrush);
-						rectBrush.DeleteObject();
-					}
-				}
-				else
-				{
-					dotResultParellel = DotProduct(brightNorm, look) / vectorLength(look);
-					if (dotResultParellel <= 0)
-					{
-						rgbRate = (int)round(255 * dotProd);
-						rectBrush.CreateSolidBrush(RGB(0, rgbRate, 0));
-						prevBrush = memDC.SelectObject(&rectBrush);
-						memDC.BeginPath();
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[7].x), ToScreenY(rect.Height(), rect.top, cub[7].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[3].x), ToScreenY(rect.Height(), rect.top, cub[3].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[6].x), ToScreenY(rect.Height(), rect.top, cub[6].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[7].x), ToScreenY(rect.Height(), rect.top, cub[7].y));
-						memDC.EndPath();
-						memDC.StrokeAndFillPath();
-						memDC.SelectObject(prevBrush);
-						rectBrush.DeleteObject();
-					}
-				}
-
-
+				CubeMeshDraw(projNum, meshData, memDCPtr, width, height, left, top, cub[7], cub[3], cub[6]);
 #pragma endregion
 #pragma region 3번 꼭짓점
-				brightness1[0][0] = -newCubeWC[2].x + newCubeWC[1].x; brightness1[1][0] = -newCubeWC[2].y + newCubeWC[1].y;
-				brightness1[2][0] = -newCubeWC[2].z + newCubeWC[1].z;
-				brightness2[0][0] = -newCubeWC[1].x + newCubeWC[6].x; brightness2[1][0] = -newCubeWC[1].y + newCubeWC[6].y;
-				brightness2[2][0] = -newCubeWC[1].z + newCubeWC[6].z;
-				originToVertex1[0][0] = -cameraX + newCubeWC[2].x; originToVertex1[1][0] = -cameraY + newCubeWC[2].y;
-				originToVertex1[2][0] = -cameraZ + newCubeWC[2].z;
-				originToVertex2[0][0] = -cameraX + newCubeWC[6].x; originToVertex2[1][0] = -cameraY + newCubeWC[6].y;
-				originToVertex2[2][0] = -cameraZ + newCubeWC[6].z;
-				originToVertex3[0][0] = -cameraX + newCubeWC[1].x; originToVertex3[1][0] = -cameraY + newCubeWC[1].y;
-				originToVertex3[2][0] = -cameraZ + newCubeWC[1].z;
-
-				bPtr = CrossProduct(brightness1, brightness2);
-				bCount = 0;
-				for (int i = 0; i < 3; i++)
+				frontPtr = Cube_isitFront(newCubeWC[2], newCubeWC[1], newCubeWC[6], camera, look, lightDirection);
+				count = 0;
+				for (int i = 0; i < 5; i++)
 				{
-					brightNorm[i][0] = *(bPtr + bCount);
-					bCount++;
+					meshData[i] = *(frontPtr + count);
+					count++;
 				}
-				dotProd = -DotProduct(brightNorm, lightDirection) / vectorLength(brightNorm);
-				if (dotProd < 0)dotProd = 0;
+				CubeMeshDraw(projNum, meshData, memDCPtr, width, height, left, top, cub[2], cub[1], cub[6]);
 
-				if (projNum == 0)
+				frontPtr = Cube_isitFront(newCubeWC[2], newCubeWC[3], newCubeWC[1], camera, look, lightDirection);
+				count = 0;
+				for (int i = 0; i < 5; i++)
 				{
-					dotResult1 = DotProduct(brightNorm, originToVertex1);
-					dotResult2 = DotProduct(brightNorm, originToVertex2);
-					dotResult3 = DotProduct(brightNorm, originToVertex3);
-					if (dotResult1 <= 0 && dotResult2 <= 0 && dotResult3 <= 0)
-					{
-						rgbRate = (int)round(255 * dotProd);
-						rectBrush.CreateSolidBrush(RGB(0, rgbRate, 0));
-						prevBrush = memDC.SelectObject(&rectBrush);
-						memDC.BeginPath();
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[2].x), ToScreenY(rect.Height(), rect.top, cub[2].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[1].x), ToScreenY(rect.Height(), rect.top, cub[1].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[6].x), ToScreenY(rect.Height(), rect.top, cub[6].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[2].x), ToScreenY(rect.Height(), rect.top, cub[2].y));
-						memDC.EndPath();
-						memDC.StrokeAndFillPath();
-						memDC.SelectObject(prevBrush);
-						rectBrush.DeleteObject();
-					}
+					meshData[i] = *(frontPtr + count);
+					count++;
 				}
-				else
+				CubeMeshDraw(projNum, meshData, memDCPtr, width, height, left, top, cub[2], cub[3], cub[1]);
+
+				frontPtr = Cube_isitFront(newCubeWC[2], newCubeWC[6], newCubeWC[3], camera, look, lightDirection);
+				count = 0;
+				for (int i = 0; i < 5; i++)
 				{
-					dotResultParellel = DotProduct(brightNorm, look) / vectorLength(look);
-					if (dotResultParellel <= 0)
-					{
-						rgbRate = (int)round(255 * dotProd);
-						rectBrush.CreateSolidBrush(RGB(0, rgbRate, 0));
-						prevBrush = memDC.SelectObject(&rectBrush);
-						memDC.BeginPath();
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[2].x), ToScreenY(rect.Height(), rect.top, cub[2].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[1].x), ToScreenY(rect.Height(), rect.top, cub[1].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[6].x), ToScreenY(rect.Height(), rect.top, cub[6].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[2].x), ToScreenY(rect.Height(), rect.top, cub[2].y));
-						memDC.EndPath();
-						memDC.StrokeAndFillPath();
-						memDC.SelectObject(prevBrush);
-						rectBrush.DeleteObject();
-					}
+					meshData[i] = *(frontPtr + count);
+					count++;
 				}
-
-
-				brightness1[0][0] = -newCubeWC[2].x + newCubeWC[3].x; brightness1[1][0] = -newCubeWC[2].y + newCubeWC[3].y;
-				brightness1[2][0] = -newCubeWC[2].z + newCubeWC[3].z;
-				brightness2[0][0] = -newCubeWC[3].x + newCubeWC[1].x; brightness2[1][0] = -newCubeWC[3].y + newCubeWC[1].y;
-				brightness2[2][0] = -newCubeWC[3].z + newCubeWC[1].z;
-				originToVertex1[0][0] = -cameraX + newCubeWC[2].x; originToVertex1[1][0] = -cameraY + newCubeWC[2].y;
-				originToVertex1[2][0] = -cameraZ + newCubeWC[2].z;
-				originToVertex2[0][0] = -cameraX + newCubeWC[3].x; originToVertex2[1][0] = -cameraY + newCubeWC[3].y;
-				originToVertex2[2][0] = -cameraZ + newCubeWC[3].z;
-				originToVertex3[0][0] = -cameraX + newCubeWC[1].x; originToVertex3[1][0] = -cameraY + newCubeWC[1].y;
-				originToVertex3[2][0] = -cameraZ + newCubeWC[1].z;
-
-				bPtr = CrossProduct(brightness1, brightness2);
-				bCount = 0;
-				for (int i = 0; i < 3; i++)
-				{
-					brightNorm[i][0] = *(bPtr + bCount);
-					bCount++;
-				}
-				dotProd = -DotProduct(brightNorm, lightDirection) / vectorLength(brightNorm);
-				if (dotProd < 0)dotProd = 0;
-
-				if (projNum == 0)
-				{
-					dotResult1 = DotProduct(brightNorm, originToVertex1);
-					dotResult2 = DotProduct(brightNorm, originToVertex2);
-					dotResult3 = DotProduct(brightNorm, originToVertex3);
-					if (dotResult1 <= 0 && dotResult2 <= 0 && dotResult3 <= 0)
-					{
-						rgbRate = (int)round(255 * dotProd);
-						rectBrush.CreateSolidBrush(RGB(0, rgbRate, 0));
-						prevBrush = memDC.SelectObject(&rectBrush);
-						memDC.BeginPath();
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[2].x), ToScreenY(rect.Height(), rect.top, cub[2].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[1].x), ToScreenY(rect.Height(), rect.top, cub[1].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[3].x), ToScreenY(rect.Height(), rect.top, cub[3].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[2].x), ToScreenY(rect.Height(), rect.top, cub[2].y));
-						memDC.EndPath();
-						memDC.StrokeAndFillPath();
-						memDC.SelectObject(prevBrush);
-						rectBrush.DeleteObject();
-					}
-				}
-				else
-				{
-					dotResultParellel = DotProduct(brightNorm, look) / vectorLength(look);
-					if (dotResultParellel <= 0)
-					{
-						rgbRate = (int)round(255 * dotProd);
-						rectBrush.CreateSolidBrush(RGB(0, rgbRate, 0));
-						prevBrush = memDC.SelectObject(&rectBrush);
-						memDC.BeginPath();
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[2].x), ToScreenY(rect.Height(), rect.top, cub[2].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[1].x), ToScreenY(rect.Height(), rect.top, cub[1].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[3].x), ToScreenY(rect.Height(), rect.top, cub[3].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[2].x), ToScreenY(rect.Height(), rect.top, cub[2].y));
-						memDC.EndPath();
-						memDC.StrokeAndFillPath();
-						memDC.SelectObject(prevBrush);
-						rectBrush.DeleteObject();
-					}
-				}
-
-
-				brightness1[0][0] = -newCubeWC[2].x + newCubeWC[6].x; brightness1[1][0] = -newCubeWC[2].y + newCubeWC[6].y;
-				brightness1[2][0] = -newCubeWC[2].z + newCubeWC[6].z;
-				brightness2[0][0] = -newCubeWC[6].x + newCubeWC[3].x; brightness2[1][0] = -newCubeWC[6].y + newCubeWC[3].y;
-				brightness2[2][0] = -newCubeWC[6].z + newCubeWC[3].z;
-				originToVertex1[0][0] = -cameraX + newCubeWC[2].x; originToVertex1[1][0] = -cameraY + newCubeWC[2].y;
-				originToVertex1[2][0] = -cameraZ + newCubeWC[2].z;
-				originToVertex2[0][0] = -cameraX + newCubeWC[3].x; originToVertex2[1][0] = -cameraY + newCubeWC[3].y;
-				originToVertex2[2][0] = -cameraZ + newCubeWC[3].z;
-				originToVertex3[0][0] = -cameraX + newCubeWC[6].x; originToVertex3[1][0] = -cameraY + newCubeWC[6].y;
-				originToVertex3[2][0] = -cameraZ + newCubeWC[6].z;
-
-				bPtr = CrossProduct(brightness1, brightness2);
-				bCount = 0;
-				for (int i = 0; i < 3; i++)
-				{
-					brightNorm[i][0] = *(bPtr + bCount);
-					bCount++;
-				}
-				dotProd = -DotProduct(brightNorm, lightDirection) / vectorLength(brightNorm);
-				if (dotProd < 0)dotProd = 0;
-
-				if (projNum == 0)
-				{
-					dotResult1 = DotProduct(brightNorm, originToVertex1);
-					dotResult2 = DotProduct(brightNorm, originToVertex2);
-					dotResult3 = DotProduct(brightNorm, originToVertex3);
-					if (dotResult1 <= 0 && dotResult2 <= 0 && dotResult3 <= 0)
-					{
-						rgbRate = (int)round(255 * dotProd);
-						rectBrush.CreateSolidBrush(RGB(0, rgbRate, 0));
-						prevBrush = memDC.SelectObject(&rectBrush);
-						memDC.BeginPath();
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[2].x), ToScreenY(rect.Height(), rect.top, cub[2].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[3].x), ToScreenY(rect.Height(), rect.top, cub[3].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[6].x), ToScreenY(rect.Height(), rect.top, cub[6].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[2].x), ToScreenY(rect.Height(), rect.top, cub[2].y));
-						memDC.EndPath();
-						memDC.StrokeAndFillPath();
-						memDC.SelectObject(prevBrush);
-						rectBrush.DeleteObject();
-					}
-				}
-				else
-				{
-					dotResultParellel = DotProduct(brightNorm, look) / vectorLength(look);
-					if (dotResultParellel <= 0)
-					{
-						rgbRate = (int)round(255 * dotProd);
-						rectBrush.CreateSolidBrush(RGB(0, rgbRate, 0));
-						prevBrush = memDC.SelectObject(&rectBrush);
-						memDC.BeginPath();
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[2].x), ToScreenY(rect.Height(), rect.top, cub[2].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[3].x), ToScreenY(rect.Height(), rect.top, cub[3].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[6].x), ToScreenY(rect.Height(), rect.top, cub[6].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[2].x), ToScreenY(rect.Height(), rect.top, cub[2].y));
-						memDC.EndPath();
-						memDC.StrokeAndFillPath();
-						memDC.SelectObject(prevBrush);
-						rectBrush.DeleteObject();
-					}
-				}
-
-
+				CubeMeshDraw(projNum, meshData, memDCPtr, width, height, left, top, cub[2], cub[6], cub[3]);
 #pragma endregion
 #pragma region 4번 꼭짓점
-				brightness1[0][0] = -newCubeWC[5].x + newCubeWC[6].x; brightness1[1][0] = -newCubeWC[5].y + newCubeWC[6].y;
-				brightness1[2][0] = -newCubeWC[5].z + newCubeWC[6].z;
-				brightness2[0][0] = -newCubeWC[6].x + newCubeWC[1].x; brightness2[1][0] = -newCubeWC[6].y + newCubeWC[1].y;
-				brightness2[2][0] = -newCubeWC[6].z + newCubeWC[1].z;
-				originToVertex1[0][0] = -cameraX + newCubeWC[5].x; originToVertex1[1][0] = -cameraY + newCubeWC[5].y;
-				originToVertex1[2][0] = -cameraZ + newCubeWC[5].z;
-				originToVertex2[0][0] = -cameraX + newCubeWC[1].x; originToVertex2[1][0] = -cameraY + newCubeWC[1].y;
-				originToVertex2[2][0] = -cameraZ + newCubeWC[1].z;
-				originToVertex3[0][0] = -cameraX + newCubeWC[6].x; originToVertex3[1][0] = -cameraY + newCubeWC[6].y;
-				originToVertex3[2][0] = -cameraZ + newCubeWC[6].z;
-
-				bPtr = CrossProduct(brightness1, brightness2);
-				bCount = 0;
-				for (int i = 0; i < 3; i++)
+				frontPtr = Cube_isitFront(newCubeWC[5], newCubeWC[6], newCubeWC[1], camera, look, lightDirection);
+				count = 0;
+				for (int i = 0; i < 5; i++)
 				{
-					brightNorm[i][0] = *(bPtr + bCount);
-					bCount++;
+					meshData[i] = *(frontPtr + count);
+					count++;
 				}
-				dotProd = -DotProduct(brightNorm, lightDirection) / vectorLength(brightNorm);
-				if (dotProd < 0)dotProd = 0;
-
-				if (projNum == 0)
+				CubeMeshDraw(projNum, meshData, memDCPtr, width, height, left, top, cub[5], cub[6], cub[1]);
+				
+				frontPtr = Cube_isitFront(newCubeWC[5], newCubeWC[1], newCubeWC[4], camera, look, lightDirection);
+				count = 0;
+				for (int i = 0; i < 5; i++)
 				{
-					dotResult1 = DotProduct(brightNorm, originToVertex1);
-					dotResult2 = DotProduct(brightNorm, originToVertex2);
-					dotResult3 = DotProduct(brightNorm, originToVertex3);
-					if (dotResult1 <= 0 && dotResult2 <= 0 && dotResult3 <= 0)
-					{
-						rgbRate = (int)round(255 * dotProd);
-						rectBrush.CreateSolidBrush(RGB(0, rgbRate, 0));
-						prevBrush = memDC.SelectObject(&rectBrush);
-						memDC.BeginPath();
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[5].x), ToScreenY(rect.Height(), rect.top, cub[5].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[1].x), ToScreenY(rect.Height(), rect.top, cub[1].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[6].x), ToScreenY(rect.Height(), rect.top, cub[6].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[5].x), ToScreenY(rect.Height(), rect.top, cub[5].y));
-						memDC.EndPath();
-						memDC.StrokeAndFillPath();
-						memDC.SelectObject(prevBrush);
-						rectBrush.DeleteObject();
-					}
+					meshData[i] = *(frontPtr + count);
+					count++;
 				}
-				else
+				CubeMeshDraw(projNum, meshData, memDCPtr, width, height, left, top, cub[5], cub[1], cub[4]);
+
+				frontPtr = Cube_isitFront(newCubeWC[5], newCubeWC[4], newCubeWC[6], camera, look, lightDirection);
+				count = 0;
+				for (int i = 0; i < 5; i++)
 				{
-					dotResultParellel = DotProduct(brightNorm, look) / vectorLength(look);
-					if (dotResultParellel <= 0)
-					{
-						rgbRate = (int)round(255 * dotProd);
-						rectBrush.CreateSolidBrush(RGB(0, rgbRate, 0));
-						prevBrush = memDC.SelectObject(&rectBrush);
-						memDC.BeginPath();
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[5].x), ToScreenY(rect.Height(), rect.top, cub[5].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[1].x), ToScreenY(rect.Height(), rect.top, cub[1].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[6].x), ToScreenY(rect.Height(), rect.top, cub[6].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[5].x), ToScreenY(rect.Height(), rect.top, cub[5].y));
-						memDC.EndPath();
-						memDC.StrokeAndFillPath();
-						memDC.SelectObject(prevBrush);
-						rectBrush.DeleteObject();
-					}
+					meshData[i] = *(frontPtr + count);
+					count++;
 				}
-
-
-				brightness1[0][0] = -newCubeWC[5].x + newCubeWC[1].x; brightness1[1][0] = -newCubeWC[5].y + newCubeWC[1].y;
-				brightness1[2][0] = -newCubeWC[5].z + newCubeWC[1].z;
-				brightness2[0][0] = -newCubeWC[1].x + newCubeWC[4].x; brightness2[1][0] = -newCubeWC[1].y + newCubeWC[4].y;
-				brightness2[2][0] = -newCubeWC[1].z + newCubeWC[4].z;
-				originToVertex1[0][0] = -cameraX + newCubeWC[5].x; originToVertex1[1][0] = -cameraY + newCubeWC[5].y;
-				originToVertex1[2][0] = -cameraZ + newCubeWC[5].z;
-				originToVertex2[0][0] = -cameraX + newCubeWC[1].x; originToVertex2[1][0] = -cameraY + newCubeWC[1].y;
-				originToVertex2[2][0] = -cameraZ + newCubeWC[1].z;
-				originToVertex3[0][0] = -cameraX + newCubeWC[4].x; originToVertex3[1][0] = -cameraY + newCubeWC[4].y;
-				originToVertex3[2][0] = -cameraZ + newCubeWC[4].z;
-
-				bPtr = CrossProduct(brightness1, brightness2);
-				bCount = 0;
-				for (int i = 0; i < 3; i++)
-				{
-					brightNorm[i][0] = *(bPtr + bCount);
-					bCount++;
-				}
-				dotProd = -DotProduct(brightNorm, lightDirection) / vectorLength(brightNorm);
-				if (dotProd < 0)dotProd = 0;
-
-				if (projNum == 0)
-				{
-					dotResult1 = DotProduct(brightNorm, originToVertex1);
-					dotResult2 = DotProduct(brightNorm, originToVertex2);
-					dotResult3 = DotProduct(brightNorm, originToVertex3);
-					if (dotResult1 <= 0 && dotResult2 <= 0 && dotResult3 <= 0)
-					{
-						rgbRate = (int)round(255 * dotProd);
-						rectBrush.CreateSolidBrush(RGB(0, rgbRate, 0));
-						prevBrush = memDC.SelectObject(&rectBrush);
-						memDC.BeginPath();
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[5].x), ToScreenY(rect.Height(), rect.top, cub[5].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[1].x), ToScreenY(rect.Height(), rect.top, cub[1].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[4].x), ToScreenY(rect.Height(), rect.top, cub[4].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[5].x), ToScreenY(rect.Height(), rect.top, cub[5].y));
-						memDC.EndPath();
-						memDC.StrokeAndFillPath();
-						memDC.SelectObject(prevBrush);
-						rectBrush.DeleteObject();
-					}
-				}
-				else
-				{
-					dotResultParellel = DotProduct(brightNorm, look) / vectorLength(look);
-					if (dotResultParellel <= 0)
-					{
-						rgbRate = (int)round(255 * dotProd);
-						rectBrush.CreateSolidBrush(RGB(0, rgbRate, 0));
-						prevBrush = memDC.SelectObject(&rectBrush);
-						memDC.BeginPath();
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[5].x), ToScreenY(rect.Height(), rect.top, cub[5].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[1].x), ToScreenY(rect.Height(), rect.top, cub[1].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[4].x), ToScreenY(rect.Height(), rect.top, cub[4].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[5].x), ToScreenY(rect.Height(), rect.top, cub[5].y));
-						memDC.EndPath();
-						memDC.StrokeAndFillPath();
-						memDC.SelectObject(prevBrush);
-						rectBrush.DeleteObject();
-					}
-				}
-
-
-				brightness1[0][0] = -newCubeWC[5].x + newCubeWC[4].x; brightness1[1][0] = -newCubeWC[5].y + newCubeWC[4].y;
-				brightness1[2][0] = -newCubeWC[5].z + newCubeWC[4].z;
-				brightness2[0][0] = -newCubeWC[4].x + newCubeWC[6].x; brightness2[1][0] = -newCubeWC[4].y + newCubeWC[6].y;
-				brightness2[2][0] = -newCubeWC[4].z + newCubeWC[6].z;
-				originToVertex1[0][0] = -cameraX + newCubeWC[5].x; originToVertex1[1][0] = -cameraY + newCubeWC[5].y;
-				originToVertex1[2][0] = -cameraZ + newCubeWC[5].z;
-				originToVertex2[0][0] = -cameraX + newCubeWC[6].x; originToVertex2[1][0] = -cameraY + newCubeWC[6].y;
-				originToVertex2[2][0] = -cameraZ + newCubeWC[6].z;
-				originToVertex3[0][0] = -cameraX + newCubeWC[4].x; originToVertex3[1][0] = -cameraY + newCubeWC[4].y;
-				originToVertex3[2][0] = -cameraZ + newCubeWC[4].z;
-
-				bPtr = CrossProduct(brightness1, brightness2);
-				bCount = 0;
-				for (int i = 0; i < 3; i++)
-				{
-					brightNorm[i][0] = *(bPtr + bCount);
-					bCount++;
-				}
-				dotProd = -DotProduct(brightNorm, lightDirection) / vectorLength(brightNorm);
-				if (dotProd < 0)dotProd = 0;
-
-				if (projNum == 0)
-				{
-					dotResult1 = DotProduct(brightNorm, originToVertex1);
-					dotResult2 = DotProduct(brightNorm, originToVertex2);
-					dotResult3 = DotProduct(brightNorm, originToVertex3);
-					if (dotResult1 <= 0 && dotResult2 <= 0 && dotResult3 <= 0)
-					{
-						rgbRate = (int)round(255 * dotProd);
-						rectBrush.CreateSolidBrush(RGB(0, rgbRate, 0));
-						prevBrush = memDC.SelectObject(&rectBrush);
-						memDC.BeginPath();
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[5].x), ToScreenY(rect.Height(), rect.top, cub[5].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[6].x), ToScreenY(rect.Height(), rect.top, cub[6].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[4].x), ToScreenY(rect.Height(), rect.top, cub[4].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[5].x), ToScreenY(rect.Height(), rect.top, cub[5].y));
-						memDC.EndPath();
-						memDC.StrokeAndFillPath();
-						memDC.SelectObject(prevBrush);
-						rectBrush.DeleteObject();
-					}
-				}
-				else
-				{
-					dotResultParellel = DotProduct(brightNorm, look) / vectorLength(look);
-					if (dotResultParellel <= 0)
-					{
-						rgbRate = (int)round(255 * dotProd);
-						rectBrush.CreateSolidBrush(RGB(0, rgbRate, 0));
-						prevBrush = memDC.SelectObject(&rectBrush);
-						memDC.BeginPath();
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[5].x), ToScreenY(rect.Height(), rect.top, cub[5].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[6].x), ToScreenY(rect.Height(), rect.top, cub[6].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[4].x), ToScreenY(rect.Height(), rect.top, cub[4].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[5].x), ToScreenY(rect.Height(), rect.top, cub[5].y));
-						memDC.EndPath();
-						memDC.StrokeAndFillPath();
-						memDC.SelectObject(prevBrush);
-						rectBrush.DeleteObject();
-					}
-				}
+				CubeMeshDraw(projNum, meshData, memDCPtr, width, height, left, top, cub[5], cub[4], cub[6]);
 #pragma endregion
 			}
 			else
 			{
 #pragma region 1번 꼭짓점 - 선
-
-				brightness1[0][0] = -newCubeWC[0].x + newCubeWC[3].x; brightness1[1][0] = -newCubeWC[0].y + newCubeWC[3].y;
-				brightness1[2][0] = -newCubeWC[0].z + newCubeWC[3].z;
-				brightness2[0][0] = -newCubeWC[3].x + newCubeWC[4].x; brightness2[1][0] = -newCubeWC[3].y + newCubeWC[4].y;
-				brightness2[2][0] = -newCubeWC[3].z + newCubeWC[4].z;
-				originToVertex1[0][0] = -cameraX + newCubeWC[0].x; originToVertex1[1][0] = -cameraY + newCubeWC[0].y;
-				originToVertex1[2][0] = -cameraZ + newCubeWC[0].z;
-				originToVertex2[0][0] = -cameraX + newCubeWC[3].x; originToVertex2[1][0] = -cameraY + newCubeWC[3].y;
-				originToVertex2[2][0] = -cameraZ + newCubeWC[3].z;
-				originToVertex3[0][0] = -cameraX + newCubeWC[4].x; originToVertex3[1][0] = -cameraY + newCubeWC[4].y;
-				originToVertex3[2][0] = -cameraZ + newCubeWC[4].z;
-
-				bPtr = CrossProduct(brightness1, brightness2);
-				bCount = 0;
-				for (int i = 0; i < 3; i++)
+				float* frontPtr = Cube_isitFront(newCubeWC[0], newCubeWC[3], newCubeWC[4], camera, look, lightDirection);
+				float meshData[5] = {};
+				int count = 0;
+				for (int i = 0; i < 5; i++)
 				{
-					brightNorm[i][0] = *(bPtr + bCount);
-					bCount++;
+					meshData[i] = *(frontPtr + count);
+					count++;
 				}
-				dotProd = DotProduct(brightNorm, lightDirection) / vectorLength(brightNorm);
-				if (projNum == 0)
-				{
-					dotResult1 = DotProduct(brightNorm, originToVertex1);
-					dotResult2 = DotProduct(brightNorm, originToVertex2);
-					dotResult3 = DotProduct(brightNorm, originToVertex3);
-					if (dotResult1 <= 0 && dotResult2 <= 0 && dotResult3 <= 0)
-					{
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[0].x), ToScreenY(rect.Height(), rect.top, cub[0].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[3].x), ToScreenY(rect.Height(), rect.top, cub[3].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[4].x), ToScreenY(rect.Height(), rect.top, cub[4].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[0].x), ToScreenY(rect.Height(), rect.top, cub[0].y));
-					}
-				}
-				else
-				{
-					dotResultParellel = DotProduct(brightNorm, look) / vectorLength(look);
-					if (dotResultParellel <= 0)
-					{
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[0].x), ToScreenY(rect.Height(), rect.top, cub[0].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[3].x), ToScreenY(rect.Height(), rect.top, cub[3].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[4].x), ToScreenY(rect.Height(), rect.top, cub[4].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[0].x), ToScreenY(rect.Height(), rect.top, cub[0].y));
-					}
-				}
+				CubeLineDraw(projNum, meshData, memDCPtr, width, height, left, top, cub[0], cub[3], cub[4]);
 
-
-				brightness1[0][0] = -newCubeWC[0].x + newCubeWC[4].x; brightness1[1][0] = -newCubeWC[0].y + newCubeWC[4].y;
-				brightness1[2][0] = -newCubeWC[0].z + newCubeWC[4].z;
-				brightness2[0][0] = -newCubeWC[4].x + newCubeWC[1].x; brightness2[1][0] = -newCubeWC[4].y + newCubeWC[1].y;
-				brightness2[2][0] = -newCubeWC[4].z + newCubeWC[1].z;
-				originToVertex1[0][0] = -cameraX + newCubeWC[0].x; originToVertex1[1][0] = -cameraY + newCubeWC[0].y;
-				originToVertex1[2][0] = -cameraZ + newCubeWC[0].z;
-				originToVertex2[0][0] = -cameraX + newCubeWC[1].x; originToVertex2[1][0] = -cameraY + newCubeWC[1].y;
-				originToVertex2[2][0] = -cameraZ + newCubeWC[1].z;
-				originToVertex3[0][0] = -cameraX + newCubeWC[4].x; originToVertex3[1][0] = -cameraY + newCubeWC[4].y;
-				originToVertex3[2][0] = -cameraZ + newCubeWC[4].z;
-
-				bPtr = CrossProduct(brightness1, brightness2);
-				bCount = 0;
-				for (int i = 0; i < 3; i++)
+				frontPtr = Cube_isitFront(newCubeWC[0], newCubeWC[4], newCubeWC[1], camera, look, lightDirection);
+				count = 0;
+				for (int i = 0; i < 5; i++)
 				{
-					brightNorm[i][0] = *(bPtr + bCount);
-					bCount++;
+					meshData[i] = *(frontPtr + count);
+					count++;
 				}
-				dotProd = DotProduct(brightNorm, lightDirection) / vectorLength(brightNorm);
-				if (projNum == 0)
-				{
-					dotResult1 = DotProduct(brightNorm, originToVertex1);
-					dotResult2 = DotProduct(brightNorm, originToVertex2);
-					dotResult3 = DotProduct(brightNorm, originToVertex3);
-					if (dotResult1 <= 0 && dotResult2 <= 0 && dotResult3 <= 0)
-					{
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[0].x), ToScreenY(rect.Height(), rect.top, cub[0].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[4].x), ToScreenY(rect.Height(), rect.top, cub[4].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[1].x), ToScreenY(rect.Height(), rect.top, cub[1].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[0].x), ToScreenY(rect.Height(), rect.top, cub[0].y));
-					}
-				}
-				else
-				{
-					dotResultParellel = DotProduct(brightNorm, look) / vectorLength(look);
-					if (dotResultParellel <= 0)
-					{
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[0].x), ToScreenY(rect.Height(), rect.top, cub[0].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[4].x), ToScreenY(rect.Height(), rect.top, cub[4].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[1].x), ToScreenY(rect.Height(), rect.top, cub[1].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[0].x), ToScreenY(rect.Height(), rect.top, cub[0].y));
-					}
-				}
+				CubeLineDraw(projNum, meshData, memDCPtr, width, height, left, top, cub[0], cub[4], cub[1]);
 
-
-				brightness1[0][0] = -newCubeWC[0].x + newCubeWC[1].x; brightness1[1][0] = -newCubeWC[0].y + newCubeWC[1].y;
-				brightness1[2][0] = -newCubeWC[0].z + newCubeWC[1].z;
-				brightness2[0][0] = -newCubeWC[1].x + newCubeWC[3].x; brightness2[1][0] = -newCubeWC[1].y + newCubeWC[3].y;
-				brightness2[2][0] = -newCubeWC[1].z + newCubeWC[3].z;
-				originToVertex1[0][0] = -cameraX + newCubeWC[0].x; originToVertex1[1][0] = -cameraY + newCubeWC[0].y;
-				originToVertex1[2][0] = -cameraZ + newCubeWC[0].z;
-				originToVertex2[0][0] = -cameraX + newCubeWC[3].x; originToVertex2[1][0] = -cameraY + newCubeWC[3].y;
-				originToVertex2[2][0] = -cameraZ + newCubeWC[3].z;
-				originToVertex3[0][0] = -cameraX + newCubeWC[1].x; originToVertex3[1][0] = -cameraY + newCubeWC[1].y;
-				originToVertex3[2][0] = -cameraZ + newCubeWC[1].z;
-
-				bPtr = CrossProduct(brightness1, brightness2);
-				bCount = 0;
-				for (int i = 0; i < 3; i++)
+				frontPtr = Cube_isitFront(newCubeWC[0], newCubeWC[1], newCubeWC[3], camera, look, lightDirection);
+				count = 0;
+				for (int i = 0; i < 5; i++)
 				{
-					brightNorm[i][0] = *(bPtr + bCount);
-					bCount++;
+					meshData[i] = *(frontPtr + count);
+					count++;
 				}
-				dotProd = DotProduct(brightNorm, lightDirection) / vectorLength(brightNorm);
-				if (projNum == 0)
-				{
-					dotResult1 = DotProduct(brightNorm, originToVertex1);
-					dotResult2 = DotProduct(brightNorm, originToVertex2);
-					dotResult3 = DotProduct(brightNorm, originToVertex3);
-					if (dotResult1 <= 0 && dotResult2 <= 0 && dotResult3 <= 0)
-					{
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[0].x), ToScreenY(rect.Height(), rect.top, cub[0].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[3].x), ToScreenY(rect.Height(), rect.top, cub[3].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[1].x), ToScreenY(rect.Height(), rect.top, cub[1].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[0].x), ToScreenY(rect.Height(), rect.top, cub[0].y));
-					}
-				}
-				else
-				{
-					dotResultParellel = DotProduct(brightNorm, look) / vectorLength(look);
-					if (dotResultParellel <= 0)
-					{
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[0].x), ToScreenY(rect.Height(), rect.top, cub[0].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[3].x), ToScreenY(rect.Height(), rect.top, cub[3].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[1].x), ToScreenY(rect.Height(), rect.top, cub[1].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[0].x), ToScreenY(rect.Height(), rect.top, cub[0].y));
-					}
-				}
-
+				CubeLineDraw(projNum, meshData, memDCPtr, width, height, left, top, cub[0], cub[1], cub[3]);
 #pragma endregion
 #pragma region 2번 꼭짓점
-				brightness1[0][0] = -newCubeWC[7].x + newCubeWC[4].x; brightness1[1][0] = -newCubeWC[7].y + newCubeWC[4].y;
-				brightness1[2][0] = -newCubeWC[7].z + newCubeWC[4].z;
-				brightness2[0][0] = -newCubeWC[4].x + newCubeWC[3].x; brightness2[1][0] = -newCubeWC[4].y + newCubeWC[3].y;
-				brightness2[2][0] = -newCubeWC[4].z + newCubeWC[3].z;
-				originToVertex1[0][0] = -cameraX + newCubeWC[7].x; originToVertex1[1][0] = -cameraY + newCubeWC[7].y;
-				originToVertex1[2][0] = -cameraZ + newCubeWC[7].z;
-				originToVertex2[0][0] = -cameraX + newCubeWC[3].x; originToVertex2[1][0] = -cameraY + newCubeWC[3].y;
-				originToVertex2[2][0] = -cameraZ + newCubeWC[3].z;
-				originToVertex3[0][0] = -cameraX + newCubeWC[4].x; originToVertex3[1][0] = -cameraY + newCubeWC[4].y;
-				originToVertex3[2][0] = -cameraZ + newCubeWC[4].z;
-
-				bPtr = CrossProduct(brightness1, brightness2);
-				bCount = 0;
-				for (int i = 0; i < 3; i++)
+				frontPtr = Cube_isitFront(newCubeWC[7], newCubeWC[4], newCubeWC[3], camera, look, lightDirection);
+				count = 0;
+				for (int i = 0; i < 5; i++)
 				{
-					brightNorm[i][0] = *(bPtr + bCount);
-					bCount++;
+					meshData[i] = *(frontPtr + count);
+					count++;
 				}
-				dotProd = DotProduct(brightNorm, lightDirection) / vectorLength(brightNorm);
-				if (projNum == 0)
-				{
-					dotResult1 = DotProduct(brightNorm, originToVertex1);
-					dotResult2 = DotProduct(brightNorm, originToVertex2);
-					dotResult3 = DotProduct(brightNorm, originToVertex3);
-					if (dotResult1 <= 0 && dotResult2 <= 0 && dotResult3 <= 0)
-					{
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[7].x), ToScreenY(rect.Height(), rect.top, cub[7].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[3].x), ToScreenY(rect.Height(), rect.top, cub[3].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[4].x), ToScreenY(rect.Height(), rect.top, cub[4].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[7].x), ToScreenY(rect.Height(), rect.top, cub[7].y));
-					}
-				}
-				else
-				{
-					dotResultParellel = DotProduct(brightNorm, look) / vectorLength(look);
-					if (dotResultParellel <= 0)
-					{
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[7].x), ToScreenY(rect.Height(), rect.top, cub[7].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[3].x), ToScreenY(rect.Height(), rect.top, cub[3].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[4].x), ToScreenY(rect.Height(), rect.top, cub[4].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[7].x), ToScreenY(rect.Height(), rect.top, cub[7].y));
-					}
-				}
+				CubeLineDraw(projNum, meshData, memDCPtr, width, height, left, top, cub[7], cub[4], cub[3]);
 
-
-				brightness1[0][0] = -newCubeWC[7].x + newCubeWC[6].x; brightness1[1][0] = -newCubeWC[7].y + newCubeWC[6].y;
-				brightness1[2][0] = -newCubeWC[7].z + newCubeWC[6].z;
-				brightness2[0][0] = -newCubeWC[6].x + newCubeWC[4].x; brightness2[1][0] = -newCubeWC[6].y + newCubeWC[4].y;
-				brightness2[2][0] = -newCubeWC[6].z + newCubeWC[4].z;
-				originToVertex1[0][0] = -cameraX + newCubeWC[7].x; originToVertex1[1][0] = -cameraY + newCubeWC[7].y;
-				originToVertex1[2][0] = -cameraZ + newCubeWC[7].z;
-				originToVertex2[0][0] = -cameraX + newCubeWC[6].x; originToVertex2[1][0] = -cameraY + newCubeWC[6].y;
-				originToVertex2[2][0] = -cameraZ + newCubeWC[6].z;
-				originToVertex3[0][0] = -cameraX + newCubeWC[4].x; originToVertex3[1][0] = -cameraY + newCubeWC[4].y;
-				originToVertex3[2][0] = -cameraZ + newCubeWC[4].z;
-
-				bPtr = CrossProduct(brightness1, brightness2);
-				bCount = 0;
-				for (int i = 0; i < 3; i++)
+				frontPtr = Cube_isitFront(newCubeWC[7], newCubeWC[6], newCubeWC[4], camera, look, lightDirection);
+				count = 0;
+				for (int i = 0; i < 5; i++)
 				{
-					brightNorm[i][0] = *(bPtr + bCount);
-					bCount++;
+					meshData[i] = *(frontPtr + count);
+					count++;
 				}
-				dotProd = DotProduct(brightNorm, lightDirection) / vectorLength(brightNorm);
-				if (projNum == 0)
-				{
-					dotResult1 = DotProduct(brightNorm, originToVertex1);
-					dotResult2 = DotProduct(brightNorm, originToVertex2);
-					dotResult3 = DotProduct(brightNorm, originToVertex3);
-					if (dotResult1 <= 0 && dotResult2 <= 0 && dotResult3 <= 0)
-					{
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[7].x), ToScreenY(rect.Height(), rect.top, cub[7].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[6].x), ToScreenY(rect.Height(), rect.top, cub[6].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[4].x), ToScreenY(rect.Height(), rect.top, cub[4].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[7].x), ToScreenY(rect.Height(), rect.top, cub[7].y));
-					}
-				}
-				else
-				{
-					dotResultParellel = DotProduct(brightNorm, look) / vectorLength(look);
-					if (dotResultParellel <= 0)
-					{
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[7].x), ToScreenY(rect.Height(), rect.top, cub[7].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[6].x), ToScreenY(rect.Height(), rect.top, cub[6].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[4].x), ToScreenY(rect.Height(), rect.top, cub[4].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[7].x), ToScreenY(rect.Height(), rect.top, cub[7].y));
-					}
-				}
+				CubeLineDraw(projNum, meshData, memDCPtr, width, height, left, top, cub[7], cub[6], cub[4]);
 
-
-				brightness1[0][0] = -newCubeWC[7].x + newCubeWC[3].x; brightness1[1][0] = -newCubeWC[7].y + newCubeWC[3].y;
-				brightness1[2][0] = -newCubeWC[7].z + newCubeWC[3].z;
-				brightness2[0][0] = -newCubeWC[3].x + newCubeWC[6].x; brightness2[1][0] = -newCubeWC[3].y + newCubeWC[6].y;
-				brightness2[2][0] = -newCubeWC[3].z + newCubeWC[6].z;
-				originToVertex1[0][0] = -cameraX + newCubeWC[7].x; originToVertex1[1][0] = -cameraY + newCubeWC[7].y;
-				originToVertex1[2][0] = -cameraZ + newCubeWC[7].z;
-				originToVertex2[0][0] = -cameraX + newCubeWC[6].x; originToVertex2[1][0] = -cameraY + newCubeWC[6].y;
-				originToVertex2[2][0] = -cameraZ + newCubeWC[6].z;
-				originToVertex3[0][0] = -cameraX + newCubeWC[3].x; originToVertex3[1][0] = -cameraY + newCubeWC[3].y;
-				originToVertex3[2][0] = -cameraZ + newCubeWC[3].z;
-
-				bPtr = CrossProduct(brightness1, brightness2);
-				bCount = 0;
-				for (int i = 0; i < 3; i++)
+				frontPtr = Cube_isitFront(newCubeWC[7], newCubeWC[3], newCubeWC[6], camera, look, lightDirection);
+				count = 0;
+				for (int i = 0; i < 5; i++)
 				{
-					brightNorm[i][0] = *(bPtr + bCount);
-					bCount++;
+					meshData[i] = *(frontPtr + count);
+					count++;
 				}
-				dotProd = DotProduct(brightNorm, lightDirection) / vectorLength(brightNorm);
-				if (projNum == 0)
-				{
-					dotResult1 = DotProduct(brightNorm, originToVertex1);
-					dotResult2 = DotProduct(brightNorm, originToVertex2);
-					dotResult3 = DotProduct(brightNorm, originToVertex3);
-					if (dotResult1 <= 0 && dotResult2 <= 0 && dotResult3 <= 0)
-					{
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[7].x), ToScreenY(rect.Height(), rect.top, cub[7].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[3].x), ToScreenY(rect.Height(), rect.top, cub[3].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[6].x), ToScreenY(rect.Height(), rect.top, cub[6].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[7].x), ToScreenY(rect.Height(), rect.top, cub[7].y));
-					}
-				}
-				else
-				{
-					dotResultParellel = DotProduct(brightNorm, look) / vectorLength(look);
-					if (dotResultParellel <= 0)
-					{
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[7].x), ToScreenY(rect.Height(), rect.top, cub[7].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[3].x), ToScreenY(rect.Height(), rect.top, cub[3].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[6].x), ToScreenY(rect.Height(), rect.top, cub[6].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[7].x), ToScreenY(rect.Height(), rect.top, cub[7].y));
-					}
-				}
-
-
+				CubeLineDraw(projNum, meshData, memDCPtr, width, height, left, top, cub[7], cub[3], cub[6]);
 #pragma endregion
 #pragma region 3번 꼭짓점
-				brightness1[0][0] = -newCubeWC[2].x + newCubeWC[1].x; brightness1[1][0] = -newCubeWC[2].y + newCubeWC[1].y;
-				brightness1[2][0] = -newCubeWC[2].z + newCubeWC[1].z;
-				brightness2[0][0] = -newCubeWC[1].x + newCubeWC[6].x; brightness2[1][0] = -newCubeWC[1].y + newCubeWC[6].y;
-				brightness2[2][0] = -newCubeWC[1].z + newCubeWC[6].z;
-				originToVertex1[0][0] = -cameraX + newCubeWC[2].x; originToVertex1[1][0] = -cameraY + newCubeWC[2].y;
-				originToVertex1[2][0] = -cameraZ + newCubeWC[2].z;
-				originToVertex2[0][0] = -cameraX + newCubeWC[6].x; originToVertex2[1][0] = -cameraY + newCubeWC[6].y;
-				originToVertex2[2][0] = -cameraZ + newCubeWC[6].z;
-				originToVertex3[0][0] = -cameraX + newCubeWC[1].x; originToVertex3[1][0] = -cameraY + newCubeWC[1].y;
-				originToVertex3[2][0] = -cameraZ + newCubeWC[1].z;
-
-				bPtr = CrossProduct(brightness1, brightness2);
-				bCount = 0;
-				for (int i = 0; i < 3; i++)
+				frontPtr = Cube_isitFront(newCubeWC[2], newCubeWC[1], newCubeWC[6], camera, look, lightDirection);
+				count = 0;
+				for (int i = 0; i < 5; i++)
 				{
-					brightNorm[i][0] = *(bPtr + bCount);
-					bCount++;
+					meshData[i] = *(frontPtr + count);
+					count++;
 				}
-				dotProd = DotProduct(brightNorm, lightDirection) / vectorLength(brightNorm);
-				if (projNum == 0)
-				{
-					dotResult1 = DotProduct(brightNorm, originToVertex1);
-					dotResult2 = DotProduct(brightNorm, originToVertex2);
-					dotResult3 = DotProduct(brightNorm, originToVertex3);
-					if (dotResult1 <= 0 && dotResult2 <= 0 && dotResult3 <= 0)
-					{
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[2].x), ToScreenY(rect.Height(), rect.top, cub[2].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[1].x), ToScreenY(rect.Height(), rect.top, cub[1].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[6].x), ToScreenY(rect.Height(), rect.top, cub[6].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[2].x), ToScreenY(rect.Height(), rect.top, cub[2].y));
-					}
-				}
-				else
-				{
-					dotResultParellel = DotProduct(brightNorm, look) / vectorLength(look);
-					if (dotResultParellel <= 0)
-					{
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[2].x), ToScreenY(rect.Height(), rect.top, cub[2].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[1].x), ToScreenY(rect.Height(), rect.top, cub[1].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[6].x), ToScreenY(rect.Height(), rect.top, cub[6].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[2].x), ToScreenY(rect.Height(), rect.top, cub[2].y));
-					}
-				}
+				CubeLineDraw(projNum, meshData, memDCPtr, width, height, left, top, cub[2], cub[1], cub[6]);
 
-
-				brightness1[0][0] = -newCubeWC[2].x + newCubeWC[3].x; brightness1[1][0] = -newCubeWC[2].y + newCubeWC[3].y;
-				brightness1[2][0] = -newCubeWC[2].z + newCubeWC[3].z;
-				brightness2[0][0] = -newCubeWC[3].x + newCubeWC[1].x; brightness2[1][0] = -newCubeWC[3].y + newCubeWC[1].y;
-				brightness2[2][0] = -newCubeWC[3].z + newCubeWC[1].z;
-				originToVertex1[0][0] = -cameraX + newCubeWC[2].x; originToVertex1[1][0] = -cameraY + newCubeWC[2].y;
-				originToVertex1[2][0] = -cameraZ + newCubeWC[2].z;
-				originToVertex2[0][0] = -cameraX + newCubeWC[3].x; originToVertex2[1][0] = -cameraY + newCubeWC[3].y;
-				originToVertex2[2][0] = -cameraZ + newCubeWC[3].z;
-				originToVertex3[0][0] = -cameraX + newCubeWC[1].x; originToVertex3[1][0] = -cameraY + newCubeWC[1].y;
-				originToVertex3[2][0] = -cameraZ + newCubeWC[1].z;
-
-				bPtr = CrossProduct(brightness1, brightness2);
-				bCount = 0;
-				for (int i = 0; i < 3; i++)
+				frontPtr = Cube_isitFront(newCubeWC[2], newCubeWC[3], newCubeWC[1], camera, look, lightDirection);
+				count = 0;
+				for (int i = 0; i < 5; i++)
 				{
-					brightNorm[i][0] = *(bPtr + bCount);
-					bCount++;
+					meshData[i] = *(frontPtr + count);
+					count++;
 				}
-				dotProd = DotProduct(brightNorm, lightDirection) / vectorLength(brightNorm);
-				if (projNum == 0)
-				{
-					dotResult1 = DotProduct(brightNorm, originToVertex1);
-					dotResult2 = DotProduct(brightNorm, originToVertex2);
-					dotResult3 = DotProduct(brightNorm, originToVertex3);
-					if (dotResult1 <= 0 && dotResult2 <= 0 && dotResult3 <= 0)
-					{
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[2].x), ToScreenY(rect.Height(), rect.top, cub[2].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[1].x), ToScreenY(rect.Height(), rect.top, cub[1].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[3].x), ToScreenY(rect.Height(), rect.top, cub[3].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[2].x), ToScreenY(rect.Height(), rect.top, cub[2].y));
-					}
-				}
-				else
-				{
-					dotResultParellel = DotProduct(brightNorm, look) / vectorLength(look);
-					if (dotResultParellel <= 0)
-					{
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[2].x), ToScreenY(rect.Height(), rect.top, cub[2].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[1].x), ToScreenY(rect.Height(), rect.top, cub[1].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[3].x), ToScreenY(rect.Height(), rect.top, cub[3].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[2].x), ToScreenY(rect.Height(), rect.top, cub[2].y));
-					}
-				}
+				CubeLineDraw(projNum, meshData, memDCPtr, width, height, left, top, cub[2], cub[3], cub[1]);
 
-
-				brightness1[0][0] = -newCubeWC[2].x + newCubeWC[6].x; brightness1[1][0] = -newCubeWC[2].y + newCubeWC[6].y;
-				brightness1[2][0] = -newCubeWC[2].z + newCubeWC[6].z;
-				brightness2[0][0] = -newCubeWC[6].x + newCubeWC[3].x; brightness2[1][0] = -newCubeWC[6].y + newCubeWC[3].y;
-				brightness2[2][0] = -newCubeWC[6].z + newCubeWC[3].z;
-				originToVertex1[0][0] = -cameraX + newCubeWC[2].x; originToVertex1[1][0] = -cameraY + newCubeWC[2].y;
-				originToVertex1[2][0] = -cameraZ + newCubeWC[2].z;
-				originToVertex2[0][0] = -cameraX + newCubeWC[3].x; originToVertex2[1][0] = -cameraY + newCubeWC[3].y;
-				originToVertex2[2][0] = -cameraZ + newCubeWC[3].z;
-				originToVertex3[0][0] = -cameraX + newCubeWC[6].x; originToVertex3[1][0] = -cameraY + newCubeWC[6].y;
-				originToVertex3[2][0] = -cameraZ + newCubeWC[6].z;
-
-				bPtr = CrossProduct(brightness1, brightness2);
-				bCount = 0;
-				for (int i = 0; i < 3; i++)
+				frontPtr = Cube_isitFront(newCubeWC[2], newCubeWC[6], newCubeWC[3], camera, look, lightDirection);
+				count = 0;
+				for (int i = 0; i < 5; i++)
 				{
-					brightNorm[i][0] = *(bPtr + bCount);
-					bCount++;
+					meshData[i] = *(frontPtr + count);
+					count++;
 				}
-				dotProd = DotProduct(brightNorm, lightDirection) / vectorLength(brightNorm);
-				if (projNum == 0)
-				{
-					dotResult1 = DotProduct(brightNorm, originToVertex1);
-					dotResult2 = DotProduct(brightNorm, originToVertex2);
-					dotResult3 = DotProduct(brightNorm, originToVertex3);
-					if (dotResult1 <= 0 && dotResult2 <= 0 && dotResult3 <= 0)
-					{
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[2].x), ToScreenY(rect.Height(), rect.top, cub[2].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[3].x), ToScreenY(rect.Height(), rect.top, cub[3].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[6].x), ToScreenY(rect.Height(), rect.top, cub[6].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[2].x), ToScreenY(rect.Height(), rect.top, cub[2].y));
-					}
-				}
-				else
-				{
-					dotResultParellel = DotProduct(brightNorm, look) / vectorLength(look);
-					if (dotResultParellel <= 0)
-					{
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[2].x), ToScreenY(rect.Height(), rect.top, cub[2].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[3].x), ToScreenY(rect.Height(), rect.top, cub[3].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[6].x), ToScreenY(rect.Height(), rect.top, cub[6].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[2].x), ToScreenY(rect.Height(), rect.top, cub[2].y));
-					}
-				}
-
-
+				CubeLineDraw(projNum, meshData, memDCPtr, width, height, left, top, cub[2], cub[6], cub[3]);
 #pragma endregion
 #pragma region 4번 꼭짓점
-				brightness1[0][0] = -newCubeWC[5].x + newCubeWC[6].x; brightness1[1][0] = -newCubeWC[5].y + newCubeWC[6].y;
-				brightness1[2][0] = -newCubeWC[5].z + newCubeWC[6].z;
-				brightness2[0][0] = -newCubeWC[6].x + newCubeWC[1].x; brightness2[1][0] = -newCubeWC[6].y + newCubeWC[1].y;
-				brightness2[2][0] = -newCubeWC[6].z + newCubeWC[1].z;
-				originToVertex1[0][0] = -cameraX + newCubeWC[5].x; originToVertex1[1][0] = -cameraY + newCubeWC[5].y;
-				originToVertex1[2][0] = -cameraZ + newCubeWC[5].z;
-				originToVertex2[0][0] = -cameraX + newCubeWC[1].x; originToVertex2[1][0] = -cameraY + newCubeWC[1].y;
-				originToVertex2[2][0] = -cameraZ + newCubeWC[1].z;
-				originToVertex3[0][0] = -cameraX + newCubeWC[6].x; originToVertex3[1][0] = -cameraY + newCubeWC[6].y;
-				originToVertex3[2][0] = -cameraZ + newCubeWC[6].z;
+				frontPtr = Cube_isitFront(newCubeWC[5], newCubeWC[6], newCubeWC[1], camera, look, lightDirection);
+				count = 0;
+				for (int i = 0; i < 5; i++)
+				{
+					meshData[i] = *(frontPtr + count);
+					count++;
+				}
+				CubeLineDraw(projNum, meshData, memDCPtr, width, height, left, top, cub[5], cub[6], cub[1]);
 
-				bPtr = CrossProduct(brightness1, brightness2);
-				bCount = 0;
-				for (int i = 0; i < 3; i++)
+				frontPtr = Cube_isitFront(newCubeWC[5], newCubeWC[1], newCubeWC[4], camera, look, lightDirection);
+				count = 0;
+				for (int i = 0; i < 5; i++)
 				{
-					brightNorm[i][0] = *(bPtr + bCount);
-					bCount++;
+					meshData[i] = *(frontPtr + count);
+					count++;
 				}
-				dotProd = DotProduct(brightNorm, lightDirection) / vectorLength(brightNorm);
-				if (projNum == 0)
-				{
-					dotResult1 = DotProduct(brightNorm, originToVertex1);
-					dotResult2 = DotProduct(brightNorm, originToVertex2);
-					dotResult3 = DotProduct(brightNorm, originToVertex3);
-					if (dotResult1 <= 0 && dotResult2 <= 0 && dotResult3 <= 0)
-					{
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[5].x), ToScreenY(rect.Height(), rect.top, cub[5].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[1].x), ToScreenY(rect.Height(), rect.top, cub[1].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[6].x), ToScreenY(rect.Height(), rect.top, cub[6].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[5].x), ToScreenY(rect.Height(), rect.top, cub[5].y));
-					}
-				}
-				else
-				{
-					dotResultParellel = DotProduct(brightNorm, look) / vectorLength(look);
-					if (dotResultParellel <= 0)
-					{
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[5].x), ToScreenY(rect.Height(), rect.top, cub[5].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[1].x), ToScreenY(rect.Height(), rect.top, cub[1].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[6].x), ToScreenY(rect.Height(), rect.top, cub[6].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[5].x), ToScreenY(rect.Height(), rect.top, cub[5].y));
-					}
-				}
+				CubeLineDraw(projNum, meshData, memDCPtr, width, height, left, top, cub[5], cub[1], cub[4]);
 
-
-				brightness1[0][0] = -newCubeWC[5].x + newCubeWC[1].x; brightness1[1][0] = -newCubeWC[5].y + newCubeWC[1].y;
-				brightness1[2][0] = -newCubeWC[5].z + newCubeWC[1].z;
-				brightness2[0][0] = -newCubeWC[1].x + newCubeWC[4].x; brightness2[1][0] = -newCubeWC[1].y + newCubeWC[4].y;
-				brightness2[2][0] = -newCubeWC[1].z + newCubeWC[4].z;
-				originToVertex1[0][0] = -cameraX + newCubeWC[5].x; originToVertex1[1][0] = -cameraY + newCubeWC[5].y;
-				originToVertex1[2][0] = -cameraZ + newCubeWC[5].z;
-				originToVertex2[0][0] = -cameraX + newCubeWC[1].x; originToVertex2[1][0] = -cameraY + newCubeWC[1].y;
-				originToVertex2[2][0] = -cameraZ + newCubeWC[1].z;
-				originToVertex3[0][0] = -cameraX + newCubeWC[4].x; originToVertex3[1][0] = -cameraY + newCubeWC[4].y;
-				originToVertex3[2][0] = -cameraZ + newCubeWC[4].z;
-
-				bPtr = CrossProduct(brightness1, brightness2);
-				bCount = 0;
-				for (int i = 0; i < 3; i++)
+				frontPtr = Cube_isitFront(newCubeWC[5], newCubeWC[4], newCubeWC[6], camera, look, lightDirection);
+				count = 0;
+				for (int i = 0; i < 5; i++)
 				{
-					brightNorm[i][0] = *(bPtr + bCount);
-					bCount++;
+					meshData[i] = *(frontPtr + count);
+					count++;
 				}
-				dotProd = DotProduct(brightNorm, lightDirection) / vectorLength(brightNorm);
-				if (projNum == 0)
-				{
-					dotResult1 = DotProduct(brightNorm, originToVertex1);
-					dotResult2 = DotProduct(brightNorm, originToVertex2);
-					dotResult3 = DotProduct(brightNorm, originToVertex3);
-					if (dotResult1 <= 0 && dotResult2 <= 0 && dotResult3 <= 0)
-					{
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[5].x), ToScreenY(rect.Height(), rect.top, cub[5].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[1].x), ToScreenY(rect.Height(), rect.top, cub[1].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[4].x), ToScreenY(rect.Height(), rect.top, cub[4].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[5].x), ToScreenY(rect.Height(), rect.top, cub[5].y));
-					}
-				}
-				else
-				{
-					dotResultParellel = DotProduct(brightNorm, look) / vectorLength(look);
-					if (dotResultParellel <= 0)
-					{
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[5].x), ToScreenY(rect.Height(), rect.top, cub[5].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[1].x), ToScreenY(rect.Height(), rect.top, cub[1].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[4].x), ToScreenY(rect.Height(), rect.top, cub[4].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[5].x), ToScreenY(rect.Height(), rect.top, cub[5].y));
-					}
-				}
-
-
-				brightness1[0][0] = -newCubeWC[5].x + newCubeWC[4].x; brightness1[1][0] = -newCubeWC[5].y + newCubeWC[4].y;
-				brightness1[2][0] = -newCubeWC[5].z + newCubeWC[4].z;
-				brightness2[0][0] = -newCubeWC[4].x + newCubeWC[6].x; brightness2[1][0] = -newCubeWC[4].y + newCubeWC[6].y;
-				brightness2[2][0] = -newCubeWC[4].z + newCubeWC[6].z;
-				originToVertex1[0][0] = -cameraX + newCubeWC[5].x; originToVertex1[1][0] = -cameraY + newCubeWC[5].y;
-				originToVertex1[2][0] = -cameraZ + newCubeWC[5].z;
-				originToVertex2[0][0] = -cameraX + newCubeWC[6].x; originToVertex2[1][0] = -cameraY + newCubeWC[6].y;
-				originToVertex2[2][0] = -cameraZ + newCubeWC[6].z;
-				originToVertex3[0][0] = -cameraX + newCubeWC[4].x; originToVertex3[1][0] = -cameraY + newCubeWC[4].y;
-				originToVertex3[2][0] = -cameraZ + newCubeWC[4].z;
-
-				bPtr = CrossProduct(brightness1, brightness2);
-				bCount = 0;
-				for (int i = 0; i < 3; i++)
-				{
-					brightNorm[i][0] = *(bPtr + bCount);
-					bCount++;
-				}
-				dotProd = DotProduct(brightNorm, lightDirection) / vectorLength(brightNorm);
-				if (projNum == 0)
-				{
-					dotResult1 = DotProduct(brightNorm, originToVertex1);
-					dotResult2 = DotProduct(brightNorm, originToVertex2);
-					dotResult3 = DotProduct(brightNorm, originToVertex3);
-					if (dotResult1 <= 0 && dotResult2 <= 0 && dotResult3 <= 0)
-					{
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[5].x), ToScreenY(rect.Height(), rect.top, cub[5].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[6].x), ToScreenY(rect.Height(), rect.top, cub[6].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[4].x), ToScreenY(rect.Height(), rect.top, cub[4].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[5].x), ToScreenY(rect.Height(), rect.top, cub[5].y));
-					}
-				}
-				else
-				{
-					dotResultParellel = DotProduct(brightNorm, look) / vectorLength(look);
-					if (dotResultParellel <= 0)
-					{
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[5].x), ToScreenY(rect.Height(), rect.top, cub[5].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[6].x), ToScreenY(rect.Height(), rect.top, cub[6].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[4].x), ToScreenY(rect.Height(), rect.top, cub[4].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[5].x), ToScreenY(rect.Height(), rect.top, cub[5].y));
-					}
-				}
-
+				CubeLineDraw(projNum, meshData, memDCPtr, width, height, left, top, cub[5], cub[4], cub[6]);
 #pragma endregion
 			}
 		}
@@ -1790,1305 +706,235 @@ void CMFCApplication3View::OnPaint()
 			if (figure.isClicked)
 			{
 #pragma region 1번 꼭짓점 - 선
-
-				brightness1[0][0] = -newCubeWC[0].x + newCubeWC[3].x; brightness1[1][0] = -newCubeWC[0].y + newCubeWC[3].y;
-				brightness1[2][0] = -newCubeWC[0].z + newCubeWC[3].z;
-				brightness2[0][0] = -newCubeWC[3].x + newCubeWC[4].x; brightness2[1][0] = -newCubeWC[3].y + newCubeWC[4].y;
-				brightness2[2][0] = -newCubeWC[3].z + newCubeWC[4].z;
-				originToVertex1[0][0] = -cameraX + newCubeWC[0].x; originToVertex1[1][0] = -cameraY + newCubeWC[0].y;
-				originToVertex1[2][0] = -cameraZ + newCubeWC[0].z;
-				originToVertex2[0][0] = -cameraX + newCubeWC[3].x; originToVertex2[1][0] = -cameraY + newCubeWC[3].y;
-				originToVertex2[2][0] = -cameraZ + newCubeWC[3].z;
-				originToVertex3[0][0] = -cameraX + newCubeWC[4].x; originToVertex3[1][0] = -cameraY + newCubeWC[4].y;
-				originToVertex3[2][0] = -cameraZ + newCubeWC[4].z;
-
-				bPtr = CrossProduct(brightness1, brightness2);
-				bCount = 0;
-				for (int i = 0; i < 3; i++)
+				float* frontPtr = Cube_isitFront(newCubeWC[0], newCubeWC[3], newCubeWC[4], camera, look, lightDirection);
+				float meshData[5] = {};
+				int count = 0;
+				for (int i = 0; i < 5; i++)
 				{
-					brightNorm[i][0] = *(bPtr + bCount);
-					bCount++;
+					meshData[i] = *(frontPtr + count);
+					count++;
 				}
-				dotProd = DotProduct(brightNorm, lightDirection) / vectorLength(brightNorm);
-				if (projNum == 0)
-				{
-					dotResult1 = DotProduct(brightNorm, originToVertex1);
-					dotResult2 = DotProduct(brightNorm, originToVertex2);
-					dotResult3 = DotProduct(brightNorm, originToVertex3);
-					if (dotResult1 <= 0 && dotResult2 <= 0 && dotResult3 <= 0)
-					{
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[0].x), ToScreenY(rect.Height(), rect.top, cub[0].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[3].x), ToScreenY(rect.Height(), rect.top, cub[3].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[4].x), ToScreenY(rect.Height(), rect.top, cub[4].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[0].x), ToScreenY(rect.Height(), rect.top, cub[0].y));
-					}
-				}
-				else
-				{
-					dotResultParellel = DotProduct(brightNorm, look) / vectorLength(look);
-					if (dotResultParellel <= 0)
-					{
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[0].x), ToScreenY(rect.Height(), rect.top, cub[0].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[3].x), ToScreenY(rect.Height(), rect.top, cub[3].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[4].x), ToScreenY(rect.Height(), rect.top, cub[4].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[0].x), ToScreenY(rect.Height(), rect.top, cub[0].y));
-					}
-				}
+				CubeLineDraw(projNum, meshData, memDCPtr, width, height, left, top, cub[0], cub[3], cub[4]);
 
-
-				brightness1[0][0] = -newCubeWC[0].x + newCubeWC[4].x; brightness1[1][0] = -newCubeWC[0].y + newCubeWC[4].y;
-				brightness1[2][0] = -newCubeWC[0].z + newCubeWC[4].z;
-				brightness2[0][0] = -newCubeWC[4].x + newCubeWC[1].x; brightness2[1][0] = -newCubeWC[4].y + newCubeWC[1].y;
-				brightness2[2][0] = -newCubeWC[4].z + newCubeWC[1].z;
-				originToVertex1[0][0] = -cameraX + newCubeWC[0].x; originToVertex1[1][0] = -cameraY + newCubeWC[0].y;
-				originToVertex1[2][0] = -cameraZ + newCubeWC[0].z;
-				originToVertex2[0][0] = -cameraX + newCubeWC[1].x; originToVertex2[1][0] = -cameraY + newCubeWC[1].y;
-				originToVertex2[2][0] = -cameraZ + newCubeWC[1].z;
-				originToVertex3[0][0] = -cameraX + newCubeWC[4].x; originToVertex3[1][0] = -cameraY + newCubeWC[4].y;
-				originToVertex3[2][0] = -cameraZ + newCubeWC[4].z;
-
-				bPtr = CrossProduct(brightness1, brightness2);
-				bCount = 0;
-				for (int i = 0; i < 3; i++)
+				frontPtr = Cube_isitFront(newCubeWC[0], newCubeWC[4], newCubeWC[1], camera, look, lightDirection);
+				count = 0;
+				for (int i = 0; i < 5; i++)
 				{
-					brightNorm[i][0] = *(bPtr + bCount);
-					bCount++;
+					meshData[i] = *(frontPtr + count);
+					count++;
 				}
-				dotProd = DotProduct(brightNorm, lightDirection) / vectorLength(brightNorm);
-				if (projNum == 0)
-				{
-					dotResult1 = DotProduct(brightNorm, originToVertex1);
-					dotResult2 = DotProduct(brightNorm, originToVertex2);
-					dotResult3 = DotProduct(brightNorm, originToVertex3);
-					if (dotResult1 <= 0 && dotResult2 <= 0 && dotResult3 <= 0)
-					{
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[0].x), ToScreenY(rect.Height(), rect.top, cub[0].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[4].x), ToScreenY(rect.Height(), rect.top, cub[4].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[1].x), ToScreenY(rect.Height(), rect.top, cub[1].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[0].x), ToScreenY(rect.Height(), rect.top, cub[0].y));
-					}
-				}
-				else
-				{
-					dotResultParellel = DotProduct(brightNorm, look) / vectorLength(look);
-					if (dotResultParellel <= 0)
-					{
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[0].x), ToScreenY(rect.Height(), rect.top, cub[0].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[4].x), ToScreenY(rect.Height(), rect.top, cub[4].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[1].x), ToScreenY(rect.Height(), rect.top, cub[1].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[0].x), ToScreenY(rect.Height(), rect.top, cub[0].y));
-					}
-				}
+				CubeLineDraw(projNum, meshData, memDCPtr, width, height, left, top, cub[0], cub[4], cub[1]);
 
-
-				brightness1[0][0] = -newCubeWC[0].x + newCubeWC[1].x; brightness1[1][0] = -newCubeWC[0].y + newCubeWC[1].y;
-				brightness1[2][0] = -newCubeWC[0].z + newCubeWC[1].z;
-				brightness2[0][0] = -newCubeWC[1].x + newCubeWC[3].x; brightness2[1][0] = -newCubeWC[1].y + newCubeWC[3].y;
-				brightness2[2][0] = -newCubeWC[1].z + newCubeWC[3].z;
-				originToVertex1[0][0] = -cameraX + newCubeWC[0].x; originToVertex1[1][0] = -cameraY + newCubeWC[0].y;
-				originToVertex1[2][0] = -cameraZ + newCubeWC[0].z;
-				originToVertex2[0][0] = -cameraX + newCubeWC[3].x; originToVertex2[1][0] = -cameraY + newCubeWC[3].y;
-				originToVertex2[2][0] = -cameraZ + newCubeWC[3].z;
-				originToVertex3[0][0] = -cameraX + newCubeWC[1].x; originToVertex3[1][0] = -cameraY + newCubeWC[1].y;
-				originToVertex3[2][0] = -cameraZ + newCubeWC[1].z;
-
-				bPtr = CrossProduct(brightness1, brightness2);
-				bCount = 0;
-				for (int i = 0; i < 3; i++)
+				frontPtr = Cube_isitFront(newCubeWC[0], newCubeWC[1], newCubeWC[3], camera, look, lightDirection);
+				count = 0;
+				for (int i = 0; i < 5; i++)
 				{
-					brightNorm[i][0] = *(bPtr + bCount);
-					bCount++;
+					meshData[i] = *(frontPtr + count);
+					count++;
 				}
-				dotProd = DotProduct(brightNorm, lightDirection) / vectorLength(brightNorm);
-				if (projNum == 0)
-				{
-					dotResult1 = DotProduct(brightNorm, originToVertex1);
-					dotResult2 = DotProduct(brightNorm, originToVertex2);
-					dotResult3 = DotProduct(brightNorm, originToVertex3);
-					if (dotResult1 <= 0 && dotResult2 <= 0 && dotResult3 <= 0)
-					{
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[0].x), ToScreenY(rect.Height(), rect.top, cub[0].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[3].x), ToScreenY(rect.Height(), rect.top, cub[3].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[1].x), ToScreenY(rect.Height(), rect.top, cub[1].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[0].x), ToScreenY(rect.Height(), rect.top, cub[0].y));
-					}
-				}
-				else
-				{
-					dotResultParellel = DotProduct(brightNorm, look) / vectorLength(look);
-					if (dotResultParellel <= 0)
-					{
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[0].x), ToScreenY(rect.Height(), rect.top, cub[0].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[3].x), ToScreenY(rect.Height(), rect.top, cub[3].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[1].x), ToScreenY(rect.Height(), rect.top, cub[1].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[0].x), ToScreenY(rect.Height(), rect.top, cub[0].y));
-					}
-				}
-
+				CubeLineDraw(projNum, meshData, memDCPtr, width, height, left, top, cub[0], cub[1], cub[3]);
 #pragma endregion
 #pragma region 2번 꼭짓점
-				brightness1[0][0] = -newCubeWC[7].x + newCubeWC[4].x; brightness1[1][0] = -newCubeWC[7].y + newCubeWC[4].y;
-				brightness1[2][0] = -newCubeWC[7].z + newCubeWC[4].z;
-				brightness2[0][0] = -newCubeWC[4].x + newCubeWC[3].x; brightness2[1][0] = -newCubeWC[4].y + newCubeWC[3].y;
-				brightness2[2][0] = -newCubeWC[4].z + newCubeWC[3].z;
-				originToVertex1[0][0] = -cameraX + newCubeWC[7].x; originToVertex1[1][0] = -cameraY + newCubeWC[7].y;
-				originToVertex1[2][0] = -cameraZ + newCubeWC[7].z;
-				originToVertex2[0][0] = -cameraX + newCubeWC[3].x; originToVertex2[1][0] = -cameraY + newCubeWC[3].y;
-				originToVertex2[2][0] = -cameraZ + newCubeWC[3].z;
-				originToVertex3[0][0] = -cameraX + newCubeWC[4].x; originToVertex3[1][0] = -cameraY + newCubeWC[4].y;
-				originToVertex3[2][0] = -cameraZ + newCubeWC[4].z;
-
-				bPtr = CrossProduct(brightness1, brightness2);
-				bCount = 0;
-				for (int i = 0; i < 3; i++)
+				frontPtr = Cube_isitFront(newCubeWC[7], newCubeWC[4], newCubeWC[3], camera, look, lightDirection);
+				count = 0;
+				for (int i = 0; i < 5; i++)
 				{
-					brightNorm[i][0] = *(bPtr + bCount);
-					bCount++;
+					meshData[i] = *(frontPtr + count);
+					count++;
 				}
-				dotProd = DotProduct(brightNorm, lightDirection) / vectorLength(brightNorm);
-				if (projNum == 0)
-				{
-					dotResult1 = DotProduct(brightNorm, originToVertex1);
-					dotResult2 = DotProduct(brightNorm, originToVertex2);
-					dotResult3 = DotProduct(brightNorm, originToVertex3);
-					if (dotResult1 <= 0 && dotResult2 <= 0 && dotResult3 <= 0)
-					{
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[7].x), ToScreenY(rect.Height(), rect.top, cub[7].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[3].x), ToScreenY(rect.Height(), rect.top, cub[3].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[4].x), ToScreenY(rect.Height(), rect.top, cub[4].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[7].x), ToScreenY(rect.Height(), rect.top, cub[7].y));
-					}
-				}
-				else
-				{
-					dotResultParellel = DotProduct(brightNorm, look) / vectorLength(look);
-					if (dotResultParellel <= 0)
-					{
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[7].x), ToScreenY(rect.Height(), rect.top, cub[7].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[3].x), ToScreenY(rect.Height(), rect.top, cub[3].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[4].x), ToScreenY(rect.Height(), rect.top, cub[4].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[7].x), ToScreenY(rect.Height(), rect.top, cub[7].y));
-					}
-				}
+				CubeLineDraw(projNum, meshData, memDCPtr, width, height, left, top, cub[7], cub[4], cub[3]);
 
-
-				brightness1[0][0] = -newCubeWC[7].x + newCubeWC[6].x; brightness1[1][0] = -newCubeWC[7].y + newCubeWC[6].y;
-				brightness1[2][0] = -newCubeWC[7].z + newCubeWC[6].z;
-				brightness2[0][0] = -newCubeWC[6].x + newCubeWC[4].x; brightness2[1][0] = -newCubeWC[6].y + newCubeWC[4].y;
-				brightness2[2][0] = -newCubeWC[6].z + newCubeWC[4].z;
-				originToVertex1[0][0] = -cameraX + newCubeWC[7].x; originToVertex1[1][0] = -cameraY + newCubeWC[7].y;
-				originToVertex1[2][0] = -cameraZ + newCubeWC[7].z;
-				originToVertex2[0][0] = -cameraX + newCubeWC[6].x; originToVertex2[1][0] = -cameraY + newCubeWC[6].y;
-				originToVertex2[2][0] = -cameraZ + newCubeWC[6].z;
-				originToVertex3[0][0] = -cameraX + newCubeWC[4].x; originToVertex3[1][0] = -cameraY + newCubeWC[4].y;
-				originToVertex3[2][0] = -cameraZ + newCubeWC[4].z;
-
-				bPtr = CrossProduct(brightness1, brightness2);
-				bCount = 0;
-				for (int i = 0; i < 3; i++)
+				frontPtr = Cube_isitFront(newCubeWC[7], newCubeWC[6], newCubeWC[4], camera, look, lightDirection);
+				count = 0;
+				for (int i = 0; i < 5; i++)
 				{
-					brightNorm[i][0] = *(bPtr + bCount);
-					bCount++;
+					meshData[i] = *(frontPtr + count);
+					count++;
 				}
-				dotProd = DotProduct(brightNorm, lightDirection) / vectorLength(brightNorm);
-				if (projNum == 0)
-				{
-					dotResult1 = DotProduct(brightNorm, originToVertex1);
-					dotResult2 = DotProduct(brightNorm, originToVertex2);
-					dotResult3 = DotProduct(brightNorm, originToVertex3);
-					if (dotResult1 <= 0 && dotResult2 <= 0 && dotResult3 <= 0)
-					{
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[7].x), ToScreenY(rect.Height(), rect.top, cub[7].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[6].x), ToScreenY(rect.Height(), rect.top, cub[6].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[4].x), ToScreenY(rect.Height(), rect.top, cub[4].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[7].x), ToScreenY(rect.Height(), rect.top, cub[7].y));
-					}
-				}
-				else
-				{
-					dotResultParellel = DotProduct(brightNorm, look) / vectorLength(look);
-					if (dotResultParellel <= 0)
-					{
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[7].x), ToScreenY(rect.Height(), rect.top, cub[7].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[6].x), ToScreenY(rect.Height(), rect.top, cub[6].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[4].x), ToScreenY(rect.Height(), rect.top, cub[4].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[7].x), ToScreenY(rect.Height(), rect.top, cub[7].y));
-					}
-				}
+				CubeLineDraw(projNum, meshData, memDCPtr, width, height, left, top, cub[7], cub[6], cub[4]);
 
-
-				brightness1[0][0] = -newCubeWC[7].x + newCubeWC[3].x; brightness1[1][0] = -newCubeWC[7].y + newCubeWC[3].y;
-				brightness1[2][0] = -newCubeWC[7].z + newCubeWC[3].z;
-				brightness2[0][0] = -newCubeWC[3].x + newCubeWC[6].x; brightness2[1][0] = -newCubeWC[3].y + newCubeWC[6].y;
-				brightness2[2][0] = -newCubeWC[3].z + newCubeWC[6].z;
-				originToVertex1[0][0] = -cameraX + newCubeWC[7].x; originToVertex1[1][0] = -cameraY + newCubeWC[7].y;
-				originToVertex1[2][0] = -cameraZ + newCubeWC[7].z;
-				originToVertex2[0][0] = -cameraX + newCubeWC[6].x; originToVertex2[1][0] = -cameraY + newCubeWC[6].y;
-				originToVertex2[2][0] = -cameraZ + newCubeWC[6].z;
-				originToVertex3[0][0] = -cameraX + newCubeWC[3].x; originToVertex3[1][0] = -cameraY + newCubeWC[3].y;
-				originToVertex3[2][0] = -cameraZ + newCubeWC[3].z;
-
-				bPtr = CrossProduct(brightness1, brightness2);
-				bCount = 0;
-				for (int i = 0; i < 3; i++)
+				frontPtr = Cube_isitFront(newCubeWC[7], newCubeWC[3], newCubeWC[6], camera, look, lightDirection);
+				count = 0;
+				for (int i = 0; i < 5; i++)
 				{
-					brightNorm[i][0] = *(bPtr + bCount);
-					bCount++;
+					meshData[i] = *(frontPtr + count);
+					count++;
 				}
-				dotProd = DotProduct(brightNorm, lightDirection) / vectorLength(brightNorm);
-				if (projNum == 0)
-				{
-					dotResult1 = DotProduct(brightNorm, originToVertex1);
-					dotResult2 = DotProduct(brightNorm, originToVertex2);
-					dotResult3 = DotProduct(brightNorm, originToVertex3);
-					if (dotResult1 <= 0 && dotResult2 <= 0 && dotResult3 <= 0)
-					{
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[7].x), ToScreenY(rect.Height(), rect.top, cub[7].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[3].x), ToScreenY(rect.Height(), rect.top, cub[3].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[6].x), ToScreenY(rect.Height(), rect.top, cub[6].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[7].x), ToScreenY(rect.Height(), rect.top, cub[7].y));
-					}
-				}
-				else
-				{
-					dotResultParellel = DotProduct(brightNorm, look) / vectorLength(look);
-					if (dotResultParellel <= 0)
-					{
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[7].x), ToScreenY(rect.Height(), rect.top, cub[7].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[3].x), ToScreenY(rect.Height(), rect.top, cub[3].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[6].x), ToScreenY(rect.Height(), rect.top, cub[6].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[7].x), ToScreenY(rect.Height(), rect.top, cub[7].y));
-					}
-				}
-
-
+				CubeLineDraw(projNum, meshData, memDCPtr, width, height, left, top, cub[7], cub[3], cub[6]);
 #pragma endregion
 #pragma region 3번 꼭짓점
-				brightness1[0][0] = -newCubeWC[2].x + newCubeWC[1].x; brightness1[1][0] = -newCubeWC[2].y + newCubeWC[1].y;
-				brightness1[2][0] = -newCubeWC[2].z + newCubeWC[1].z;
-				brightness2[0][0] = -newCubeWC[1].x + newCubeWC[6].x; brightness2[1][0] = -newCubeWC[1].y + newCubeWC[6].y;
-				brightness2[2][0] = -newCubeWC[1].z + newCubeWC[6].z;
-				originToVertex1[0][0] = -cameraX + newCubeWC[2].x; originToVertex1[1][0] = -cameraY + newCubeWC[2].y;
-				originToVertex1[2][0] = -cameraZ + newCubeWC[2].z;
-				originToVertex2[0][0] = -cameraX + newCubeWC[6].x; originToVertex2[1][0] = -cameraY + newCubeWC[6].y;
-				originToVertex2[2][0] = -cameraZ + newCubeWC[6].z;
-				originToVertex3[0][0] = -cameraX + newCubeWC[1].x; originToVertex3[1][0] = -cameraY + newCubeWC[1].y;
-				originToVertex3[2][0] = -cameraZ + newCubeWC[1].z;
-
-				bPtr = CrossProduct(brightness1, brightness2);
-				bCount = 0;
-				for (int i = 0; i < 3; i++)
+				frontPtr = Cube_isitFront(newCubeWC[2], newCubeWC[1], newCubeWC[6], camera, look, lightDirection);
+				count = 0;
+				for (int i = 0; i < 5; i++)
 				{
-					brightNorm[i][0] = *(bPtr + bCount);
-					bCount++;
+					meshData[i] = *(frontPtr + count);
+					count++;
 				}
-				dotProd = DotProduct(brightNorm, lightDirection) / vectorLength(brightNorm);
-				if (projNum == 0)
-				{
-					dotResult1 = DotProduct(brightNorm, originToVertex1);
-					dotResult2 = DotProduct(brightNorm, originToVertex2);
-					dotResult3 = DotProduct(brightNorm, originToVertex3);
-					if (dotResult1 <= 0 && dotResult2 <= 0 && dotResult3 <= 0)
-					{
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[2].x), ToScreenY(rect.Height(), rect.top, cub[2].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[1].x), ToScreenY(rect.Height(), rect.top, cub[1].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[6].x), ToScreenY(rect.Height(), rect.top, cub[6].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[2].x), ToScreenY(rect.Height(), rect.top, cub[2].y));
-					}
-				}
-				else
-				{
-					dotResultParellel = DotProduct(brightNorm, look) / vectorLength(look);
-					if (dotResultParellel <= 0)
-					{
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[2].x), ToScreenY(rect.Height(), rect.top, cub[2].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[1].x), ToScreenY(rect.Height(), rect.top, cub[1].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[6].x), ToScreenY(rect.Height(), rect.top, cub[6].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[2].x), ToScreenY(rect.Height(), rect.top, cub[2].y));
-					}
-				}
+				CubeLineDraw(projNum, meshData, memDCPtr, width, height, left, top, cub[2], cub[1], cub[6]);
 
-
-				brightness1[0][0] = -newCubeWC[2].x + newCubeWC[3].x; brightness1[1][0] = -newCubeWC[2].y + newCubeWC[3].y;
-				brightness1[2][0] = -newCubeWC[2].z + newCubeWC[3].z;
-				brightness2[0][0] = -newCubeWC[3].x + newCubeWC[1].x; brightness2[1][0] = -newCubeWC[3].y + newCubeWC[1].y;
-				brightness2[2][0] = -newCubeWC[3].z + newCubeWC[1].z;
-				originToVertex1[0][0] = -cameraX + newCubeWC[2].x; originToVertex1[1][0] = -cameraY + newCubeWC[2].y;
-				originToVertex1[2][0] = -cameraZ + newCubeWC[2].z;
-				originToVertex2[0][0] = -cameraX + newCubeWC[3].x; originToVertex2[1][0] = -cameraY + newCubeWC[3].y;
-				originToVertex2[2][0] = -cameraZ + newCubeWC[3].z;
-				originToVertex3[0][0] = -cameraX + newCubeWC[1].x; originToVertex3[1][0] = -cameraY + newCubeWC[1].y;
-				originToVertex3[2][0] = -cameraZ + newCubeWC[1].z;
-
-				bPtr = CrossProduct(brightness1, brightness2);
-				bCount = 0;
-				for (int i = 0; i < 3; i++)
+				frontPtr = Cube_isitFront(newCubeWC[2], newCubeWC[3], newCubeWC[1], camera, look, lightDirection);
+				count = 0;
+				for (int i = 0; i < 5; i++)
 				{
-					brightNorm[i][0] = *(bPtr + bCount);
-					bCount++;
+					meshData[i] = *(frontPtr + count);
+					count++;
 				}
-				dotProd = DotProduct(brightNorm, lightDirection) / vectorLength(brightNorm);
-				if (projNum == 0)
-				{
-					dotResult1 = DotProduct(brightNorm, originToVertex1);
-					dotResult2 = DotProduct(brightNorm, originToVertex2);
-					dotResult3 = DotProduct(brightNorm, originToVertex3);
-					if (dotResult1 <= 0 && dotResult2 <= 0 && dotResult3 <= 0)
-					{
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[2].x), ToScreenY(rect.Height(), rect.top, cub[2].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[1].x), ToScreenY(rect.Height(), rect.top, cub[1].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[3].x), ToScreenY(rect.Height(), rect.top, cub[3].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[2].x), ToScreenY(rect.Height(), rect.top, cub[2].y));
-					}
-				}
-				else
-				{
-					dotResultParellel = DotProduct(brightNorm, look) / vectorLength(look);
-					if (dotResultParellel <= 0)
-					{
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[2].x), ToScreenY(rect.Height(), rect.top, cub[2].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[1].x), ToScreenY(rect.Height(), rect.top, cub[1].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[3].x), ToScreenY(rect.Height(), rect.top, cub[3].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[2].x), ToScreenY(rect.Height(), rect.top, cub[2].y));
-					}
-				}
+				CubeLineDraw(projNum, meshData, memDCPtr, width, height, left, top, cub[2], cub[3], cub[1]);
 
-
-				brightness1[0][0] = -newCubeWC[2].x + newCubeWC[6].x; brightness1[1][0] = -newCubeWC[2].y + newCubeWC[6].y;
-				brightness1[2][0] = -newCubeWC[2].z + newCubeWC[6].z;
-				brightness2[0][0] = -newCubeWC[6].x + newCubeWC[3].x; brightness2[1][0] = -newCubeWC[6].y + newCubeWC[3].y;
-				brightness2[2][0] = -newCubeWC[6].z + newCubeWC[3].z;
-				originToVertex1[0][0] = -cameraX + newCubeWC[2].x; originToVertex1[1][0] = -cameraY + newCubeWC[2].y;
-				originToVertex1[2][0] = -cameraZ + newCubeWC[2].z;
-				originToVertex2[0][0] = -cameraX + newCubeWC[3].x; originToVertex2[1][0] = -cameraY + newCubeWC[3].y;
-				originToVertex2[2][0] = -cameraZ + newCubeWC[3].z;
-				originToVertex3[0][0] = -cameraX + newCubeWC[6].x; originToVertex3[1][0] = -cameraY + newCubeWC[6].y;
-				originToVertex3[2][0] = -cameraZ + newCubeWC[6].z;
-
-				bPtr = CrossProduct(brightness1, brightness2);
-				bCount = 0;
-				for (int i = 0; i < 3; i++)
+				frontPtr = Cube_isitFront(newCubeWC[2], newCubeWC[6], newCubeWC[3], camera, look, lightDirection);
+				count = 0;
+				for (int i = 0; i < 5; i++)
 				{
-					brightNorm[i][0] = *(bPtr + bCount);
-					bCount++;
+					meshData[i] = *(frontPtr + count);
+					count++;
 				}
-				dotProd = DotProduct(brightNorm, lightDirection) / vectorLength(brightNorm);
-				if (projNum == 0)
-				{
-					dotResult1 = DotProduct(brightNorm, originToVertex1);
-					dotResult2 = DotProduct(brightNorm, originToVertex2);
-					dotResult3 = DotProduct(brightNorm, originToVertex3);
-					if (dotResult1 <= 0 && dotResult2 <= 0 && dotResult3 <= 0)
-					{
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[2].x), ToScreenY(rect.Height(), rect.top, cub[2].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[3].x), ToScreenY(rect.Height(), rect.top, cub[3].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[6].x), ToScreenY(rect.Height(), rect.top, cub[6].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[2].x), ToScreenY(rect.Height(), rect.top, cub[2].y));
-					}
-				}
-				else
-				{
-					dotResultParellel = DotProduct(brightNorm, look) / vectorLength(look);
-					if (dotResultParellel <= 0)
-					{
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[2].x), ToScreenY(rect.Height(), rect.top, cub[2].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[3].x), ToScreenY(rect.Height(), rect.top, cub[3].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[6].x), ToScreenY(rect.Height(), rect.top, cub[6].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[2].x), ToScreenY(rect.Height(), rect.top, cub[2].y));
-					}
-				}
-
-
+				CubeLineDraw(projNum, meshData, memDCPtr, width, height, left, top, cub[2], cub[6], cub[3]);
 #pragma endregion
 #pragma region 4번 꼭짓점
-				brightness1[0][0] = -newCubeWC[5].x + newCubeWC[6].x; brightness1[1][0] = -newCubeWC[5].y + newCubeWC[6].y;
-				brightness1[2][0] = -newCubeWC[5].z + newCubeWC[6].z;
-				brightness2[0][0] = -newCubeWC[6].x + newCubeWC[1].x; brightness2[1][0] = -newCubeWC[6].y + newCubeWC[1].y;
-				brightness2[2][0] = -newCubeWC[6].z + newCubeWC[1].z;
-				originToVertex1[0][0] = -cameraX + newCubeWC[5].x; originToVertex1[1][0] = -cameraY + newCubeWC[5].y;
-				originToVertex1[2][0] = -cameraZ + newCubeWC[5].z;
-				originToVertex2[0][0] = -cameraX + newCubeWC[1].x; originToVertex2[1][0] = -cameraY + newCubeWC[1].y;
-				originToVertex2[2][0] = -cameraZ + newCubeWC[1].z;
-				originToVertex3[0][0] = -cameraX + newCubeWC[6].x; originToVertex3[1][0] = -cameraY + newCubeWC[6].y;
-				originToVertex3[2][0] = -cameraZ + newCubeWC[6].z;
+				frontPtr = Cube_isitFront(newCubeWC[5], newCubeWC[6], newCubeWC[1], camera, look, lightDirection);
+				count = 0;
+				for (int i = 0; i < 5; i++)
+				{
+					meshData[i] = *(frontPtr + count);
+					count++;
+				}
+				CubeLineDraw(projNum, meshData, memDCPtr, width, height, left, top, cub[5], cub[6], cub[1]);
 
-				bPtr = CrossProduct(brightness1, brightness2);
-				bCount = 0;
-				for (int i = 0; i < 3; i++)
+				frontPtr = Cube_isitFront(newCubeWC[5], newCubeWC[1], newCubeWC[4], camera, look, lightDirection);
+				count = 0;
+				for (int i = 0; i < 5; i++)
 				{
-					brightNorm[i][0] = *(bPtr + bCount);
-					bCount++;
+					meshData[i] = *(frontPtr + count);
+					count++;
 				}
-				dotProd = DotProduct(brightNorm, lightDirection) / vectorLength(brightNorm);
-				if (projNum == 0)
-				{
-					dotResult1 = DotProduct(brightNorm, originToVertex1);
-					dotResult2 = DotProduct(brightNorm, originToVertex2);
-					dotResult3 = DotProduct(brightNorm, originToVertex3);
-					if (dotResult1 <= 0 && dotResult2 <= 0 && dotResult3 <= 0)
-					{
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[5].x), ToScreenY(rect.Height(), rect.top, cub[5].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[1].x), ToScreenY(rect.Height(), rect.top, cub[1].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[6].x), ToScreenY(rect.Height(), rect.top, cub[6].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[5].x), ToScreenY(rect.Height(), rect.top, cub[5].y));
-					}
-				}
-				else
-				{
-					dotResultParellel = DotProduct(brightNorm, look) / vectorLength(look);
-					if (dotResultParellel <= 0)
-					{
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[5].x), ToScreenY(rect.Height(), rect.top, cub[5].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[1].x), ToScreenY(rect.Height(), rect.top, cub[1].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[6].x), ToScreenY(rect.Height(), rect.top, cub[6].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[5].x), ToScreenY(rect.Height(), rect.top, cub[5].y));
-					}
-				}
+				CubeLineDraw(projNum, meshData, memDCPtr, width, height, left, top, cub[5], cub[1], cub[4]);
 
-
-				brightness1[0][0] = -newCubeWC[5].x + newCubeWC[1].x; brightness1[1][0] = -newCubeWC[5].y + newCubeWC[1].y;
-				brightness1[2][0] = -newCubeWC[5].z + newCubeWC[1].z;
-				brightness2[0][0] = -newCubeWC[1].x + newCubeWC[4].x; brightness2[1][0] = -newCubeWC[1].y + newCubeWC[4].y;
-				brightness2[2][0] = -newCubeWC[1].z + newCubeWC[4].z;
-				originToVertex1[0][0] = -cameraX + newCubeWC[5].x; originToVertex1[1][0] = -cameraY + newCubeWC[5].y;
-				originToVertex1[2][0] = -cameraZ + newCubeWC[5].z;
-				originToVertex2[0][0] = -cameraX + newCubeWC[1].x; originToVertex2[1][0] = -cameraY + newCubeWC[1].y;
-				originToVertex2[2][0] = -cameraZ + newCubeWC[1].z;
-				originToVertex3[0][0] = -cameraX + newCubeWC[4].x; originToVertex3[1][0] = -cameraY + newCubeWC[4].y;
-				originToVertex3[2][0] = -cameraZ + newCubeWC[4].z;
-
-				bPtr = CrossProduct(brightness1, brightness2);
-				bCount = 0;
-				for (int i = 0; i < 3; i++)
+				frontPtr = Cube_isitFront(newCubeWC[5], newCubeWC[4], newCubeWC[6], camera, look, lightDirection);
+				count = 0;
+				for (int i = 0; i < 5; i++)
 				{
-					brightNorm[i][0] = *(bPtr + bCount);
-					bCount++;
+					meshData[i] = *(frontPtr + count);
+					count++;
 				}
-				dotProd = DotProduct(brightNorm, lightDirection) / vectorLength(brightNorm);
-				if (projNum == 0)
-				{
-					dotResult1 = DotProduct(brightNorm, originToVertex1);
-					dotResult2 = DotProduct(brightNorm, originToVertex2);
-					dotResult3 = DotProduct(brightNorm, originToVertex3);
-					if (dotResult1 <= 0 && dotResult2 <= 0 && dotResult3 <= 0)
-					{
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[5].x), ToScreenY(rect.Height(), rect.top, cub[5].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[1].x), ToScreenY(rect.Height(), rect.top, cub[1].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[4].x), ToScreenY(rect.Height(), rect.top, cub[4].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[5].x), ToScreenY(rect.Height(), rect.top, cub[5].y));
-					}
-				}
-				else
-				{
-					dotResultParellel = DotProduct(brightNorm, look) / vectorLength(look);
-					if (dotResultParellel <= 0)
-					{
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[5].x), ToScreenY(rect.Height(), rect.top, cub[5].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[1].x), ToScreenY(rect.Height(), rect.top, cub[1].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[4].x), ToScreenY(rect.Height(), rect.top, cub[4].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[5].x), ToScreenY(rect.Height(), rect.top, cub[5].y));
-					}
-				}
-
-
-				brightness1[0][0] = -newCubeWC[5].x + newCubeWC[4].x; brightness1[1][0] = -newCubeWC[5].y + newCubeWC[4].y;
-				brightness1[2][0] = -newCubeWC[5].z + newCubeWC[4].z;
-				brightness2[0][0] = -newCubeWC[4].x + newCubeWC[6].x; brightness2[1][0] = -newCubeWC[4].y + newCubeWC[6].y;
-				brightness2[2][0] = -newCubeWC[4].z + newCubeWC[6].z;
-				originToVertex1[0][0] = -cameraX + newCubeWC[5].x; originToVertex1[1][0] = -cameraY + newCubeWC[5].y;
-				originToVertex1[2][0] = -cameraZ + newCubeWC[5].z;
-				originToVertex2[0][0] = -cameraX + newCubeWC[6].x; originToVertex2[1][0] = -cameraY + newCubeWC[6].y;
-				originToVertex2[2][0] = -cameraZ + newCubeWC[6].z;
-				originToVertex3[0][0] = -cameraX + newCubeWC[4].x; originToVertex3[1][0] = -cameraY + newCubeWC[4].y;
-				originToVertex3[2][0] = -cameraZ + newCubeWC[4].z;
-
-				bPtr = CrossProduct(brightness1, brightness2);
-				bCount = 0;
-				for (int i = 0; i < 3; i++)
-				{
-					brightNorm[i][0] = *(bPtr + bCount);
-					bCount++;
-				}
-				dotProd = DotProduct(brightNorm, lightDirection) / vectorLength(brightNorm);
-				if (projNum == 0)
-				{
-					dotResult1 = DotProduct(brightNorm, originToVertex1);
-					dotResult2 = DotProduct(brightNorm, originToVertex2);
-					dotResult3 = DotProduct(brightNorm, originToVertex3);
-					if (dotResult1 <= 0 && dotResult2 <= 0 && dotResult3 <= 0)
-					{
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[5].x), ToScreenY(rect.Height(), rect.top, cub[5].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[6].x), ToScreenY(rect.Height(), rect.top, cub[6].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[4].x), ToScreenY(rect.Height(), rect.top, cub[4].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[5].x), ToScreenY(rect.Height(), rect.top, cub[5].y));
-					}
-				}
-				else
-				{
-					dotResultParellel = DotProduct(brightNorm, look) / vectorLength(look);
-					if (dotResultParellel <= 0)
-					{
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[5].x), ToScreenY(rect.Height(), rect.top, cub[5].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[6].x), ToScreenY(rect.Height(), rect.top, cub[6].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[4].x), ToScreenY(rect.Height(), rect.top, cub[4].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[5].x), ToScreenY(rect.Height(), rect.top, cub[5].y));
-					}
-				}
-
+				CubeLineDraw(projNum, meshData, memDCPtr, width, height, left, top, cub[5], cub[4], cub[6]);
 #pragma endregion
 			}
 			else
 			{
 #pragma region 1번 꼭짓점 - 면
-
-				brightness1[0][0] = -newCubeWC[0].x + newCubeWC[3].x; brightness1[1][0] = -newCubeWC[0].y + newCubeWC[3].y;
-				brightness1[2][0] = -newCubeWC[0].z + newCubeWC[3].z;
-				brightness2[0][0] = -newCubeWC[3].x + newCubeWC[4].x; brightness2[1][0] = -newCubeWC[3].y + newCubeWC[4].y;
-				brightness2[2][0] = -newCubeWC[3].z + newCubeWC[4].z;
-				originToVertex1[0][0] = -cameraX + newCubeWC[0].x; originToVertex1[1][0] = -cameraY + newCubeWC[0].y;
-				originToVertex1[2][0] = -cameraZ + newCubeWC[0].z;
-				originToVertex2[0][0] = -cameraX + newCubeWC[3].x; originToVertex2[1][0] = -cameraY + newCubeWC[3].y;
-				originToVertex2[2][0] = -cameraZ + newCubeWC[3].z;
-				originToVertex3[0][0] = -cameraX + newCubeWC[4].x; originToVertex3[1][0] = -cameraY + newCubeWC[4].y;
-				originToVertex3[2][0] = -cameraZ + newCubeWC[4].z;
-
-				bPtr = CrossProduct(brightness1, brightness2);
-				bCount = 0;
-				for (int i = 0; i < 3; i++)
+				// Cube_isitFront(MyVertex vertex1, MyVertex vertex2, MyVertex vertex3, float camera[3][1], float look[3][1], float lightDirection[3][1], int projNum)
+				// return {dotProd, dotresult1, dotresult2, dotresult3, dotresultparallel}
+				float* frontPtr = Cube_isitFront(newCubeWC[0], newCubeWC[3], newCubeWC[4], camera, look, lightDirection);
+				float meshData[5] = {};
+				int count = 0;
+				for (int i = 0; i < 5; i++)
 				{
-					brightNorm[i][0] = *(bPtr + bCount);
-					bCount++;
+					meshData[i] = *(frontPtr + count);
+					count++;
 				}
-				dotProd = -DotProduct(brightNorm, lightDirection) / vectorLength(brightNorm);
-				if (dotProd < 0)dotProd = 0;
-				if (projNum == 0)
-				{
-					dotResult1 = DotProduct(brightNorm, originToVertex1);
-					dotResult2 = DotProduct(brightNorm, originToVertex2);
-					dotResult3 = DotProduct(brightNorm, originToVertex3);
-					if (dotResult1 <= 0 && dotResult2 <= 0 && dotResult3 <= 0)
-					{
-						rgbRate = (int)round(255 * dotProd);
-						rectBrush.CreateSolidBrush(RGB(0, rgbRate, 0));
-						prevBrush = memDC.SelectObject(&rectBrush);
-						memDC.BeginPath();
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[0].x), ToScreenY(rect.Height(), rect.top, cub[0].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[3].x), ToScreenY(rect.Height(), rect.top, cub[3].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[4].x), ToScreenY(rect.Height(), rect.top, cub[4].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[0].x), ToScreenY(rect.Height(), rect.top, cub[0].y));
-						memDC.EndPath();
-						memDC.StrokeAndFillPath();
-						memDC.SelectObject(prevBrush);
-						rectBrush.DeleteObject();
-					}
-				}
-				else
-				{
-					dotResultParellel = DotProduct(brightNorm, look) / vectorLength(look);
-					if (dotResultParellel <= 0)
-					{
-						rgbRate = (int)round(255 * dotProd);
-						rectBrush.CreateSolidBrush(RGB(0, rgbRate, 0));
-						prevBrush = memDC.SelectObject(&rectBrush);
-						memDC.BeginPath();
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[0].x), ToScreenY(rect.Height(), rect.top, cub[0].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[3].x), ToScreenY(rect.Height(), rect.top, cub[3].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[4].x), ToScreenY(rect.Height(), rect.top, cub[4].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[0].x), ToScreenY(rect.Height(), rect.top, cub[0].y));
-						memDC.EndPath();
-						memDC.StrokeAndFillPath();
-						memDC.SelectObject(prevBrush);
-						rectBrush.DeleteObject();
-					}
-				}
+				CubeMeshDraw(projNum, meshData, memDCPtr, width, height, left, top, cub[0], cub[3], cub[4]);
 
-
-				brightness1[0][0] = -newCubeWC[0].x + newCubeWC[4].x; brightness1[1][0] = -newCubeWC[0].y + newCubeWC[4].y;
-				brightness1[2][0] = -newCubeWC[0].z + newCubeWC[4].z;
-				brightness2[0][0] = -newCubeWC[4].x + newCubeWC[1].x; brightness2[1][0] = -newCubeWC[4].y + newCubeWC[1].y;
-				brightness2[2][0] = -newCubeWC[4].z + newCubeWC[1].z;
-				originToVertex1[0][0] = -cameraX + newCubeWC[0].x; originToVertex1[1][0] = -cameraY + newCubeWC[0].y;
-				originToVertex1[2][0] = -cameraZ + newCubeWC[0].z;
-				originToVertex2[0][0] = -cameraX + newCubeWC[1].x; originToVertex2[1][0] = -cameraY + newCubeWC[1].y;
-				originToVertex2[2][0] = -cameraZ + newCubeWC[1].z;
-				originToVertex3[0][0] = -cameraX + newCubeWC[4].x; originToVertex3[1][0] = -cameraY + newCubeWC[4].y;
-				originToVertex3[2][0] = -cameraZ + newCubeWC[4].z;
-
-				bPtr = CrossProduct(brightness1, brightness2);
-				bCount = 0;
-				for (int i = 0; i < 3; i++)
+				frontPtr = Cube_isitFront(newCubeWC[0], newCubeWC[4], newCubeWC[1], camera, look, lightDirection);
+				count = 0;
+				for (int i = 0; i < 5; i++)
 				{
-					brightNorm[i][0] = *(bPtr + bCount);
-					bCount++;
+					meshData[i] = *(frontPtr + count);
+					count++;
 				}
-				dotProd = -DotProduct(brightNorm, lightDirection) / vectorLength(brightNorm);
-				if (dotProd < 0)dotProd = 0;
-				if (projNum == 0)
-				{
-					dotResult1 = DotProduct(brightNorm, originToVertex1);
-					dotResult2 = DotProduct(brightNorm, originToVertex2);
-					dotResult3 = DotProduct(brightNorm, originToVertex3);
-					if (dotResult1 <= 0 && dotResult2 <= 0 && dotResult3 <= 0)
-					{
-						rgbRate = (int)round(255 * dotProd);
-						rectBrush.CreateSolidBrush(RGB(0, rgbRate, 0));
-						prevBrush = memDC.SelectObject(&rectBrush);
-						memDC.BeginPath();
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[0].x), ToScreenY(rect.Height(), rect.top, cub[0].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[4].x), ToScreenY(rect.Height(), rect.top, cub[4].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[1].x), ToScreenY(rect.Height(), rect.top, cub[1].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[0].x), ToScreenY(rect.Height(), rect.top, cub[0].y));
-						memDC.EndPath();
-						memDC.StrokeAndFillPath();
-						memDC.SelectObject(prevBrush);
-						rectBrush.DeleteObject();
-					}
-				}
-				else
-				{
-					dotResultParellel = DotProduct(brightNorm, look) / vectorLength(look);
-					if (dotResultParellel <= 0)
-					{
-						rgbRate = (int)round(255 * dotProd);
-						rectBrush.CreateSolidBrush(RGB(0, rgbRate, 0));
-						prevBrush = memDC.SelectObject(&rectBrush);
-						memDC.BeginPath();
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[0].x), ToScreenY(rect.Height(), rect.top, cub[0].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[4].x), ToScreenY(rect.Height(), rect.top, cub[4].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[1].x), ToScreenY(rect.Height(), rect.top, cub[1].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[0].x), ToScreenY(rect.Height(), rect.top, cub[0].y));
-						memDC.EndPath();
-						memDC.StrokeAndFillPath();
-						memDC.SelectObject(prevBrush);
-						rectBrush.DeleteObject();
-					}
-				}
+				CubeMeshDraw(projNum, meshData, memDCPtr, width, height, left, top, cub[0], cub[4], cub[1]);
 
-
-				brightness1[0][0] = -newCubeWC[0].x + newCubeWC[1].x; brightness1[1][0] = -newCubeWC[0].y + newCubeWC[1].y;
-				brightness1[2][0] = -newCubeWC[0].z + newCubeWC[1].z;
-				brightness2[0][0] = -newCubeWC[1].x + newCubeWC[3].x; brightness2[1][0] = -newCubeWC[1].y + newCubeWC[3].y;
-				brightness2[2][0] = -newCubeWC[1].z + newCubeWC[3].z;
-				originToVertex1[0][0] = -cameraX + newCubeWC[0].x; originToVertex1[1][0] = -cameraY + newCubeWC[0].y;
-				originToVertex1[2][0] = -cameraZ + newCubeWC[0].z;
-				originToVertex2[0][0] = -cameraX + newCubeWC[3].x; originToVertex2[1][0] = -cameraY + newCubeWC[3].y;
-				originToVertex2[2][0] = -cameraZ + newCubeWC[3].z;
-				originToVertex3[0][0] = -cameraX + newCubeWC[1].x; originToVertex3[1][0] = -cameraY + newCubeWC[1].y;
-				originToVertex3[2][0] = -cameraZ + newCubeWC[1].z;
-
-				bPtr = CrossProduct(brightness1, brightness2);
-				bCount = 0;
-				for (int i = 0; i < 3; i++)
+				frontPtr = Cube_isitFront(newCubeWC[0], newCubeWC[1], newCubeWC[3], camera, look, lightDirection);
+				count = 0;
+				for (int i = 0; i < 5; i++)
 				{
-					brightNorm[i][0] = *(bPtr + bCount);
-					bCount++;
+					meshData[i] = *(frontPtr + count);
+					count++;
 				}
-				dotProd = -DotProduct(brightNorm, lightDirection) / vectorLength(brightNorm);
-				if (dotProd < 0)dotProd = 0;
-				if (projNum == 0)
-				{
-					dotResult1 = DotProduct(brightNorm, originToVertex1);
-					dotResult2 = DotProduct(brightNorm, originToVertex2);
-					dotResult3 = DotProduct(brightNorm, originToVertex3);
-					if (dotResult1 <= 0 && dotResult2 <= 0 && dotResult3 <= 0)
-					{
-						rgbRate = (int)round(255 * dotProd);
-						rectBrush.CreateSolidBrush(RGB(0, rgbRate, 0));
-						prevBrush = memDC.SelectObject(&rectBrush);
-						memDC.BeginPath();
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[0].x), ToScreenY(rect.Height(), rect.top, cub[0].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[3].x), ToScreenY(rect.Height(), rect.top, cub[3].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[1].x), ToScreenY(rect.Height(), rect.top, cub[1].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[0].x), ToScreenY(rect.Height(), rect.top, cub[0].y));
-						memDC.EndPath();
-						memDC.StrokeAndFillPath();
-						memDC.SelectObject(prevBrush);
-						rectBrush.DeleteObject();
-					}
-				}
-				else
-				{
-					dotResultParellel = DotProduct(brightNorm, look) / vectorLength(look);
-					if (dotResultParellel <= 0)
-					{
-						rgbRate = (int)round(255 * dotProd);
-						rectBrush.CreateSolidBrush(RGB(0, rgbRate, 0));
-						prevBrush = memDC.SelectObject(&rectBrush);
-						memDC.BeginPath();
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[0].x), ToScreenY(rect.Height(), rect.top, cub[0].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[3].x), ToScreenY(rect.Height(), rect.top, cub[3].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[1].x), ToScreenY(rect.Height(), rect.top, cub[1].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[0].x), ToScreenY(rect.Height(), rect.top, cub[0].y));
-						memDC.EndPath();
-						memDC.StrokeAndFillPath();
-						memDC.SelectObject(prevBrush);
-						rectBrush.DeleteObject();
-					}
-				}
-
+				CubeMeshDraw(projNum, meshData, memDCPtr, width, height, left, top, cub[0], cub[1], cub[3]);
 #pragma endregion
 #pragma region 2번 꼭짓점
-				brightness1[0][0] = -newCubeWC[7].x + newCubeWC[4].x; brightness1[1][0] = -newCubeWC[7].y + newCubeWC[4].y;
-				brightness1[2][0] = -newCubeWC[7].z + newCubeWC[4].z;
-				brightness2[0][0] = -newCubeWC[4].x + newCubeWC[3].x; brightness2[1][0] = -newCubeWC[4].y + newCubeWC[3].y;
-				brightness2[2][0] = -newCubeWC[4].z + newCubeWC[3].z;
-				originToVertex1[0][0] = -cameraX + newCubeWC[7].x; originToVertex1[1][0] = -cameraY + newCubeWC[7].y;
-				originToVertex1[2][0] = -cameraZ + newCubeWC[7].z;
-				originToVertex2[0][0] = -cameraX + newCubeWC[3].x; originToVertex2[1][0] = -cameraY + newCubeWC[3].y;
-				originToVertex2[2][0] = -cameraZ + newCubeWC[3].z;
-				originToVertex3[0][0] = -cameraX + newCubeWC[4].x; originToVertex3[1][0] = -cameraY + newCubeWC[4].y;
-				originToVertex3[2][0] = -cameraZ + newCubeWC[4].z;
-
-				bPtr = CrossProduct(brightness1, brightness2);
-				bCount = 0;
-				for (int i = 0; i < 3; i++)
+				frontPtr = Cube_isitFront(newCubeWC[7], newCubeWC[4], newCubeWC[3], camera, look, lightDirection);
+				count = 0;
+				for (int i = 0; i < 5; i++)
 				{
-					brightNorm[i][0] = *(bPtr + bCount);
-					bCount++;
+					meshData[i] = *(frontPtr + count);
+					count++;
 				}
-				dotProd = -DotProduct(brightNorm, lightDirection) / vectorLength(brightNorm);
-				if (dotProd < 0)dotProd = 0;
-				if (projNum == 0)
-				{
-					dotResult1 = DotProduct(brightNorm, originToVertex1);
-					dotResult2 = DotProduct(brightNorm, originToVertex2);
-					dotResult3 = DotProduct(brightNorm, originToVertex3);
-					if (dotResult1 <= 0 && dotResult2 <= 0 && dotResult3 <= 0)
-					{
-						rgbRate = (int)round(255 * dotProd);
-						rectBrush.CreateSolidBrush(RGB(0, rgbRate, 0));
-						prevBrush = memDC.SelectObject(&rectBrush);
-						memDC.BeginPath();
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[7].x), ToScreenY(rect.Height(), rect.top, cub[7].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[3].x), ToScreenY(rect.Height(), rect.top, cub[3].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[4].x), ToScreenY(rect.Height(), rect.top, cub[4].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[7].x), ToScreenY(rect.Height(), rect.top, cub[7].y));
-						memDC.EndPath();
-						memDC.StrokeAndFillPath();
-						memDC.SelectObject(prevBrush);
-						rectBrush.DeleteObject();
-					}
-				}
-				else
-				{
-					dotResultParellel = DotProduct(brightNorm, look) / vectorLength(look);
-					if (dotResultParellel <= 0)
-					{
-						rgbRate = (int)round(255 * dotProd);
-						rectBrush.CreateSolidBrush(RGB(0, rgbRate, 0));
-						prevBrush = memDC.SelectObject(&rectBrush);
-						memDC.BeginPath();
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[7].x), ToScreenY(rect.Height(), rect.top, cub[7].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[3].x), ToScreenY(rect.Height(), rect.top, cub[3].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[4].x), ToScreenY(rect.Height(), rect.top, cub[4].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[7].x), ToScreenY(rect.Height(), rect.top, cub[7].y));
-						memDC.EndPath();
-						memDC.StrokeAndFillPath();
-						memDC.SelectObject(prevBrush);
-						rectBrush.DeleteObject();
-					}
-				}
+				CubeMeshDraw(projNum, meshData, memDCPtr, width, height, left, top, cub[7], cub[4], cub[3]);
 
-
-				brightness1[0][0] = -newCubeWC[7].x + newCubeWC[6].x; brightness1[1][0] = -newCubeWC[7].y + newCubeWC[6].y;
-				brightness1[2][0] = -newCubeWC[7].z + newCubeWC[6].z;
-				brightness2[0][0] = -newCubeWC[6].x + newCubeWC[4].x; brightness2[1][0] = -newCubeWC[6].y + newCubeWC[4].y;
-				brightness2[2][0] = -newCubeWC[6].z + newCubeWC[4].z;
-				originToVertex1[0][0] = -cameraX + newCubeWC[7].x; originToVertex1[1][0] = -cameraY + newCubeWC[7].y;
-				originToVertex1[2][0] = -cameraZ + newCubeWC[7].z;
-				originToVertex2[0][0] = -cameraX + newCubeWC[6].x; originToVertex2[1][0] = -cameraY + newCubeWC[6].y;
-				originToVertex2[2][0] = -cameraZ + newCubeWC[6].z;
-				originToVertex3[0][0] = -cameraX + newCubeWC[4].x; originToVertex3[1][0] = -cameraY + newCubeWC[4].y;
-				originToVertex3[2][0] = -cameraZ + newCubeWC[4].z;
-
-				bPtr = CrossProduct(brightness1, brightness2);
-				bCount = 0;
-				for (int i = 0; i < 3; i++)
+				frontPtr = Cube_isitFront(newCubeWC[7], newCubeWC[6], newCubeWC[4], camera, look, lightDirection);
+				count = 0;
+				for (int i = 0; i < 5; i++)
 				{
-					brightNorm[i][0] = *(bPtr + bCount);
-					bCount++;
+					meshData[i] = *(frontPtr + count);
+					count++;
 				}
-				dotProd = -DotProduct(brightNorm, lightDirection) / vectorLength(brightNorm);
-				if (dotProd < 0)dotProd = 0;
-				if (projNum == 0)
-				{
-					dotResult1 = DotProduct(brightNorm, originToVertex1);
-					dotResult2 = DotProduct(brightNorm, originToVertex2);
-					dotResult3 = DotProduct(brightNorm, originToVertex3);
-					if (dotResult1 <= 0 && dotResult2 <= 0 && dotResult3 <= 0)
-					{
-						rgbRate = (int)round(255 * dotProd);
-						rectBrush.CreateSolidBrush(RGB(0, rgbRate, 0));
-						prevBrush = memDC.SelectObject(&rectBrush);
-						memDC.BeginPath();
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[7].x), ToScreenY(rect.Height(), rect.top, cub[7].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[6].x), ToScreenY(rect.Height(), rect.top, cub[6].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[4].x), ToScreenY(rect.Height(), rect.top, cub[4].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[7].x), ToScreenY(rect.Height(), rect.top, cub[7].y));
-						memDC.EndPath();
-						memDC.StrokeAndFillPath();
-						memDC.SelectObject(prevBrush);
-						rectBrush.DeleteObject();
-					}
-				}
-				else
-				{
-					dotResultParellel = DotProduct(brightNorm, look) / vectorLength(look);
-					if (dotResultParellel <= 0)
-					{
-						rgbRate = (int)round(255 * dotProd);
-						rectBrush.CreateSolidBrush(RGB(0, rgbRate, 0));
-						prevBrush = memDC.SelectObject(&rectBrush);
-						memDC.BeginPath();
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[7].x), ToScreenY(rect.Height(), rect.top, cub[7].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[6].x), ToScreenY(rect.Height(), rect.top, cub[6].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[4].x), ToScreenY(rect.Height(), rect.top, cub[4].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[7].x), ToScreenY(rect.Height(), rect.top, cub[7].y));
-						memDC.EndPath();
-						memDC.StrokeAndFillPath();
-						memDC.SelectObject(prevBrush);
-						rectBrush.DeleteObject();
-					}
-				}
+				CubeMeshDraw(projNum, meshData, memDCPtr, width, height, left, top, cub[7], cub[6], cub[4]);
 
-
-				brightness1[0][0] = -newCubeWC[7].x + newCubeWC[3].x; brightness1[1][0] = -newCubeWC[7].y + newCubeWC[3].y;
-				brightness1[2][0] = -newCubeWC[7].z + newCubeWC[3].z;
-				brightness2[0][0] = -newCubeWC[3].x + newCubeWC[6].x; brightness2[1][0] = -newCubeWC[3].y + newCubeWC[6].y;
-				brightness2[2][0] = -newCubeWC[3].z + newCubeWC[6].z;
-				originToVertex1[0][0] = -cameraX + newCubeWC[7].x; originToVertex1[1][0] = -cameraY + newCubeWC[7].y;
-				originToVertex1[2][0] = -cameraZ + newCubeWC[7].z;
-				originToVertex2[0][0] = -cameraX + newCubeWC[6].x; originToVertex2[1][0] = -cameraY + newCubeWC[6].y;
-				originToVertex2[2][0] = -cameraZ + newCubeWC[6].z;
-				originToVertex3[0][0] = -cameraX + newCubeWC[3].x; originToVertex3[1][0] = -cameraY + newCubeWC[3].y;
-				originToVertex3[2][0] = -cameraZ + newCubeWC[3].z;
-
-				bPtr = CrossProduct(brightness1, brightness2);
-				bCount = 0;
-				for (int i = 0; i < 3; i++)
+				frontPtr = Cube_isitFront(newCubeWC[7], newCubeWC[3], newCubeWC[6], camera, look, lightDirection);
+				count = 0;
+				for (int i = 0; i < 5; i++)
 				{
-					brightNorm[i][0] = *(bPtr + bCount);
-					bCount++;
+					meshData[i] = *(frontPtr + count);
+					count++;
 				}
-				dotProd = -DotProduct(brightNorm, lightDirection) / vectorLength(brightNorm);
-				if (dotProd < 0)dotProd = 0;
-				if (projNum == 0)
-				{
-					dotResult1 = DotProduct(brightNorm, originToVertex1);
-					dotResult2 = DotProduct(brightNorm, originToVertex2);
-					dotResult3 = DotProduct(brightNorm, originToVertex3);
-					if (dotResult1 <= 0 && dotResult2 <= 0 && dotResult3 <= 0)
-					{
-						rgbRate = (int)round(255 * dotProd);
-						rectBrush.CreateSolidBrush(RGB(0, rgbRate, 0));
-						prevBrush = memDC.SelectObject(&rectBrush);
-						memDC.BeginPath();
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[7].x), ToScreenY(rect.Height(), rect.top, cub[7].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[3].x), ToScreenY(rect.Height(), rect.top, cub[3].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[6].x), ToScreenY(rect.Height(), rect.top, cub[6].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[7].x), ToScreenY(rect.Height(), rect.top, cub[7].y));
-						memDC.EndPath();
-						memDC.StrokeAndFillPath();
-						memDC.SelectObject(prevBrush);
-						rectBrush.DeleteObject();
-					}
-				}
-				else
-				{
-					dotResultParellel = DotProduct(brightNorm, look) / vectorLength(look);
-					if (dotResultParellel <= 0)
-					{
-						rgbRate = (int)round(255 * dotProd);
-						rectBrush.CreateSolidBrush(RGB(0, rgbRate, 0));
-						prevBrush = memDC.SelectObject(&rectBrush);
-						memDC.BeginPath();
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[7].x), ToScreenY(rect.Height(), rect.top, cub[7].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[3].x), ToScreenY(rect.Height(), rect.top, cub[3].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[6].x), ToScreenY(rect.Height(), rect.top, cub[6].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[7].x), ToScreenY(rect.Height(), rect.top, cub[7].y));
-						memDC.EndPath();
-						memDC.StrokeAndFillPath();
-						memDC.SelectObject(prevBrush);
-						rectBrush.DeleteObject();
-					}
-				}
-
-
+				CubeMeshDraw(projNum, meshData, memDCPtr, width, height, left, top, cub[7], cub[3], cub[6]);
 #pragma endregion
 #pragma region 3번 꼭짓점
-				brightness1[0][0] = -newCubeWC[2].x + newCubeWC[1].x; brightness1[1][0] = -newCubeWC[2].y + newCubeWC[1].y;
-				brightness1[2][0] = -newCubeWC[2].z + newCubeWC[1].z;
-				brightness2[0][0] = -newCubeWC[1].x + newCubeWC[6].x; brightness2[1][0] = -newCubeWC[1].y + newCubeWC[6].y;
-				brightness2[2][0] = -newCubeWC[1].z + newCubeWC[6].z;
-				originToVertex1[0][0] = -cameraX + newCubeWC[2].x; originToVertex1[1][0] = -cameraY + newCubeWC[2].y;
-				originToVertex1[2][0] = -cameraZ + newCubeWC[2].z;
-				originToVertex2[0][0] = -cameraX + newCubeWC[6].x; originToVertex2[1][0] = -cameraY + newCubeWC[6].y;
-				originToVertex2[2][0] = -cameraZ + newCubeWC[6].z;
-				originToVertex3[0][0] = -cameraX + newCubeWC[1].x; originToVertex3[1][0] = -cameraY + newCubeWC[1].y;
-				originToVertex3[2][0] = -cameraZ + newCubeWC[1].z;
-
-				bPtr = CrossProduct(brightness1, brightness2);
-				bCount = 0;
-				for (int i = 0; i < 3; i++)
+				frontPtr = Cube_isitFront(newCubeWC[2], newCubeWC[1], newCubeWC[6], camera, look, lightDirection);
+				count = 0;
+				for (int i = 0; i < 5; i++)
 				{
-					brightNorm[i][0] = *(bPtr + bCount);
-					bCount++;
+					meshData[i] = *(frontPtr + count);
+					count++;
 				}
-				dotProd = -DotProduct(brightNorm, lightDirection) / vectorLength(brightNorm);
-				if (dotProd < 0)dotProd = 0;
-				if (projNum == 0)
-				{
-					dotResult1 = DotProduct(brightNorm, originToVertex1);
-					dotResult2 = DotProduct(brightNorm, originToVertex2);
-					dotResult3 = DotProduct(brightNorm, originToVertex3);
-					if (dotResult1 <= 0 && dotResult2 <= 0 && dotResult3 <= 0)
-					{
-						rgbRate = (int)round(255 * dotProd);
-						rectBrush.CreateSolidBrush(RGB(0, rgbRate, 0));
-						prevBrush = memDC.SelectObject(&rectBrush);
-						memDC.BeginPath();
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[2].x), ToScreenY(rect.Height(), rect.top, cub[2].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[1].x), ToScreenY(rect.Height(), rect.top, cub[1].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[6].x), ToScreenY(rect.Height(), rect.top, cub[6].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[2].x), ToScreenY(rect.Height(), rect.top, cub[2].y));
-						memDC.EndPath();
-						memDC.StrokeAndFillPath();
-						memDC.SelectObject(prevBrush);
-						rectBrush.DeleteObject();
-					}
-				}
-				else
-				{
-					dotResultParellel = DotProduct(brightNorm, look) / vectorLength(look);
-					if (dotResultParellel <= 0)
-					{
-						rgbRate = (int)round(255 * dotProd);
-						rectBrush.CreateSolidBrush(RGB(0, rgbRate, 0));
-						prevBrush = memDC.SelectObject(&rectBrush);
-						memDC.BeginPath();
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[2].x), ToScreenY(rect.Height(), rect.top, cub[2].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[1].x), ToScreenY(rect.Height(), rect.top, cub[1].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[6].x), ToScreenY(rect.Height(), rect.top, cub[6].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[2].x), ToScreenY(rect.Height(), rect.top, cub[2].y));
-						memDC.EndPath();
-						memDC.StrokeAndFillPath();
-						memDC.SelectObject(prevBrush);
-						rectBrush.DeleteObject();
-					}
-				}
+				CubeMeshDraw(projNum, meshData, memDCPtr, width, height, left, top, cub[2], cub[1], cub[6]);
 
-
-				brightness1[0][0] = -newCubeWC[2].x + newCubeWC[3].x; brightness1[1][0] = -newCubeWC[2].y + newCubeWC[3].y;
-				brightness1[2][0] = -newCubeWC[2].z + newCubeWC[3].z;
-				brightness2[0][0] = -newCubeWC[3].x + newCubeWC[1].x; brightness2[1][0] = -newCubeWC[3].y + newCubeWC[1].y;
-				brightness2[2][0] = -newCubeWC[3].z + newCubeWC[1].z;
-				originToVertex1[0][0] = -cameraX + newCubeWC[2].x; originToVertex1[1][0] = -cameraY + newCubeWC[2].y;
-				originToVertex1[2][0] = -cameraZ + newCubeWC[2].z;
-				originToVertex2[0][0] = -cameraX + newCubeWC[3].x; originToVertex2[1][0] = -cameraY + newCubeWC[3].y;
-				originToVertex2[2][0] = -cameraZ + newCubeWC[3].z;
-				originToVertex3[0][0] = -cameraX + newCubeWC[1].x; originToVertex3[1][0] = -cameraY + newCubeWC[1].y;
-				originToVertex3[2][0] = -cameraZ + newCubeWC[1].z;
-
-				bPtr = CrossProduct(brightness1, brightness2);
-				bCount = 0;
-				for (int i = 0; i < 3; i++)
+				frontPtr = Cube_isitFront(newCubeWC[2], newCubeWC[3], newCubeWC[1], camera, look, lightDirection);
+				count = 0;
+				for (int i = 0; i < 5; i++)
 				{
-					brightNorm[i][0] = *(bPtr + bCount);
-					bCount++;
+					meshData[i] = *(frontPtr + count);
+					count++;
 				}
-				dotProd = -DotProduct(brightNorm, lightDirection) / vectorLength(brightNorm);
-				if (dotProd < 0)dotProd = 0;
-				if (projNum == 0)
-				{
-					dotResult1 = DotProduct(brightNorm, originToVertex1);
-					dotResult2 = DotProduct(brightNorm, originToVertex2);
-					dotResult3 = DotProduct(brightNorm, originToVertex3);
-					if (dotResult1 <= 0 && dotResult2 <= 0 && dotResult3 <= 0)
-					{
-						rgbRate = (int)round(255 * dotProd);
-						rectBrush.CreateSolidBrush(RGB(0, rgbRate, 0));
-						prevBrush = memDC.SelectObject(&rectBrush);
-						memDC.BeginPath();
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[2].x), ToScreenY(rect.Height(), rect.top, cub[2].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[1].x), ToScreenY(rect.Height(), rect.top, cub[1].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[3].x), ToScreenY(rect.Height(), rect.top, cub[3].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[2].x), ToScreenY(rect.Height(), rect.top, cub[2].y));
-						memDC.EndPath();
-						memDC.StrokeAndFillPath();
-						memDC.SelectObject(prevBrush);
-						rectBrush.DeleteObject();
-					}
-				}
-				else
-				{
-					dotResultParellel = DotProduct(brightNorm, look) / vectorLength(look);
-					if (dotResultParellel <= 0)
-					{
-						rgbRate = (int)round(255 * dotProd);
-						rectBrush.CreateSolidBrush(RGB(0, rgbRate, 0));
-						prevBrush = memDC.SelectObject(&rectBrush);
-						memDC.BeginPath();
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[2].x), ToScreenY(rect.Height(), rect.top, cub[2].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[1].x), ToScreenY(rect.Height(), rect.top, cub[1].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[3].x), ToScreenY(rect.Height(), rect.top, cub[3].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[2].x), ToScreenY(rect.Height(), rect.top, cub[2].y));
-						memDC.EndPath();
-						memDC.StrokeAndFillPath();
-						memDC.SelectObject(prevBrush);
-						rectBrush.DeleteObject();
-					}
-				}
+				CubeMeshDraw(projNum, meshData, memDCPtr, width, height, left, top, cub[2], cub[3], cub[1]);
 
-
-				brightness1[0][0] = -newCubeWC[2].x + newCubeWC[6].x; brightness1[1][0] = -newCubeWC[2].y + newCubeWC[6].y;
-				brightness1[2][0] = -newCubeWC[2].z + newCubeWC[6].z;
-				brightness2[0][0] = -newCubeWC[6].x + newCubeWC[3].x; brightness2[1][0] = -newCubeWC[6].y + newCubeWC[3].y;
-				brightness2[2][0] = -newCubeWC[6].z + newCubeWC[3].z;
-				originToVertex1[0][0] = -cameraX + newCubeWC[2].x; originToVertex1[1][0] = -cameraY + newCubeWC[2].y;
-				originToVertex1[2][0] = -cameraZ + newCubeWC[2].z;
-				originToVertex2[0][0] = -cameraX + newCubeWC[3].x; originToVertex2[1][0] = -cameraY + newCubeWC[3].y;
-				originToVertex2[2][0] = -cameraZ + newCubeWC[3].z;
-				originToVertex3[0][0] = -cameraX + newCubeWC[6].x; originToVertex3[1][0] = -cameraY + newCubeWC[6].y;
-				originToVertex3[2][0] = -cameraZ + newCubeWC[6].z;
-
-				bPtr = CrossProduct(brightness1, brightness2);
-				bCount = 0;
-				for (int i = 0; i < 3; i++)
+				frontPtr = Cube_isitFront(newCubeWC[2], newCubeWC[6], newCubeWC[3], camera, look, lightDirection);
+				count = 0;
+				for (int i = 0; i < 5; i++)
 				{
-					brightNorm[i][0] = *(bPtr + bCount);
-					bCount++;
+					meshData[i] = *(frontPtr + count);
+					count++;
 				}
-				dotProd = -DotProduct(brightNorm, lightDirection) / vectorLength(brightNorm);
-				if (dotProd < 0)dotProd = 0;
-				if (projNum == 0)
-				{
-					dotResult1 = DotProduct(brightNorm, originToVertex1);
-					dotResult2 = DotProduct(brightNorm, originToVertex2);
-					dotResult3 = DotProduct(brightNorm, originToVertex3);
-					if (dotResult1 <= 0 && dotResult2 <= 0 && dotResult3 <= 0)
-					{
-						rgbRate = (int)round(255 * dotProd);
-						rectBrush.CreateSolidBrush(RGB(0, rgbRate, 0));
-						prevBrush = memDC.SelectObject(&rectBrush);
-						memDC.BeginPath();
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[2].x), ToScreenY(rect.Height(), rect.top, cub[2].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[3].x), ToScreenY(rect.Height(), rect.top, cub[3].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[6].x), ToScreenY(rect.Height(), rect.top, cub[6].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[2].x), ToScreenY(rect.Height(), rect.top, cub[2].y));
-						memDC.EndPath();
-						memDC.StrokeAndFillPath();
-						memDC.SelectObject(prevBrush);
-						rectBrush.DeleteObject();
-					}
-				}
-				else
-				{
-					dotResultParellel = DotProduct(brightNorm, look) / vectorLength(look);
-					if (dotResultParellel <= 0)
-					{
-						rgbRate = (int)round(255 * dotProd);
-						rectBrush.CreateSolidBrush(RGB(0, rgbRate, 0));
-						prevBrush = memDC.SelectObject(&rectBrush);
-						memDC.BeginPath();
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[2].x), ToScreenY(rect.Height(), rect.top, cub[2].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[3].x), ToScreenY(rect.Height(), rect.top, cub[3].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[6].x), ToScreenY(rect.Height(), rect.top, cub[6].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[2].x), ToScreenY(rect.Height(), rect.top, cub[2].y));
-						memDC.EndPath();
-						memDC.StrokeAndFillPath();
-						memDC.SelectObject(prevBrush);
-						rectBrush.DeleteObject();
-					}
-				}
-
-
+				CubeMeshDraw(projNum, meshData, memDCPtr, width, height, left, top, cub[2], cub[6], cub[3]);
 #pragma endregion
 #pragma region 4번 꼭짓점
-				brightness1[0][0] = -newCubeWC[5].x + newCubeWC[6].x; brightness1[1][0] = -newCubeWC[5].y + newCubeWC[6].y;
-				brightness1[2][0] = -newCubeWC[5].z + newCubeWC[6].z;
-				brightness2[0][0] = -newCubeWC[6].x + newCubeWC[1].x; brightness2[1][0] = -newCubeWC[6].y + newCubeWC[1].y;
-				brightness2[2][0] = -newCubeWC[6].z + newCubeWC[1].z;
-				originToVertex1[0][0] = -cameraX + newCubeWC[5].x; originToVertex1[1][0] = -cameraY + newCubeWC[5].y;
-				originToVertex1[2][0] = -cameraZ + newCubeWC[5].z;
-				originToVertex2[0][0] = -cameraX + newCubeWC[1].x; originToVertex2[1][0] = -cameraY + newCubeWC[1].y;
-				originToVertex2[2][0] = -cameraZ + newCubeWC[1].z;
-				originToVertex3[0][0] = -cameraX + newCubeWC[6].x; originToVertex3[1][0] = -cameraY + newCubeWC[6].y;
-				originToVertex3[2][0] = -cameraZ + newCubeWC[6].z;
+				frontPtr = Cube_isitFront(newCubeWC[5], newCubeWC[6], newCubeWC[1], camera, look, lightDirection);
+				count = 0;
+				for (int i = 0; i < 5; i++)
+				{
+					meshData[i] = *(frontPtr + count);
+					count++;
+				}
+				CubeMeshDraw(projNum, meshData, memDCPtr, width, height, left, top, cub[5], cub[6], cub[1]);
 
-				bPtr = CrossProduct(brightness1, brightness2);
-				bCount = 0;
-				for (int i = 0; i < 3; i++)
+				frontPtr = Cube_isitFront(newCubeWC[5], newCubeWC[1], newCubeWC[4], camera, look, lightDirection);
+				count = 0;
+				for (int i = 0; i < 5; i++)
 				{
-					brightNorm[i][0] = *(bPtr + bCount);
-					bCount++;
+					meshData[i] = *(frontPtr + count);
+					count++;
 				}
-				dotProd = -DotProduct(brightNorm, lightDirection) / vectorLength(brightNorm);
-				if (dotProd < 0)dotProd = 0;
-				if (projNum == 0)
-				{
-					dotResult1 = DotProduct(brightNorm, originToVertex1);
-					dotResult2 = DotProduct(brightNorm, originToVertex2);
-					dotResult3 = DotProduct(brightNorm, originToVertex3);
-					if (dotResult1 <= 0 && dotResult2 <= 0 && dotResult3 <= 0)
-					{
-						rgbRate = (int)round(255 * dotProd);
-						rectBrush.CreateSolidBrush(RGB(0, rgbRate, 0));
-						prevBrush = memDC.SelectObject(&rectBrush);
-						memDC.BeginPath();
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[5].x), ToScreenY(rect.Height(), rect.top, cub[5].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[1].x), ToScreenY(rect.Height(), rect.top, cub[1].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[6].x), ToScreenY(rect.Height(), rect.top, cub[6].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[5].x), ToScreenY(rect.Height(), rect.top, cub[5].y));
-						memDC.EndPath();
-						memDC.StrokeAndFillPath();
-						memDC.SelectObject(prevBrush);
-						rectBrush.DeleteObject();
-					}
-				}
-				else
-				{
-					dotResultParellel = DotProduct(brightNorm, look) / vectorLength(look);
-					if (dotResultParellel <= 0)
-					{
-						rgbRate = (int)round(255 * dotProd);
-						rectBrush.CreateSolidBrush(RGB(0, rgbRate, 0));
-						prevBrush = memDC.SelectObject(&rectBrush);
-						memDC.BeginPath();
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[5].x), ToScreenY(rect.Height(), rect.top, cub[5].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[1].x), ToScreenY(rect.Height(), rect.top, cub[1].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[6].x), ToScreenY(rect.Height(), rect.top, cub[6].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[5].x), ToScreenY(rect.Height(), rect.top, cub[5].y));
-						memDC.EndPath();
-						memDC.StrokeAndFillPath();
-						memDC.SelectObject(prevBrush);
-						rectBrush.DeleteObject();
-					}
-				}
+				CubeMeshDraw(projNum, meshData, memDCPtr, width, height, left, top, cub[5], cub[1], cub[4]);
 
-
-				brightness1[0][0] = -newCubeWC[5].x + newCubeWC[1].x; brightness1[1][0] = -newCubeWC[5].y + newCubeWC[1].y;
-				brightness1[2][0] = -newCubeWC[5].z + newCubeWC[1].z;
-				brightness2[0][0] = -newCubeWC[1].x + newCubeWC[4].x; brightness2[1][0] = -newCubeWC[1].y + newCubeWC[4].y;
-				brightness2[2][0] = -newCubeWC[1].z + newCubeWC[4].z;
-				originToVertex1[0][0] = -cameraX + newCubeWC[5].x; originToVertex1[1][0] = -cameraY + newCubeWC[5].y;
-				originToVertex1[2][0] = -cameraZ + newCubeWC[5].z;
-				originToVertex2[0][0] = -cameraX + newCubeWC[1].x; originToVertex2[1][0] = -cameraY + newCubeWC[1].y;
-				originToVertex2[2][0] = -cameraZ + newCubeWC[1].z;
-				originToVertex3[0][0] = -cameraX + newCubeWC[4].x; originToVertex3[1][0] = -cameraY + newCubeWC[4].y;
-				originToVertex3[2][0] = -cameraZ + newCubeWC[4].z;
-
-				bPtr = CrossProduct(brightness1, brightness2);
-				bCount = 0;
-				for (int i = 0; i < 3; i++)
+				frontPtr = Cube_isitFront(newCubeWC[5], newCubeWC[4], newCubeWC[6], camera, look, lightDirection);
+				count = 0;
+				for (int i = 0; i < 5; i++)
 				{
-					brightNorm[i][0] = *(bPtr + bCount);
-					bCount++;
+					meshData[i] = *(frontPtr + count);
+					count++;
 				}
-				dotProd = -DotProduct(brightNorm, lightDirection) / vectorLength(brightNorm);
-				if (dotProd < 0)dotProd = 0;
-				if (projNum == 0)
-				{
-					dotResult1 = DotProduct(brightNorm, originToVertex1);
-					dotResult2 = DotProduct(brightNorm, originToVertex2);
-					dotResult3 = DotProduct(brightNorm, originToVertex3);
-					if (dotResult1 <= 0 && dotResult2 <= 0 && dotResult3 <= 0)
-					{
-						rgbRate = (int)round(255 * dotProd);
-						rectBrush.CreateSolidBrush(RGB(0, rgbRate, 0));
-						prevBrush = memDC.SelectObject(&rectBrush);
-						memDC.BeginPath();
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[5].x), ToScreenY(rect.Height(), rect.top, cub[5].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[1].x), ToScreenY(rect.Height(), rect.top, cub[1].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[4].x), ToScreenY(rect.Height(), rect.top, cub[4].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[5].x), ToScreenY(rect.Height(), rect.top, cub[5].y));
-						memDC.EndPath();
-						memDC.StrokeAndFillPath();
-						memDC.SelectObject(prevBrush);
-						rectBrush.DeleteObject();
-					}
-				}
-				else
-				{
-					dotResultParellel = DotProduct(brightNorm, look) / vectorLength(look);
-					if (dotResultParellel <= 0)
-					{
-						rgbRate = (int)round(255 * dotProd);
-						rectBrush.CreateSolidBrush(RGB(0, rgbRate, 0));
-						prevBrush = memDC.SelectObject(&rectBrush);
-						memDC.BeginPath();
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[5].x), ToScreenY(rect.Height(), rect.top, cub[5].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[1].x), ToScreenY(rect.Height(), rect.top, cub[1].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[4].x), ToScreenY(rect.Height(), rect.top, cub[4].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[5].x), ToScreenY(rect.Height(), rect.top, cub[5].y));
-						memDC.EndPath();
-						memDC.StrokeAndFillPath();
-						memDC.SelectObject(prevBrush);
-						rectBrush.DeleteObject();
-					}
-				}
-
-
-				brightness1[0][0] = -newCubeWC[5].x + newCubeWC[4].x; brightness1[1][0] = -newCubeWC[5].y + newCubeWC[4].y;
-				brightness1[2][0] = -newCubeWC[5].z + newCubeWC[4].z;
-				brightness2[0][0] = -newCubeWC[4].x + newCubeWC[6].x; brightness2[1][0] = -newCubeWC[4].y + newCubeWC[6].y;
-				brightness2[2][0] = -newCubeWC[4].z + newCubeWC[6].z;
-				originToVertex1[0][0] = -cameraX + newCubeWC[5].x; originToVertex1[1][0] = -cameraY + newCubeWC[5].y;
-				originToVertex1[2][0] = -cameraZ + newCubeWC[5].z;
-				originToVertex2[0][0] = -cameraX + newCubeWC[6].x; originToVertex2[1][0] = -cameraY + newCubeWC[6].y;
-				originToVertex2[2][0] = -cameraZ + newCubeWC[6].z;
-				originToVertex3[0][0] = -cameraX + newCubeWC[4].x; originToVertex3[1][0] = -cameraY + newCubeWC[4].y;
-				originToVertex3[2][0] = -cameraZ + newCubeWC[4].z;
-
-				bPtr = CrossProduct(brightness1, brightness2);
-				bCount = 0;
-				for (int i = 0; i < 3; i++)
-				{
-					brightNorm[i][0] = *(bPtr + bCount);
-					bCount++;
-				}
-				dotProd = -DotProduct(brightNorm, lightDirection) / vectorLength(brightNorm);
-				if (dotProd < 0)dotProd = 0;
-				if (projNum == 0)
-				{
-					dotResult1 = DotProduct(brightNorm, originToVertex1);
-					dotResult2 = DotProduct(brightNorm, originToVertex2);
-					dotResult3 = DotProduct(brightNorm, originToVertex3);
-					if (dotResult1 <= 0 && dotResult2 <= 0 && dotResult3 <= 0)
-					{
-						rgbRate = (int)round(255 * dotProd);
-						rectBrush.CreateSolidBrush(RGB(0, rgbRate, 0));
-						prevBrush = memDC.SelectObject(&rectBrush);
-						memDC.BeginPath();
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[5].x), ToScreenY(rect.Height(), rect.top, cub[5].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[6].x), ToScreenY(rect.Height(), rect.top, cub[6].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[4].x), ToScreenY(rect.Height(), rect.top, cub[4].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[5].x), ToScreenY(rect.Height(), rect.top, cub[5].y));
-						memDC.EndPath();
-						memDC.StrokeAndFillPath();
-						memDC.SelectObject(prevBrush);
-						rectBrush.DeleteObject();
-					}
-				}
-				else
-				{
-					dotResultParellel = DotProduct(brightNorm, look) / vectorLength(look);
-					if (dotResultParellel <= 0)
-					{
-						rgbRate = (int)round(255 * dotProd);
-						rectBrush.CreateSolidBrush(RGB(0, rgbRate, 0));
-						prevBrush = memDC.SelectObject(&rectBrush);
-						memDC.BeginPath();
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, cub[5].x), ToScreenY(rect.Height(), rect.top, cub[5].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[6].x), ToScreenY(rect.Height(), rect.top, cub[6].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[4].x), ToScreenY(rect.Height(), rect.top, cub[4].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, cub[5].x), ToScreenY(rect.Height(), rect.top, cub[5].y));
-						memDC.EndPath();
-						memDC.StrokeAndFillPath();
-						memDC.SelectObject(prevBrush);
-						rectBrush.DeleteObject();
-					}
-				}
-
+				CubeMeshDraw(projNum, meshData, memDCPtr, width, height, left, top, cub[5], cub[4], cub[6]);
 #pragma endregion
 			}
 		}
@@ -3120,11 +966,6 @@ void CMFCApplication3View::OnPaint()
 		originInView[0][0] = figure.sphereOrigin.x; originInView[1][0] = figure.sphereOrigin.y; originInView[2][0] = figure.sphereOrigin.z; originInView[3][0] = 1;
 		float* fPtr = MatrixMulti(view, originInView);
 		int sampleCount = 0;
-		//for (int i = 0; i < 3; i++) // 뷰 좌표계에서의 큐브의 중심을 구하기
-		//{
-		//	originInView[i][0] = *(fPtr + sampleCount);
-		//	sampleCount++;
-		//}
 
 		for (int i = 0; i < 230; i++) // 뷰 좌표계에서의 큐브 중심을 원점으로 옮기면서 나머지 점들도 다 동일하게 옮겨줌
 		{
@@ -5698,8 +3539,8 @@ void CMFCApplication3View::OnRButtonUp(UINT nFlags, CPoint point)
 	az10[0][0] = (point.x - left - width / 2) / (width / 2);
 	az10[1][0] = (point.y - top - height / 2) * (-1) / (height / 2);
 	az10[3][0] = 1; // 화면을 클릭했을 때 얻어지는 투영면에서의 한 지점
-					// 뷰 행렬
 
+	// 뷰 행렬
 	look[0][0] = lookX; look[1][0] = lookY; look[2][0] = lookZ;
 	float view[4][4] = {};
 	camera[0][0] = cameraX; camera[1][0] = cameraY; camera[2][0] = cameraZ;
@@ -6680,6 +4521,7 @@ BOOL CMFCApplication3View::PreTranslateMessage(MSG* pMsg)
 				if (!figure.isClicked) continue;
 				isChecked = TRUE;
 				figure.length -= 5;
+				if (figure.length < 5) figure.length = 5;
 				break;
 			}
 			for (auto& figure : v_sphereFigure)
@@ -6687,7 +4529,8 @@ BOOL CMFCApplication3View::PreTranslateMessage(MSG* pMsg)
 				if (isChecked) break;
 				if (!figure.isClicked) continue;
 				isChecked = TRUE;
-				figure.radius -= 4;
+				figure.radius -= 5;
+				if (figure.radius < 5) figure.radius = 5;
 				break;
 			}
 			for (auto& figure : v_torusFigure)
@@ -6696,7 +4539,9 @@ BOOL CMFCApplication3View::PreTranslateMessage(MSG* pMsg)
 				if (!figure.isClicked) continue;
 				isChecked = TRUE;
 				figure.torusLongRadius -= 8;
-				figure.torusRadius -= 1;
+				figure.torusRadius -= 2;
+				if (figure.torusLongRadius < 8) figure.torusLongRadius = 8;
+				if (figure.torusRadius < 2) figure.torusRadius = 2;
 				break;
 			}
 		}
