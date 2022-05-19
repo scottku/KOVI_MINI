@@ -97,10 +97,8 @@ public:
 	float lookX;
 	float lookY;
 	float lookZ;
-	float width;
-	float height;
-	float left;
-	float top;
+	float width, height, left, top, right, bottom;
+	float fPlane, nPlane;
 	float lightDirX;
 	float lightDirY;
 	float lightDirZ;

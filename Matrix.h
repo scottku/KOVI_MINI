@@ -44,7 +44,8 @@ float* MatrixReverse(float a[4][4]); // 역행렬
 
 float* ViewMatrix(float camera[3][1] /*카메라 위치*/, float look[3][1] /*카메라 시야 방향*/); // 뷰 행렬
 
-float* ProjectionMatrix(int width, int height, float angle, float near, float far); // 투영 행렬
+float* ProjectionMatrix(int width, int height, float angle); // 투영 행렬
+float* ProjectionMatrixParallel(int right, int left, int bottom, int top, float n, float f);
 
 float* AffinTransform(float scaleX, float scaleY, float scaleZ, float angleX, float angleY, float angleZ, float transX, float transY, float transZ); // 아핀 행렬 생성
 // 스케일 증가 -> x축기준 회전 -> y축기준 회전 -> z축기준 회전 -> 이동

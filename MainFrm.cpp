@@ -116,7 +116,8 @@ void CMainFrame::Dump(CDumpContext& dc) const
 void CMainFrame::OnButtonTri()
 {
 	// TODO: 여기에 명령 처리기 코드를 추가합니다.
-	figureNum = 0;
+	figureNum = -1;
+	Invalidate();
 	//AfxMessageBox(_T("삼각형!"));
 }
 

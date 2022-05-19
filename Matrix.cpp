@@ -499,11 +499,9 @@ float* ViewMatrix(float a[3][1] /*Ä«¸Þ¶ó À§Ä¡*/, float c[3][1] /*Ä«¸Þ¶ó ½Ã¾ß ¹æÇ
 	//return (float*)result;
 }
 
-float* ProjectionMatrix(int width, int height, float angle, float n, float f)
+float* ProjectionMatrix(int width, int height, float angle)
 {
 	//GetClientRect()·Î Á¾È¾ºñ ±¸ÇÒ °Í
-	n = -n;
-	f = -f;
 	float a = width / height;
 	double distance = 1 / tan((angle/2) * pi / 180);
 	float d = (float)distance;
@@ -516,6 +514,20 @@ float* ProjectionMatrix(int width, int height, float angle, float n, float f)
 	//projection[2][2] = (n + f) / (n - f);
 	//projection[2][3] = (2 * n * f) / (n - f);
 	//projection[3][2] = -1;
+
+	arrayReturnPtr = (float*)projection;
+	return arrayReturnPtr;
+}
+float* ProjectionMatrixParallel(int right, int left, int bottom, int top, float n, float f)
+{
+	float projection[4][4] = {};
+	projection[0][0] = 2.f / (right - left);
+	projection[1][1] = -2.f / (top - bottom);
+	projection[2][2] = -2.f / (f - n);
+
+	projection[2][3] = -(f + n) / (f - n);
+
+	projection[3][3] = 1;
 
 	arrayReturnPtr = (float*)projection;
 	return arrayReturnPtr;
