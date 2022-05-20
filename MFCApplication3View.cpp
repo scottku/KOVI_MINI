@@ -40,10 +40,7 @@ BEGIN_MESSAGE_MAP(CMFCApplication3View, CView)
 	ON_COMMAND(ID_FILE_PRINT_PREVIEW, &CView::OnFilePrintPreview)
 	ON_WM_PAINT()
 	ON_WM_LBUTTONDOWN()
-	ON_WM_LBUTTONUP()
-	ON_WM_MOUSEMOVE()
 	ON_WM_ERASEBKGND()
-	ON_WM_HOTKEY()
 	ON_WM_RBUTTONUP()
 END_MESSAGE_MAP()
 
@@ -1165,7 +1162,7 @@ void CMFCApplication3View::OnPaint()
 		for (int i = 1; i < 13; i++) // 원의 가장 끝점과 옆의 12개의 점들 사이의 면
 		{
 			float cross[3][1] = {};
-
+			
 			if ((i % 12) != 0)
 			{
 				vFst[0][0] = -newSphereWC[0].x + newSphereWC[i].x;
@@ -1455,47 +1452,17 @@ void CMFCApplication3View::OnPaint()
 				for (int i = 1; i < 13; i++)
 				{
 					if (isVisableDot1[i - 1] == 0) continue;
-					memDC.MoveTo(ToScreenX(rect.Width(), rect.left, sph[0].x), ToScreenY(rect.Height(), rect.top, sph[0].y));
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i].x), ToScreenY(rect.Height(), rect.top, sph[i].y));
-					if (i % 12 == 0)
-					{
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i - 11].x), ToScreenY(rect.Height(), rect.top, sph[i - 11].y));
-					}
-					else
-					{
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i + 1].x), ToScreenY(rect.Height(), rect.top, sph[i + 1].y));
-					}
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[0].x), ToScreenY(rect.Height(), rect.top, sph[0].y));
+					DrawSphereLine(i, memDCPtr, width, height, left, top, sph[0], sph[i], sph[i-11], sph[i+1]);
 				}
 				for (int i = 1; i < 217; i++)
 				{
 					if (isVisable[i - 1] == 0) continue;
-					memDC.MoveTo(ToScreenX(rect.Width(), rect.left, sph[i].x), ToScreenY(rect.Height(), rect.top, sph[i].y));
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i + 12].x), ToScreenY(rect.Height(), rect.top, sph[i + 12].y));
-					if (i % 12 == 0)
-					{
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i + 1].x), ToScreenY(rect.Height(), rect.top, sph[i + 1].y));
-					}
-					else
-					{
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i + 13].x), ToScreenY(rect.Height(), rect.top, sph[i + 13].y));
-					}
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i].x), ToScreenY(rect.Height(), rect.top, sph[i].y));
+					DrawSphereLine(i, memDCPtr, width, height, left, top, sph[i], sph[i + 12], sph[i + 1], sph[i + 13]);
 				}
 				for (int i = 217; i < 229; i++)
 				{
 					if (isVisableDot2[i - 217] == 0) continue;
-					memDC.MoveTo(ToScreenX(rect.Width(), rect.left, sph[i].x), ToScreenY(rect.Height(), rect.top, sph[i].y));
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[229].x), ToScreenY(rect.Height(), rect.top, sph[229].y));
-					if (i % 12 == 0)
-					{
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i - 11].x), ToScreenY(rect.Height(), rect.top, sph[i - 11].y));
-					}
-					else
-					{
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i + 1].x), ToScreenY(rect.Height(), rect.top, sph[i + 1].y));
-					}
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i].x), ToScreenY(rect.Height(), rect.top, sph[i].y));
+					DrawSphereLine(i, memDCPtr, width, height, left, top, sph[i], sph[229], sph[i - 11], sph[i + 1]);
 				}
 			}
 			else
@@ -1503,68 +1470,17 @@ void CMFCApplication3View::OnPaint()
 				for (int i = 1; i < 13; i++)
 				{
 					if (isVisableDot1[i - 1] == 0) continue;
-					sphBrush.CreateSolidBrush(RGB(0, rgbTemp1_12[i - 1], 0));
-					prevBrush = memDC.SelectObject(&sphBrush);
-					memDC.BeginPath();
-					memDC.MoveTo(ToScreenX(rect.Width(), rect.left, sph[0].x), ToScreenY(rect.Height(), rect.top, sph[0].y));
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i].x), ToScreenY(rect.Height(), rect.top, sph[i].y));
-					if (i % 12 == 0)
-					{
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i - 11].x), ToScreenY(rect.Height(), rect.top, sph[i - 11].y));
-					}
-					else
-					{
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i + 1].x), ToScreenY(rect.Height(), rect.top, sph[i + 1].y));
-					}
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[0].x), ToScreenY(rect.Height(), rect.top, sph[0].y));
-					memDC.EndPath();
-					memDC.StrokeAndFillPath();
-					memDC.SelectObject(prevBrush);
-					sphBrush.DeleteObject();
+					DrawSphereMesh(i, 1, memDCPtr, width, height, left, top, sph[0], sph[i], sph[i - 11], sph[i + 1], rgbTemp1_12);
 				}
 				for (int i = 1; i < 217; i++)
 				{
 					if (isVisable[i - 1] == 0) continue;
-					sphBrush.CreateSolidBrush(RGB(0, rgbTemp1_216[i - 1], 0));
-					prevBrush = memDC.SelectObject(&sphBrush);
-					memDC.BeginPath();
-					memDC.MoveTo(ToScreenX(rect.Width(), rect.left, sph[i].x), ToScreenY(rect.Height(), rect.top, sph[i].y));
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i + 12].x), ToScreenY(rect.Height(), rect.top, sph[i + 12].y));
-					if (i % 12 == 0)
-					{
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i + 1].x), ToScreenY(rect.Height(), rect.top, sph[i + 1].y));
-					}
-					else
-					{
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i + 13].x), ToScreenY(rect.Height(), rect.top, sph[i + 13].y));
-					}
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i].x), ToScreenY(rect.Height(), rect.top, sph[i].y));
-					memDC.EndPath();
-					memDC.StrokeAndFillPath();
-					memDC.SelectObject(prevBrush);
-					sphBrush.DeleteObject();
+					DrawSphereMesh(i, 1, memDCPtr, width, height, left, top, sph[i], sph[i + 12], sph[i + 1], sph[i + 13], rgbTemp1_216);
 				}
 				for (int i = 217; i < 229; i++)
 				{
 					if (isVisableDot2[i - 217] == 0) continue;
-					sphBrush.CreateSolidBrush(RGB(0, rgbTemp217_228[i - 217], 0));
-					prevBrush = memDC.SelectObject(&sphBrush);
-					memDC.BeginPath();
-					memDC.MoveTo(ToScreenX(rect.Width(), rect.left, sph[i].x), ToScreenY(rect.Height(), rect.top, sph[i].y));
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[229].x), ToScreenY(rect.Height(), rect.top, sph[229].y));
-					if (i % 12 == 0)
-					{
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i - 11].x), ToScreenY(rect.Height(), rect.top, sph[i - 11].y));
-					}
-					else
-					{
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i + 1].x), ToScreenY(rect.Height(), rect.top, sph[i + 1].y));
-					}
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i].x), ToScreenY(rect.Height(), rect.top, sph[i].y));
-					memDC.EndPath();
-					memDC.StrokeAndFillPath();
-					memDC.SelectObject(prevBrush);
-					sphBrush.DeleteObject();
+					DrawSphereMesh(i, 217, memDCPtr, width, height, left, top, sph[i], sph[229], sph[i - 11], sph[i + 1], rgbTemp217_228);
 				}
 			}
 		}
@@ -1575,47 +1491,17 @@ void CMFCApplication3View::OnPaint()
 				for (int i = 1; i < 13; i++)
 				{
 					if (isVisableDot1[i - 1] == 0) continue;
-					memDC.MoveTo(ToScreenX(rect.Width(), rect.left, sph[0].x), ToScreenY(rect.Height(), rect.top, sph[0].y));
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i].x), ToScreenY(rect.Height(), rect.top, sph[i].y));
-					if (i % 12 == 0)
-					{
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i - 11].x), ToScreenY(rect.Height(), rect.top, sph[i - 11].y));
-					}
-					else
-					{
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i + 1].x), ToScreenY(rect.Height(), rect.top, sph[i + 1].y));
-					}
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[0].x), ToScreenY(rect.Height(), rect.top, sph[0].y));
+					DrawSphereLine(i, memDCPtr, width, height, left, top, sph[0], sph[i], sph[i - 11], sph[i + 1]);
 				}
 				for (int i = 1; i < 217; i++)
 				{
 					if (isVisable[i - 1] == 0) continue;
-					memDC.MoveTo(ToScreenX(rect.Width(), rect.left, sph[i].x), ToScreenY(rect.Height(), rect.top, sph[i].y));
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i + 12].x), ToScreenY(rect.Height(), rect.top, sph[i + 12].y));
-					if (i % 12 == 0)
-					{
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i + 1].x), ToScreenY(rect.Height(), rect.top, sph[i + 1].y));
-					}
-					else
-					{
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i + 13].x), ToScreenY(rect.Height(), rect.top, sph[i + 13].y));
-					}
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i].x), ToScreenY(rect.Height(), rect.top, sph[i].y));
+					DrawSphereLine(i, memDCPtr, width, height, left, top, sph[i], sph[i + 12], sph[i + 1], sph[i + 13]);
 				}
 				for (int i = 217; i < 229; i++)
 				{
 					if (isVisableDot2[i - 217] == 0) continue;
-					memDC.MoveTo(ToScreenX(rect.Width(), rect.left, sph[i].x), ToScreenY(rect.Height(), rect.top, sph[i].y));
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[229].x), ToScreenY(rect.Height(), rect.top, sph[229].y));
-					if (i % 12 == 0)
-					{
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i - 11].x), ToScreenY(rect.Height(), rect.top, sph[i - 11].y));
-					}
-					else
-					{
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i + 1].x), ToScreenY(rect.Height(), rect.top, sph[i + 1].y));
-					}
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i].x), ToScreenY(rect.Height(), rect.top, sph[i].y));
+					DrawSphereLine(i, memDCPtr, width, height, left, top, sph[i], sph[229], sph[i - 11], sph[i + 1]);
 				}
 			}
 			else
@@ -1623,68 +1509,17 @@ void CMFCApplication3View::OnPaint()
 				for (int i = 1; i < 13; i++)
 				{
 					if (isVisableDot1[i - 1] == 0) continue;
-					sphBrush.CreateSolidBrush(RGB(0, rgbTemp1_12[i - 1], 0));
-					prevBrush = memDC.SelectObject(&sphBrush);
-					memDC.BeginPath();
-					memDC.MoveTo(ToScreenX(rect.Width(), rect.left, sph[0].x), ToScreenY(rect.Height(), rect.top, sph[0].y));
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i].x), ToScreenY(rect.Height(), rect.top, sph[i].y));
-					if (i % 12 == 0)
-					{
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i - 11].x), ToScreenY(rect.Height(), rect.top, sph[i - 11].y));
-					}
-					else
-					{
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i + 1].x), ToScreenY(rect.Height(), rect.top, sph[i + 1].y));
-					}
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[0].x), ToScreenY(rect.Height(), rect.top, sph[0].y));
-					memDC.EndPath();
-					memDC.StrokeAndFillPath();
-					memDC.SelectObject(prevBrush);
-					sphBrush.DeleteObject();
+					DrawSphereMesh(i, 1, memDCPtr, width, height, left, top, sph[0], sph[i], sph[i - 11], sph[i + 1], rgbTemp1_12);
 				}
 				for (int i = 1; i < 217; i++)
 				{
 					if (isVisable[i - 1] == 0) continue;
-					sphBrush.CreateSolidBrush(RGB(0, rgbTemp1_216[i - 1], 0));
-					prevBrush = memDC.SelectObject(&sphBrush);
-					memDC.BeginPath();
-					memDC.MoveTo(ToScreenX(rect.Width(), rect.left, sph[i].x), ToScreenY(rect.Height(), rect.top, sph[i].y));
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i + 12].x), ToScreenY(rect.Height(), rect.top, sph[i + 12].y));
-					if (i % 12 == 0)
-					{
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i + 1].x), ToScreenY(rect.Height(), rect.top, sph[i + 1].y));
-					}
-					else
-					{
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i + 13].x), ToScreenY(rect.Height(), rect.top, sph[i + 13].y));
-					}
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i].x), ToScreenY(rect.Height(), rect.top, sph[i].y));
-					memDC.EndPath();
-					memDC.StrokeAndFillPath();
-					memDC.SelectObject(prevBrush);
-					sphBrush.DeleteObject();
+					DrawSphereMesh(i, 1, memDCPtr, width, height, left, top, sph[i], sph[i + 12], sph[i + 1], sph[i + 13], rgbTemp1_216);
 				}
 				for (int i = 217; i < 229; i++)
 				{
 					if (isVisableDot2[i - 217] == 0) continue;
-					sphBrush.CreateSolidBrush(RGB(0, rgbTemp217_228[i - 217], 0));
-					prevBrush = memDC.SelectObject(&sphBrush);
-					memDC.BeginPath();
-					memDC.MoveTo(ToScreenX(rect.Width(), rect.left, sph[i].x), ToScreenY(rect.Height(), rect.top, sph[i].y));
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[229].x), ToScreenY(rect.Height(), rect.top, sph[229].y));
-					if (i % 12 == 0)
-					{
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i - 11].x), ToScreenY(rect.Height(), rect.top, sph[i - 11].y));
-					}
-					else
-					{
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i + 1].x), ToScreenY(rect.Height(), rect.top, sph[i + 1].y));
-					}
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, sph[i].x), ToScreenY(rect.Height(), rect.top, sph[i].y));
-					memDC.EndPath();
-					memDC.StrokeAndFillPath();
-					memDC.SelectObject(prevBrush);
-					sphBrush.DeleteObject();
+					DrawSphereMesh(i, 217, memDCPtr, width, height, left, top, sph[i], sph[229], sph[i - 11], sph[i + 1], rgbTemp217_228);
 				}
 			}
 		}
@@ -2285,25 +2120,13 @@ void CMFCApplication3View::OnPaint()
 			{
 				if (figure.isClicked == FALSE)
 				{// 선으로 그리기
-					memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[0].x), ToScreenY(rect.Height(), rect.top, tor[0].y));
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[1].x), ToScreenY(rect.Height(), rect.top, tor[1].y));
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[12].x), ToScreenY(rect.Height(), rect.top, tor[12].y));
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[0].x), ToScreenY(rect.Height(), rect.top, tor[0].y));
+					DrawTorusLine(memDCPtr, width, height, left, top, tor[0], tor[1], tor[12]);
 				}
 				else
 				{
 					// 면으로 그리기
-					torBrush.CreateSolidBrush(RGB(0, rgbTemp[0], 0));
-					prevBrush = memDC.SelectObject(&torBrush);
-					memDC.BeginPath();
-					memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[0].x), ToScreenY(rect.Height(), rect.top, tor[0].y));
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[1].x), ToScreenY(rect.Height(), rect.top, tor[1].y));
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[12].x), ToScreenY(rect.Height(), rect.top, tor[12].y));
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[0].x), ToScreenY(rect.Height(), rect.top, tor[0].y));
-					memDC.EndPath();
-					memDC.StrokeAndFillPath();
-					memDC.SelectObject(prevBrush);
-					torBrush.DeleteObject();
+					DrawTorusMesh(0, rgbTemp, memDCPtr, width, height, left, top, tor[0], tor[1], tor[12]);
+
 				}
 			}
 			for (auto i : myInt)
@@ -2316,25 +2139,12 @@ void CMFCApplication3View::OnPaint()
 						if (figure.isClicked == FALSE)
 						{
 							// 선으로 그리기
-							memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 11].x), ToScreenY(rect.Height(), rect.top, tor[i - 11].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 132].x), ToScreenY(rect.Height(), rect.top, tor[i - 132].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+							DrawTorusLine(memDCPtr, width, height, left, top, tor[i], tor[i - 11], tor[i - 132]);
 						}
 						else
 						{
 							// 면으로 그리기
-							torBrush.CreateSolidBrush(RGB(0, rgbTemp[i], 0));
-							prevBrush = memDC.SelectObject(&torBrush);
-							memDC.BeginPath();
-							memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 11].x), ToScreenY(rect.Height(), rect.top, tor[i - 11].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 132].x), ToScreenY(rect.Height(), rect.top, tor[i - 132].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-							memDC.EndPath();
-							memDC.StrokeAndFillPath();
-							memDC.SelectObject(prevBrush);
-							torBrush.DeleteObject();
+							DrawTorusMesh(i, rgbTemp, memDCPtr, width, height, left, top, tor[i], tor[i - 11], tor[i - 132]);
 						}
 					}
 					else
@@ -2342,25 +2152,12 @@ void CMFCApplication3View::OnPaint()
 						if (figure.isClicked == FALSE)
 						{
 							// 선으로 그리기
-							memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 11].x), ToScreenY(rect.Height(), rect.top, tor[i - 11].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 12].x), ToScreenY(rect.Height(), rect.top, tor[i + 12].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+							DrawTorusLine(memDCPtr, width, height, left, top, tor[i], tor[i - 11], tor[i + 12]);
 						}
 						else
 						{
 							// 면으로 그리기
-							torBrush.CreateSolidBrush(RGB(0, rgbTemp[i], 0));
-							prevBrush = memDC.SelectObject(&torBrush);
-							memDC.BeginPath();
-							memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 11].x), ToScreenY(rect.Height(), rect.top, tor[i - 11].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 12].x), ToScreenY(rect.Height(), rect.top, tor[i + 12].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-							memDC.EndPath();
-							memDC.StrokeAndFillPath();
-							memDC.SelectObject(prevBrush);
-							torBrush.DeleteObject();
+							DrawTorusMesh(i, rgbTemp, memDCPtr, width, height, left, top, tor[i], tor[i - 11], tor[i + 12]);
 						}
 					}
 				}
@@ -2371,25 +2168,12 @@ void CMFCApplication3View::OnPaint()
 						if (figure.isClicked == FALSE)
 						{
 							// 선으로 그리기
-							memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 1].x), ToScreenY(rect.Height(), rect.top, tor[i + 1].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 132].x), ToScreenY(rect.Height(), rect.top, tor[i - 132].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+							DrawTorusLine(memDCPtr, width, height, left, top, tor[i], tor[i + 1], tor[i - 132]);
 						}
 						else
 						{
 							// 면으로 그리기
-							torBrush.CreateSolidBrush(RGB(0, rgbTemp[i], 0));
-							prevBrush = memDC.SelectObject(&torBrush);
-							memDC.BeginPath();
-							memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 1].x), ToScreenY(rect.Height(), rect.top, tor[i + 1].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 132].x), ToScreenY(rect.Height(), rect.top, tor[i - 132].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-							memDC.EndPath();
-							memDC.StrokeAndFillPath();
-							memDC.SelectObject(prevBrush);
-							torBrush.DeleteObject();
+							DrawTorusMesh(i, rgbTemp, memDCPtr, width, height, left, top, tor[i], tor[i + 1], tor[i - 132]);
 						}
 					}
 					else
@@ -2397,25 +2181,12 @@ void CMFCApplication3View::OnPaint()
 						if (figure.isClicked == FALSE)
 						{
 							// 선으로 그리기
-							memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 1].x), ToScreenY(rect.Height(), rect.top, tor[i + 1].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 12].x), ToScreenY(rect.Height(), rect.top, tor[i + 12].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+							DrawTorusLine(memDCPtr, width, height, left, top, tor[i], tor[i + 1], tor[i + 12]);
 						}
 						else
 						{
 							// 면으로 그리기
-							torBrush.CreateSolidBrush(RGB(0, rgbTemp[i], 0));
-							prevBrush = memDC.SelectObject(&torBrush);
-							memDC.BeginPath();
-							memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 1].x), ToScreenY(rect.Height(), rect.top, tor[i + 1].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 12].x), ToScreenY(rect.Height(), rect.top, tor[i + 12].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-							memDC.EndPath();
-							memDC.StrokeAndFillPath();
-							memDC.SelectObject(prevBrush);
-							torBrush.DeleteObject();
+							DrawTorusMesh(i, rgbTemp, memDCPtr, width, height, left, top, tor[i], tor[i + 1], tor[i + 12]);
 						}
 					}
 				}
@@ -2427,25 +2198,12 @@ void CMFCApplication3View::OnPaint()
 			{
 				if (figure.isClicked)
 				{// 선으로 그리기
-					memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[0].x), ToScreenY(rect.Height(), rect.top, tor[0].y));
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[1].x), ToScreenY(rect.Height(), rect.top, tor[1].y));
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[12].x), ToScreenY(rect.Height(), rect.top, tor[12].y));
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[0].x), ToScreenY(rect.Height(), rect.top, tor[0].y));
+					DrawTorusLine(memDCPtr, width, height, left, top, tor[0], tor[1], tor[12]);
 				}
 				else
 				{
 					// 면으로 그리기
-					torBrush.CreateSolidBrush(RGB(0, rgbTemp[0], 0));
-					prevBrush = memDC.SelectObject(&torBrush);
-					memDC.BeginPath();
-					memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[0].x), ToScreenY(rect.Height(), rect.top, tor[0].y));
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[1].x), ToScreenY(rect.Height(), rect.top, tor[1].y));
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[12].x), ToScreenY(rect.Height(), rect.top, tor[12].y));
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[0].x), ToScreenY(rect.Height(), rect.top, tor[0].y));
-					memDC.EndPath();
-					memDC.StrokeAndFillPath();
-					memDC.SelectObject(prevBrush);
-					torBrush.DeleteObject();
+					DrawTorusMesh(0, rgbTemp, memDCPtr, width, height, left, top, tor[0], tor[1], tor[12]);
 				}
 			}
 			rgbCount = -1;
@@ -2460,25 +2218,12 @@ void CMFCApplication3View::OnPaint()
 						if (figure.isClicked)
 						{
 							// 선으로 그리기
-							memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 11].x), ToScreenY(rect.Height(), rect.top, tor[i - 11].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 132].x), ToScreenY(rect.Height(), rect.top, tor[i - 132].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+							DrawTorusLine(memDCPtr, width, height, left, top, tor[i], tor[i - 11], tor[i - 132]);
 						}
 						else
 						{
 							// 면으로 그리기
-							torBrush.CreateSolidBrush(RGB(0, rgbTemp[i], 0));
-							prevBrush = memDC.SelectObject(&torBrush);
-							memDC.BeginPath();
-							memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 11].x), ToScreenY(rect.Height(), rect.top, tor[i - 11].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 132].x), ToScreenY(rect.Height(), rect.top, tor[i - 132].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-							memDC.EndPath();
-							memDC.StrokeAndFillPath();
-							memDC.SelectObject(prevBrush);
-							torBrush.DeleteObject();
+							DrawTorusMesh(i, rgbTemp, memDCPtr, width, height, left, top, tor[i], tor[i - 11], tor[i - 132]);
 						}
 					}
 					else
@@ -2486,25 +2231,12 @@ void CMFCApplication3View::OnPaint()
 						if (figure.isClicked)
 						{
 							// 선으로 그리기
-							memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 11].x), ToScreenY(rect.Height(), rect.top, tor[i - 11].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 12].x), ToScreenY(rect.Height(), rect.top, tor[i + 12].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+							DrawTorusLine(memDCPtr, width, height, left, top, tor[i], tor[i - 11], tor[i + 12]);
 						}
 						else
 						{
 							// 면으로 그리기
-							torBrush.CreateSolidBrush(RGB(0, rgbTemp[i], 0));
-							prevBrush = memDC.SelectObject(&torBrush);
-							memDC.BeginPath();
-							memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 11].x), ToScreenY(rect.Height(), rect.top, tor[i - 11].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 12].x), ToScreenY(rect.Height(), rect.top, tor[i + 12].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-							memDC.EndPath();
-							memDC.StrokeAndFillPath();
-							memDC.SelectObject(prevBrush);
-							torBrush.DeleteObject();
+							DrawTorusMesh(i, rgbTemp, memDCPtr, width, height, left, top, tor[i], tor[i - 11], tor[i + 12]);
 						}
 					}
 				}
@@ -2515,25 +2247,12 @@ void CMFCApplication3View::OnPaint()
 						if (figure.isClicked)
 						{
 							// 선으로 그리기
-							memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 1].x), ToScreenY(rect.Height(), rect.top, tor[i + 1].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 132].x), ToScreenY(rect.Height(), rect.top, tor[i - 132].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+							DrawTorusLine(memDCPtr, width, height, left, top, tor[i], tor[i + 1], tor[i - 132]);
 						}
 						else
 						{
 							// 면으로 그리기
-							torBrush.CreateSolidBrush(RGB(0, rgbTemp[i], 0));
-							prevBrush = memDC.SelectObject(&torBrush);
-							memDC.BeginPath();
-							memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 1].x), ToScreenY(rect.Height(), rect.top, tor[i + 1].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 132].x), ToScreenY(rect.Height(), rect.top, tor[i - 132].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-							memDC.EndPath();
-							memDC.StrokeAndFillPath();
-							memDC.SelectObject(prevBrush);
-							torBrush.DeleteObject();
+							DrawTorusMesh(i, rgbTemp, memDCPtr, width, height, left, top, tor[i], tor[i + 1], tor[i - 132]);
 						}
 					}
 					else
@@ -2541,25 +2260,12 @@ void CMFCApplication3View::OnPaint()
 						if (figure.isClicked)
 						{
 							// 선으로 그리기
-							memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 1].x), ToScreenY(rect.Height(), rect.top, tor[i + 1].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 12].x), ToScreenY(rect.Height(), rect.top, tor[i + 12].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+							DrawTorusLine(memDCPtr, width, height, left, top, tor[i], tor[i + 1], tor[i + 12]);
 						}
 						else
 						{
 							// 면으로 그리기
-							torBrush.CreateSolidBrush(RGB(0, rgbTemp[i], 0));
-							prevBrush = memDC.SelectObject(&torBrush);
-							memDC.BeginPath();
-							memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 1].x), ToScreenY(rect.Height(), rect.top, tor[i + 1].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 12].x), ToScreenY(rect.Height(), rect.top, tor[i + 12].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-							memDC.EndPath();
-							memDC.StrokeAndFillPath();
-							memDC.SelectObject(prevBrush);
-							torBrush.DeleteObject();
+							DrawTorusMesh(i, rgbTemp, memDCPtr, width, height, left, top, tor[i], tor[i + 1], tor[i + 12]);
 						}
 					}
 				}
@@ -2725,25 +2431,12 @@ void CMFCApplication3View::OnPaint()
 				if (figure.isClicked == FALSE)
 				{
 					// 선으로 그리기
-					memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[0].x), ToScreenY(rect.Height(), rect.top, tor[0].y));
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[11].x), ToScreenY(rect.Height(), rect.top, tor[11].y));
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[132].x), ToScreenY(rect.Height(), rect.top, tor[132].y));
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[0].x), ToScreenY(rect.Height(), rect.top, tor[0].y));
+					DrawTorusLine(memDCPtr, width, height, left, top, tor[0], tor[11], tor[132]);
 				}
 				else
 				{
 					// 면으로 그리기
-					torBrush.CreateSolidBrush(RGB(0, rgbTemp[0], 0));
-					prevBrush = memDC.SelectObject(&torBrush);
-					memDC.BeginPath();
-					memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[0].x), ToScreenY(rect.Height(), rect.top, tor[0].y));
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[11].x), ToScreenY(rect.Height(), rect.top, tor[11].y));
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[132].x), ToScreenY(rect.Height(), rect.top, tor[132].y));
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[0].x), ToScreenY(rect.Height(), rect.top, tor[0].y));
-					memDC.EndPath();
-					memDC.StrokeAndFillPath();
-					memDC.SelectObject(prevBrush);
-					torBrush.DeleteObject();
+					DrawTorusMesh(0, rgbTemp, memDCPtr, width, height, left, top, tor[0], tor[11], tor[132]);
 				}
 			}
 			//////
@@ -2755,25 +2448,12 @@ void CMFCApplication3View::OnPaint()
 					if (figure.isClicked == FALSE)
 					{
 						// 선으로 그리기
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 11].x), ToScreenY(rect.Height(), rect.top, tor[i + 11].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 12].x), ToScreenY(rect.Height(), rect.top, tor[i - 12].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+						DrawTorusLine(memDCPtr, width, height, left, top, tor[i], tor[i + 11], tor[i - 12]);
 					}
 					else
 					{
 						// 면으로 그리기
-						torBrush.CreateSolidBrush(RGB(0, rgbTemp[i], 0));
-						prevBrush = memDC.SelectObject(&torBrush);
-						memDC.BeginPath();
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 11].x), ToScreenY(rect.Height(), rect.top, tor[i + 11].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 12].x), ToScreenY(rect.Height(), rect.top, tor[i - 12].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-						memDC.EndPath();
-						memDC.StrokeAndFillPath();
-						memDC.SelectObject(prevBrush);
-						torBrush.DeleteObject();
+						DrawTorusMesh(i, rgbTemp, memDCPtr, width, height, left, top, tor[i], tor[i + 11], tor[i - 12]);
 					}
 				}
 				else
@@ -2783,25 +2463,12 @@ void CMFCApplication3View::OnPaint()
 						if (figure.isClicked == FALSE)
 						{
 							// 선으로 그리기
-							memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 1].x), ToScreenY(rect.Height(), rect.top, tor[i - 1].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 132].x), ToScreenY(rect.Height(), rect.top, tor[i + 132].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+							DrawTorusLine(memDCPtr, width, height, left, top, tor[i], tor[i - 1], tor[i + 132]);
 						}
 						else
 						{
 							// 면으로 그리기
-							torBrush.CreateSolidBrush(RGB(0, rgbTemp[i], 0));
-							prevBrush = memDC.SelectObject(&torBrush);
-							memDC.BeginPath();
-							memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 1].x), ToScreenY(rect.Height(), rect.top, tor[i - 1].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 132].x), ToScreenY(rect.Height(), rect.top, tor[i + 132].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-							memDC.EndPath();
-							memDC.StrokeAndFillPath();
-							memDC.SelectObject(prevBrush);
-							torBrush.DeleteObject();
+							DrawTorusMesh(i, rgbTemp, memDCPtr, width, height, left, top, tor[i], tor[i - 1], tor[i + 132]);
 						}
 					}
 					else
@@ -2809,25 +2476,12 @@ void CMFCApplication3View::OnPaint()
 						if (figure.isClicked == FALSE)
 						{
 							// 선으로 그리기
-							memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 1].x), ToScreenY(rect.Height(), rect.top, tor[i - 1].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 12].x), ToScreenY(rect.Height(), rect.top, tor[i - 12].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+							DrawTorusLine(memDCPtr, width, height, left, top, tor[i], tor[i - 1], tor[i - 12]);
 						}
 						else
 						{
 							// 면으로 그리기
-							torBrush.CreateSolidBrush(RGB(0, rgbTemp[i], 0));
-							prevBrush = memDC.SelectObject(&torBrush);
-							memDC.BeginPath();
-							memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 1].x), ToScreenY(rect.Height(), rect.top, tor[i - 1].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 12].x), ToScreenY(rect.Height(), rect.top, tor[i - 12].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-							memDC.EndPath();
-							memDC.StrokeAndFillPath();
-							memDC.SelectObject(prevBrush);
-							torBrush.DeleteObject();
+							DrawTorusMesh(i, rgbTemp, memDCPtr, width, height, left, top, tor[i], tor[i - 1], tor[i - 12]);
 						}
 					}
 				}
@@ -2840,25 +2494,12 @@ void CMFCApplication3View::OnPaint()
 				if (figure.isClicked)
 				{
 					// 선으로 그리기
-					memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[0].x), ToScreenY(rect.Height(), rect.top, tor[0].y));
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[11].x), ToScreenY(rect.Height(), rect.top, tor[11].y));
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[132].x), ToScreenY(rect.Height(), rect.top, tor[132].y));
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[0].x), ToScreenY(rect.Height(), rect.top, tor[0].y));
+					DrawTorusLine(memDCPtr, width, height, left, top, tor[0], tor[11], tor[132]);
 				}
 				else
 				{
 					// 면으로 그리기
-					torBrush.CreateSolidBrush(RGB(0, rgbTemp[0], 0));
-					prevBrush = memDC.SelectObject(&torBrush);
-					memDC.BeginPath();
-					memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[0].x), ToScreenY(rect.Height(), rect.top, tor[0].y));
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[11].x), ToScreenY(rect.Height(), rect.top, tor[11].y));
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[132].x), ToScreenY(rect.Height(), rect.top, tor[132].y));
-					memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[0].x), ToScreenY(rect.Height(), rect.top, tor[0].y));
-					memDC.EndPath();
-					memDC.StrokeAndFillPath();
-					memDC.SelectObject(prevBrush);
-					torBrush.DeleteObject();
+					DrawTorusMesh(0, rgbTemp, memDCPtr, width, height, left, top, tor[0], tor[11], tor[132]);
 				}
 			}
 			//////
@@ -2870,25 +2511,12 @@ void CMFCApplication3View::OnPaint()
 					if (figure.isClicked)
 					{
 						// 선으로 그리기
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 11].x), ToScreenY(rect.Height(), rect.top, tor[i + 11].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 12].x), ToScreenY(rect.Height(), rect.top, tor[i - 12].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+						DrawTorusLine(memDCPtr, width, height, left, top, tor[i], tor[i + 11], tor[i - 12]);
 					}
 					else
 					{
 						// 면으로 그리기
-						torBrush.CreateSolidBrush(RGB(0, rgbTemp[i], 0));
-						prevBrush = memDC.SelectObject(&torBrush);
-						memDC.BeginPath();
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 11].x), ToScreenY(rect.Height(), rect.top, tor[i + 11].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 12].x), ToScreenY(rect.Height(), rect.top, tor[i - 12].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-						memDC.EndPath();
-						memDC.StrokeAndFillPath();
-						memDC.SelectObject(prevBrush);
-						torBrush.DeleteObject();
+						DrawTorusMesh(i, rgbTemp, memDCPtr, width, height, left, top, tor[i], tor[i + 11], tor[i - 12]);
 					}
 				}
 				else
@@ -2898,25 +2526,12 @@ void CMFCApplication3View::OnPaint()
 						if (figure.isClicked)
 						{
 							// 선으로 그리기
-							memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 1].x), ToScreenY(rect.Height(), rect.top, tor[i - 1].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 132].x), ToScreenY(rect.Height(), rect.top, tor[i + 132].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+							DrawTorusLine(memDCPtr, width, height, left, top, tor[i], tor[i - 1], tor[i + 132]);
 						}
 						else
 						{
 							// 면으로 그리기
-							torBrush.CreateSolidBrush(RGB(0, rgbTemp[i], 0));
-							prevBrush = memDC.SelectObject(&torBrush);
-							memDC.BeginPath();
-							memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 1].x), ToScreenY(rect.Height(), rect.top, tor[i - 1].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 132].x), ToScreenY(rect.Height(), rect.top, tor[i + 132].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-							memDC.EndPath();
-							memDC.StrokeAndFillPath();
-							memDC.SelectObject(prevBrush);
-							torBrush.DeleteObject();
+							DrawTorusMesh(i, rgbTemp, memDCPtr, width, height, left, top, tor[i], tor[i - 1], tor[i + 132]);
 						}
 					}
 					else
@@ -2924,25 +2539,12 @@ void CMFCApplication3View::OnPaint()
 						if (figure.isClicked)
 						{
 							// 선으로 그리기
-							memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 1].x), ToScreenY(rect.Height(), rect.top, tor[i - 1].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 12].x), ToScreenY(rect.Height(), rect.top, tor[i - 12].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+							DrawTorusLine(memDCPtr, width, height, left, top, tor[i], tor[i - 1], tor[i - 12]);
 						}
 						else
 						{
 							// 면으로 그리기
-							torBrush.CreateSolidBrush(RGB(0, rgbTemp[i], 0));
-							prevBrush = memDC.SelectObject(&torBrush);
-							memDC.BeginPath();
-							memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 1].x), ToScreenY(rect.Height(), rect.top, tor[i - 1].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 12].x), ToScreenY(rect.Height(), rect.top, tor[i - 12].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-							memDC.EndPath();
-							memDC.StrokeAndFillPath();
-							memDC.SelectObject(prevBrush);
-							torBrush.DeleteObject();
+							DrawTorusMesh(i, rgbTemp, memDCPtr, width, height, left, top, tor[i], tor[i - 1], tor[i - 12]);
 						}
 					}
 				}
@@ -2971,25 +2573,12 @@ void CMFCApplication3View::OnPaint()
 				{
 					if (figure.isClicked == FALSE)
 					{// 선으로 그리기
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[0].x), ToScreenY(rect.Height(), rect.top, tor[0].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[1].x), ToScreenY(rect.Height(), rect.top, tor[1].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[12].x), ToScreenY(rect.Height(), rect.top, tor[12].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[0].x), ToScreenY(rect.Height(), rect.top, tor[0].y));
+						DrawTorusLine(memDCPtr, width, height, left, top, tor[0], tor[1], tor[12]);
 					}
 					else
 					{
 						// 면으로 그리기
-						torBrush.CreateSolidBrush(RGB(0, rgbTemp[0], 0));
-						prevBrush = memDC.SelectObject(&torBrush);
-						memDC.BeginPath();
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[0].x), ToScreenY(rect.Height(), rect.top, tor[0].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[1].x), ToScreenY(rect.Height(), rect.top, tor[1].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[12].x), ToScreenY(rect.Height(), rect.top, tor[12].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[0].x), ToScreenY(rect.Height(), rect.top, tor[0].y));
-						memDC.EndPath();
-						memDC.StrokeAndFillPath();
-						memDC.SelectObject(prevBrush);
-						torBrush.DeleteObject();
+						DrawTorusMesh(0, rgbTemp, memDCPtr, width, height, left, top, tor[0], tor[1], tor[12]);
 					}
 				}
 			}
@@ -3008,25 +2597,12 @@ void CMFCApplication3View::OnPaint()
 						if (figure.isClicked == FALSE)
 						{
 							// 선으로 그리기
-							memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 11].x), ToScreenY(rect.Height(), rect.top, tor[i - 11].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 132].x), ToScreenY(rect.Height(), rect.top, tor[i - 132].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+							DrawTorusLine(memDCPtr, width, height, left, top, tor[i], tor[i - 11], tor[i - 132]);
 						}
 						else
 						{
 							// 면으로 그리기
-							torBrush.CreateSolidBrush(RGB(0, rgbTemp[i], 0));
-							prevBrush = memDC.SelectObject(&torBrush);
-							memDC.BeginPath();
-							memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 11].x), ToScreenY(rect.Height(), rect.top, tor[i - 11].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 132].x), ToScreenY(rect.Height(), rect.top, tor[i - 132].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-							memDC.EndPath();
-							memDC.StrokeAndFillPath();
-							memDC.SelectObject(prevBrush);
-							torBrush.DeleteObject();
+							DrawTorusMesh(i, rgbTemp, memDCPtr, width, height, left, top, tor[i], tor[i - 11], tor[i - 132]);
 						}
 					}
 					else
@@ -3034,25 +2610,12 @@ void CMFCApplication3View::OnPaint()
 						if (figure.isClicked == FALSE)
 						{
 							// 선으로 그리기
-							memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 11].x), ToScreenY(rect.Height(), rect.top, tor[i - 11].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 12].x), ToScreenY(rect.Height(), rect.top, tor[i + 12].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+							DrawTorusLine(memDCPtr, width, height, left, top, tor[i], tor[i - 11], tor[i + 12]);
 						}
 						else
 						{
 							// 면으로 그리기
-							torBrush.CreateSolidBrush(RGB(0, rgbTemp[i], 0));
-							prevBrush = memDC.SelectObject(&torBrush);
-							memDC.BeginPath();
-							memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 11].x), ToScreenY(rect.Height(), rect.top, tor[i - 11].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 12].x), ToScreenY(rect.Height(), rect.top, tor[i + 12].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-							memDC.EndPath();
-							memDC.StrokeAndFillPath();
-							memDC.SelectObject(prevBrush);
-							torBrush.DeleteObject();
+							DrawTorusMesh(i, rgbTemp, memDCPtr, width, height, left, top, tor[i], tor[i - 11], tor[i + 12]);
 						}
 					}
 				}
@@ -3063,25 +2626,12 @@ void CMFCApplication3View::OnPaint()
 						if (figure.isClicked == FALSE)
 						{
 							// 선으로 그리기
-							memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 1].x), ToScreenY(rect.Height(), rect.top, tor[i + 1].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 132].x), ToScreenY(rect.Height(), rect.top, tor[i - 132].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+							DrawTorusLine(memDCPtr, width, height, left, top, tor[i], tor[i + 1], tor[i - 132]);
 						}
 						else
 						{
 							// 면으로 그리기
-							torBrush.CreateSolidBrush(RGB(0, rgbTemp[i], 0));
-							prevBrush = memDC.SelectObject(&torBrush);
-							memDC.BeginPath();
-							memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 1].x), ToScreenY(rect.Height(), rect.top, tor[i + 1].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 132].x), ToScreenY(rect.Height(), rect.top, tor[i - 132].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-							memDC.EndPath();
-							memDC.StrokeAndFillPath();
-							memDC.SelectObject(prevBrush);
-							torBrush.DeleteObject();
+							DrawTorusMesh(i, rgbTemp, memDCPtr, width, height, left, top, tor[i], tor[i + 1], tor[i - 132]);
 						}
 					}
 					else
@@ -3089,25 +2639,12 @@ void CMFCApplication3View::OnPaint()
 						if (figure.isClicked == FALSE)
 						{
 							// 선으로 그리기
-							memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 1].x), ToScreenY(rect.Height(), rect.top, tor[i + 1].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 12].x), ToScreenY(rect.Height(), rect.top, tor[i + 12].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+							DrawTorusLine(memDCPtr, width, height, left, top, tor[i], tor[i + 1], tor[i + 12]);
 						}
 						else
 						{
 							// 면으로 그리기
-							torBrush.CreateSolidBrush(RGB(0, rgbTemp[i], 0));
-							prevBrush = memDC.SelectObject(&torBrush);
-							memDC.BeginPath();
-							memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 1].x), ToScreenY(rect.Height(), rect.top, tor[i + 1].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 12].x), ToScreenY(rect.Height(), rect.top, tor[i + 12].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-							memDC.EndPath();
-							memDC.StrokeAndFillPath();
-							memDC.SelectObject(prevBrush);
-							torBrush.DeleteObject();
+							DrawTorusMesh(i, rgbTemp, memDCPtr, width, height, left, top, tor[i], tor[i + 1], tor[i + 12]);
 						}
 					}
 				}
@@ -3130,25 +2667,12 @@ void CMFCApplication3View::OnPaint()
 				{
 					if (figure.isClicked)
 					{// 선으로 그리기
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[0].x), ToScreenY(rect.Height(), rect.top, tor[0].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[1].x), ToScreenY(rect.Height(), rect.top, tor[1].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[12].x), ToScreenY(rect.Height(), rect.top, tor[12].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[0].x), ToScreenY(rect.Height(), rect.top, tor[0].y));
+						DrawTorusLine(memDCPtr, width, height, left, top, tor[0], tor[1], tor[12]);
 					}
 					else
 					{
 						// 면으로 그리기
-						torBrush.CreateSolidBrush(RGB(0, rgbTemp[0], 0));
-						prevBrush = memDC.SelectObject(&torBrush);
-						memDC.BeginPath();
-						memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[0].x), ToScreenY(rect.Height(), rect.top, tor[0].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[1].x), ToScreenY(rect.Height(), rect.top, tor[1].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[12].x), ToScreenY(rect.Height(), rect.top, tor[12].y));
-						memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[0].x), ToScreenY(rect.Height(), rect.top, tor[0].y));
-						memDC.EndPath();
-						memDC.StrokeAndFillPath();
-						memDC.SelectObject(prevBrush);
-						torBrush.DeleteObject();
+						DrawTorusMesh(0, rgbTemp, memDCPtr, width, height, left, top, tor[0], tor[1], tor[12]);
 					}
 				}
 			}
@@ -3168,25 +2692,12 @@ void CMFCApplication3View::OnPaint()
 						if (figure.isClicked)
 						{
 							// 선으로 그리기
-							memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 11].x), ToScreenY(rect.Height(), rect.top, tor[i - 11].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 132].x), ToScreenY(rect.Height(), rect.top, tor[i - 132].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+							DrawTorusLine(memDCPtr, width, height, left, top, tor[i], tor[i - 11], tor[i - 132]);
 						}
 						else
 						{
 							// 면으로 그리기
-							torBrush.CreateSolidBrush(RGB(0, rgbTemp[i], 0));
-							prevBrush = memDC.SelectObject(&torBrush);
-							memDC.BeginPath();
-							memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 11].x), ToScreenY(rect.Height(), rect.top, tor[i - 11].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 132].x), ToScreenY(rect.Height(), rect.top, tor[i - 132].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-							memDC.EndPath();
-							memDC.StrokeAndFillPath();
-							memDC.SelectObject(prevBrush);
-							torBrush.DeleteObject();
+							DrawTorusMesh(i, rgbTemp, memDCPtr, width, height, left, top, tor[i], tor[i - 11], tor[i - 132]);
 						}
 					}
 					else
@@ -3194,25 +2705,12 @@ void CMFCApplication3View::OnPaint()
 						if (figure.isClicked)
 						{
 							// 선으로 그리기
-							memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 11].x), ToScreenY(rect.Height(), rect.top, tor[i - 11].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 12].x), ToScreenY(rect.Height(), rect.top, tor[i + 12].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+							DrawTorusLine(memDCPtr, width, height, left, top, tor[i], tor[i - 11], tor[i + 12]);
 						}
 						else
 						{
 							// 면으로 그리기
-							torBrush.CreateSolidBrush(RGB(0, rgbTemp[i], 0));
-							prevBrush = memDC.SelectObject(&torBrush);
-							memDC.BeginPath();
-							memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 11].x), ToScreenY(rect.Height(), rect.top, tor[i - 11].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 12].x), ToScreenY(rect.Height(), rect.top, tor[i + 12].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-							memDC.EndPath();
-							memDC.StrokeAndFillPath();
-							memDC.SelectObject(prevBrush);
-							torBrush.DeleteObject();
+							DrawTorusMesh(i, rgbTemp, memDCPtr, width, height, left, top, tor[i], tor[i - 11], tor[i + 12]);
 						}
 					}
 				}
@@ -3223,25 +2721,12 @@ void CMFCApplication3View::OnPaint()
 						if (figure.isClicked)
 						{
 							// 선으로 그리기
-							memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 1].x), ToScreenY(rect.Height(), rect.top, tor[i + 1].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 132].x), ToScreenY(rect.Height(), rect.top, tor[i - 132].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+							DrawTorusLine(memDCPtr, width, height, left, top, tor[i], tor[i + 1], tor[i - 132]);
 						}
 						else
 						{
 							// 면으로 그리기
-							torBrush.CreateSolidBrush(RGB(0, rgbTemp[i], 0));
-							prevBrush = memDC.SelectObject(&torBrush);
-							memDC.BeginPath();
-							memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 1].x), ToScreenY(rect.Height(), rect.top, tor[i + 1].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i - 132].x), ToScreenY(rect.Height(), rect.top, tor[i - 132].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-							memDC.EndPath();
-							memDC.StrokeAndFillPath();
-							memDC.SelectObject(prevBrush);
-							torBrush.DeleteObject();
+							DrawTorusMesh(i, rgbTemp, memDCPtr, width, height, left, top, tor[i], tor[i + 1], tor[i - 132]);
 						}
 					}
 					else
@@ -3249,25 +2734,12 @@ void CMFCApplication3View::OnPaint()
 						if (figure.isClicked)
 						{
 							// 선으로 그리기
-							memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 1].x), ToScreenY(rect.Height(), rect.top, tor[i + 1].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 12].x), ToScreenY(rect.Height(), rect.top, tor[i + 12].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
+							DrawTorusLine(memDCPtr, width, height, left, top, tor[i], tor[i + 1], tor[i + 12]);
 						}
 						else
 						{
 							// 면으로 그리기
-							torBrush.CreateSolidBrush(RGB(0, rgbTemp[i], 0));
-							prevBrush = memDC.SelectObject(&torBrush);
-							memDC.BeginPath();
-							memDC.MoveTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 1].x), ToScreenY(rect.Height(), rect.top, tor[i + 1].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i + 12].x), ToScreenY(rect.Height(), rect.top, tor[i + 12].y));
-							memDC.LineTo(ToScreenX(rect.Width(), rect.left, tor[i].x), ToScreenY(rect.Height(), rect.top, tor[i].y));
-							memDC.EndPath();
-							memDC.StrokeAndFillPath();
-							memDC.SelectObject(prevBrush);
-							torBrush.DeleteObject();
+							DrawTorusMesh(i, rgbTemp, memDCPtr, width, height, left, top, tor[i], tor[i + 1], tor[i + 12]);
 						}
 					}
 				}
@@ -3486,22 +2958,6 @@ void CMFCApplication3View::OnLButtonDown(UINT nFlags, CPoint point)
 	CView::OnLButtonDown(nFlags, point);
 }
 
-void CMFCApplication3View::OnLButtonUp(UINT nFlags, CPoint point)
-{
-	// TODO: 여기에 메시지 처리기 코드를 추가 및/또는 기본값을 호출합니다.
-
-	CView::OnLButtonUp(nFlags, point);
-}
-
-
-void CMFCApplication3View::OnMouseMove(UINT nFlags, CPoint point)
-{
-	// TODO: 여기에 메시지 처리기 코드를 추가 및/또는 기본값을 호출합니다.
-
-	CView::OnMouseMove(nFlags, point);
-}
-
-
 BOOL CMFCApplication3View::OnEraseBkgnd(CDC* pDC)
 {
 	// TODO: 여기에 메시지 처리기 코드를 추가 및/또는 기본값을 호출합니다.
@@ -3510,15 +2966,6 @@ BOOL CMFCApplication3View::OnEraseBkgnd(CDC* pDC)
 
 	return CView::OnEraseBkgnd(pDC);
 }
-
-
-void CMFCApplication3View::OnHotKey(UINT nHotKeyId, UINT nKey1, UINT nKey2)
-{
-	// TODO: 여기에 메시지 처리기 코드를 추가 및/또는 기본값을 호출합니다.
-
-	CView::OnHotKey(nHotKeyId, nKey1, nKey2);
-}
-
 
 void CMFCApplication3View::OnRButtonUp(UINT nFlags, CPoint point)
 {

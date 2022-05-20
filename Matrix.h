@@ -62,3 +62,8 @@ float* Cube_isitFront(MyVertex vertex1, MyVertex vertex2, MyVertex vertex3, floa
 void CubeMeshDraw(int projNum, float meshData[5], CDC* memDC, float width, float height, float left, float top, MyVertex p1, MyVertex p2, MyVertex p3);
 void CubeLineDraw(int projNum, float meshData[5], CDC* memDC, float width, float height, float left, float top, MyVertex p1, MyVertex p2, MyVertex p3);
 
+void DrawSphereLine(int i, CDC* memDC, float width, float heigth, float left, float top, MyVertex v1, MyVertex v2, MyVertex v3, MyVertex vException);
+void DrawSphereMesh(int i, int start, CDC* memDC, float width, float height, float left, float top, MyVertex v1, MyVertex v2, MyVertex v3, MyVertex vException, int* array);
+
+void DrawTorusLine(CDC* memDCPtr, float width, float height, float left, float top, MyVertex v1, MyVertex v2, MyVertex v3);
+void DrawTorusMesh(int i, int* RGB_array, CDC* memDC, float width, float height, float left, float top, MyVertex v1, MyVertex v2, MyVertex v3);

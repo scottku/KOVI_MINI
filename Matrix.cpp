@@ -913,3 +913,67 @@ void CubeLineDraw(int projNum, float meshData[5], CDC* memDC, float width, float
 		}
 	}
 }
+
+void DrawSphereLine(int i, CDC* memDC, float width, float height, float left, float top, MyVertex v1, MyVertex v2, MyVertex v3, MyVertex vException)
+{
+	memDC->MoveTo(ToScreenX(width, left, v1.x), ToScreenY(height, top, v1.y));
+	memDC->LineTo(ToScreenX(width, left, v2.x), ToScreenY(height, top, v2.y));
+	if (i % 12 == 0)
+	{
+		memDC->LineTo(ToScreenX(width, left, v3.x), ToScreenY(height, top, v3.y));
+	}
+	else
+	{
+		memDC->LineTo(ToScreenX(width, left, vException.x), ToScreenY(height, top, vException.y));
+	}
+	memDC->LineTo(ToScreenX(width, left, v1.x), ToScreenY(height, top, v1.y));
+}
+void DrawSphereMesh(int i, int start, CDC* memDC, float width, float height, float left, float top, MyVertex v1, MyVertex v2, MyVertex v3, MyVertex vException, int* array)
+{
+	CBrush brush;
+	CBrush* prevBrush;
+	brush.CreateSolidBrush(RGB(0, *(array + (i - start)), 0));
+	prevBrush = memDC->SelectObject(&brush);
+
+	memDC->BeginPath();
+	memDC->MoveTo(ToScreenX(width, left, v1.x), ToScreenY(height, top, v1.y));
+	memDC->LineTo(ToScreenX(width, left, v2.x), ToScreenY(height, top, v2.y));
+	if (i % 12 == 0)
+	{
+		memDC->LineTo(ToScreenX(width, left, v3.x), ToScreenY(height, top, v3.y));
+	}
+	else
+	{
+		memDC->LineTo(ToScreenX(width, left, vException.x), ToScreenY(height, top, vException.y));
+	}
+	memDC->LineTo(ToScreenX(width, left, v1.x), ToScreenY(height, top, v1.y));
+	memDC->EndPath();
+	memDC->StrokeAndFillPath();
+	memDC->SelectObject(prevBrush);
+	brush.DeleteObject();
+}
+
+void DrawTorusLine(CDC* memDC, float width, float height, float left, float top, MyVertex v1, MyVertex v2, MyVertex v3)
+{
+	memDC->MoveTo(ToScreenX(width, left, v1.x), ToScreenY(height, top, v1.y));
+	memDC->LineTo(ToScreenX(width, left, v2.x), ToScreenY(height, top, v2.y));
+	memDC->LineTo(ToScreenX(width, left, v3.x), ToScreenY(height, top, v3.y));
+	memDC->LineTo(ToScreenX(width, left, v1.x), ToScreenY(height, top, v1.y));
+}
+void DrawTorusMesh(int i, int* RGB_array, CDC* memDC, float width, float height, float left, float top, MyVertex v1, MyVertex v2, MyVertex v3)
+{
+	CBrush torBrush;
+	CBrush* prevBrush;
+	torBrush.CreateSolidBrush(RGB(0, *(RGB_array + i), 0));
+	prevBrush = memDC->SelectObject(&torBrush);
+
+	memDC->BeginPath();
+	memDC->MoveTo(ToScreenX(width, left, v1.x), ToScreenY(height, top, v1.y));
+	memDC->LineTo(ToScreenX(width, left, v2.x), ToScreenY(height, top, v2.y));
+	memDC->LineTo(ToScreenX(width, left, v3.x), ToScreenY(height, top, v3.y));
+	memDC->LineTo(ToScreenX(width, left, v1.x), ToScreenY(height, top, v1.y));
+	memDC->EndPath();
+	memDC->StrokeAndFillPath();
+	memDC->SelectObject(prevBrush);
+	torBrush.DeleteObject();
+}
