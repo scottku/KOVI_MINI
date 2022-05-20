@@ -14,12 +14,6 @@ struct MyShape
 	CPoint ptEnd;
 };
 
-//typedef struct Vertex
-//{
-//	float x, y, z;
-//	float vertexNormal[4][1];
-//} Vertex;
-
 typedef struct TorusInfo
 {
 	MyVertex torus[144];

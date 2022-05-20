@@ -502,19 +502,16 @@ float* ViewMatrix(float a[3][1] /*Ä«¸Þ¶ó À§Ä¡*/, float c[3][1] /*Ä«¸Þ¶ó ½Ã¾ß ¹æÇ
 float* ProjectionMatrix(int width, int height, float angle)
 {
 	//GetClientRect()·Î Á¾È¾ºñ ±¸ÇÒ °Í
-	float a = width / height;
+	float a = (float)width / (float)height;
 	double distance = 1 / tan((angle/2) * pi / 180);
 	float d = (float)distance;
 	float projection[4][4] = {};
 	projection[0][0] = d / a;
 	projection[1][1] = d;
+
 	projection[2][2] = -1;
 	projection[3][3] = 1;
-	//// °Å¸®°ª ³ªÁß¿¡ Ãß°¡
-	//projection[2][2] = (n + f) / (n - f);
-	//projection[2][3] = (2 * n * f) / (n - f);
-	//projection[3][2] = -1;
-
+	
 	arrayReturnPtr = (float*)projection;
 	return arrayReturnPtr;
 }
@@ -854,7 +851,7 @@ void CubeMeshDraw(int projNum, float meshData[5], CDC* memDC, float width, float
 
 		if (dotResult1 <= 0 && dotResult2 <= 0 && dotResult3 <= 0)
 		{
-			rgbRate = (int)round(255 * meshData[0]);
+			rgbRate = (int)round(80 + 175 * meshData[0]);
 			brush.CreateSolidBrush(RGB(0, rgbRate, 0));
 			prevBrush = memDC->SelectObject(&brush);
 			memDC->BeginPath();

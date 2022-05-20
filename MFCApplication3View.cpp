@@ -55,7 +55,7 @@ CMFCApplication3View::CMFCApplication3View()
 	v_torusFigure = {};
 	cameraX = 0;
 	cameraY = 0;
-	cameraZ = -100;
+	cameraZ = -300;
 	cameraRotateX = 5;
 	cameraRotateY = 5;
 	rotateXCount = 0;
@@ -1243,7 +1243,7 @@ void CMFCApplication3View::OnPaint()
 			float result3 = DotProduct(vPolygon3, cross);
 			lightDotPrd = -DotProduct(cross, lightDirection);
 			if (lightDotPrd < 0) lightDotPrd = 0;
-			rgbTemp1_12[i - 1] = (int)round(255 * lightDotPrd);
+			rgbTemp1_12[i - 1] = (int)round(80 + 175 * lightDotPrd);
 
 			if (result1 > 0 || result2 > 0 || result3 > 0)
 			{
@@ -1339,7 +1339,7 @@ void CMFCApplication3View::OnPaint()
 			float result3 = DotProduct(vPolygon3, cross);
 			lightDotPrd = -DotProduct(cross, lightDirection);
 			if (lightDotPrd < 0) lightDotPrd = 0;
-			rgbTemp1_216[i - 1] = (int)round(255 * lightDotPrd);
+			rgbTemp1_216[i - 1] = (int)round(80 + 175 * lightDotPrd);
 
 			if (result1 > 0 || result2 > 0 || result3 > 0)
 			{
@@ -1434,7 +1434,7 @@ void CMFCApplication3View::OnPaint()
 			float result3 = DotProduct(vPolygon3, cross);
 			lightDotPrd = -DotProduct(cross, lightDirection);
 			if (lightDotPrd < 0) lightDotPrd = 0;
-			rgbTemp217_228[i - 217] = (int)round(255 * lightDotPrd);
+			rgbTemp217_228[i - 217] = (int)round(80 + 175 * lightDotPrd);
 
 			if (result1 > 0 || result2 > 0 || result3 > 0)
 			{
@@ -1773,7 +1773,7 @@ void CMFCApplication3View::OnPaint()
 			float result3 = DotProduct(vPolygon3, cross);
 			lightDotPrd = -DotProduct(cross, lightDirection);
 			if (lightDotPrd < 0) lightDotPrd = 0;
-			rgbTemp1_216_2[i - 1] = (int)round(255 * lightDotPrd);
+			rgbTemp1_216_2[i - 1] = (int)round(80 + 175 * lightDotPrd);
 
 			if (result1 > 0 || result2 > 0 || result3 > 0)
 			{
@@ -2254,7 +2254,7 @@ void CMFCApplication3View::OnPaint()
 			float result3 = DotProduct(vPolygon3, crsBoth);
 			lightDotPrd = -DotProduct(crsBoth, lightDirection);
 			if (lightDotPrd < 0)lightDotPrd = 0;
-			rgbTemp[i] = (int)round(255 * lightDotPrd);
+			rgbTemp[i] = (int)round(80 + 175 * lightDotPrd);
 
 			if (i == 0)
 			{
@@ -2693,8 +2693,7 @@ void CMFCApplication3View::OnPaint()
 			float result3 = DotProduct(vPolygon3, crsBoth);
 			lightDotPrd = -DotProduct(crsBoth, lightDirection);
 			if (lightDotPrd < 0) lightDotPrd = 0;
-			rgbTemp[i] = (int)round(255 * lightDotPrd);
-
+			rgbTemp[i] = (int)round(80 + 175 * lightDotPrd);
 
 			if (i == 0)
 			{
@@ -3296,7 +3295,7 @@ void CMFCApplication3View::OnLButtonDown(UINT nFlags, CPoint point)
 	float az10[4][1];
 	if (projNum == 0)
 	{
-		az10[2][0] = fPlane;
+		az10[2][0] = height / 2;
 		az10[0][0] = (point.x - left - width / 2) / (width / 2) * az10[2][0];
 		az10[1][0] = (point.y - top - height / 2) * (-1) / (height / 2) * az10[2][0];
 	}
