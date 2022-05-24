@@ -190,7 +190,7 @@ void CMFCApplication3View::OnPaint()
 	newPen.CreatePen(PS_SOLID, 0.5, RGB(255, 255, 255));
 	CPen* oldPen = memDC.SelectObject(&newPen);
 
-	/////////// 백스페이스 컬링 Test
+	/////////// 절두체 컬링 Test
 	// far 평면의 1사분면의 점
 	float farPoint1[4][1] = { {652.37}, {300}, {-300},{1} };
 	// far 평면의 3사분면의 점
@@ -455,6 +455,15 @@ void CMFCApplication3View::OnPaint()
 			}
 		}
 
+		////////
+		MyVertex newCubeWC[8] = {};
+		float tempVertex[4][1] = {};
+		for (int i = 0; i < 8; i++)
+		{
+			newCubeWC[i].x = cub[i].x; newCubeWC[i].y = cub[i].y; newCubeWC[i].z = cub[i].z;
+		}
+		////////
+
 		float sample[4][1] = {};
 		// sphere 각 점들을 뷰 행렬 변환 시킴
 		for (int i = 0; i < 8; i++)
@@ -496,7 +505,11 @@ void CMFCApplication3View::OnPaint()
 				if (isItUpper[i]) break;
 				if (i == 7) bDrawBlock = TRUE;
 			}
-			if (bDrawBlock) continue;
+			if (bDrawBlock)
+			{
+				figure.isFront = FALSE;
+				continue;
+			}
 		}
 		else
 		{
@@ -519,22 +532,13 @@ void CMFCApplication3View::OnPaint()
 				if (isItUpper[i]) break;
 				if (i == 7) bDrawBlock = TRUE;
 			}
-			if (bDrawBlock) continue;
-		}
-		
-
-		/*////// z가 -1보다 큰 친구들은 화면에서 지우기 -> 카메라 뒤쪽 절두체에서 투영되는 친구들 제거
-		BOOL insideFrustum = TRUE;
-		for (int i = 0; i < 8; i++)
-		{
-			if (cub[i].z > -1)
+			if (bDrawBlock)
 			{
-				insideFrustum = FALSE;
-				break;
+				figure.isFront = FALSE;
+				continue;
 			}
 		}
-		if (!insideFrustum) continue;*/
-
+		figure.isFront = TRUE;
 		// sphere 각 점들을 투영 시킴
 		for (int i = 0; i < 8; i++)
 		{
@@ -558,62 +562,12 @@ void CMFCApplication3View::OnPaint()
 			}
 		}
 
-		/*/////////// 화면 밖으로 모든 점이 나가버리면 안그리게 할 것
-		float pointOfView[2][1] = {};
-		bool outOfView[8] = {};
+		// picking을 위해 스크린에 찍힌 점들의 값을 미리 저장
 		for (int i = 0; i < 8; i++)
 		{
-			pointOfView[0][0] = ToScreenX(width, left, cub[i].x); pointOfView[1][0] = ToScreenY(height, top, cub[i].y);
-			if (pointOfView[0][0] < 0 || pointOfView[0][0] > width || pointOfView[1][0] < 0 || pointOfView[1][0] > height)
-				outOfView[i] = TRUE;
-			else outOfView[i] = FALSE;
-		}
-		bool totalOut = FALSE;
-		for (int i = 0; i < 8; i++)
-		{
-			if (outOfView[i]) totalOut = TRUE;
-			else
-			{
-				totalOut = FALSE;
-				break;
-			}
-		}
-		if (totalOut) continue;*/
-
-		// 위치가 이동되었으니 월드좌표계의 좌표들도 변했을 것-> 현재 가지고 있는 좌표를 뒤로 돌려서 새로운 월드 좌표를 받아야 함
-		MyVertex newCubeWC[8] = {};
-		float tempVertex[4][1] = {};
-		for (int i = 0; i < 8; i++)
-		{
-			float* tempPtr;
-			int tempCount = 0;
-			if (projNum == 0)
-			{
-				tempVertex[0][0] = cub[i].x * cub[i].z; tempVertex[1][0] = cub[i].y * cub[i].z; tempVertex[2][0] = cub[i].z; tempVertex[3][0] = 1;
-			}
-			else
-			{
-				tempVertex[0][0] = cub[i].x; tempVertex[1][0] = cub[i].y; tempVertex[2][0] = cub[i].z; tempVertex[3][0] = 1;
-			}
-
-			tempPtr = MatrixMulti(projReverse, tempVertex);
-			tempCount = 0;
-			for (int j = 0; j < 4; j++) // 투영 역행렬 = 카메라 좌표계
-			{
-				tempVertex[j][0] = *(tempPtr + tempCount);
-				tempCount++;
-			}
-
-			tempPtr = MatrixMulti(viewReverse, tempVertex);
-			tempCount = 0;
-			for (int j = 0; j < 4; j++) // 뷰 역행렬 = 월드 좌표계
-			{
-				tempVertex[j][0] = *(tempPtr + tempCount);
-				tempCount++;
-			}
-			// 새로운 월드 좌표계 저장
-			newCubeWC[i].x = tempVertex[0][0]; newCubeWC[i].y = tempVertex[1][0]; newCubeWC[i].z = tempVertex[2][0];
-			figure.cube_justForClick[i].x = tempVertex[0][0]; figure.cube_justForClick[i].y = tempVertex[1][0]; figure.cube_justForClick[i].z = tempVertex[2][0];
+			figure.cube_justForClick[i].x = ToScreenX(width, left, cub[i].x); 
+			figure.cube_justForClick[i].y = ToScreenY(height, top, cub[i].y); 
+			figure.cube_justForClick[i].z = 0;
 		}
 
 		float brightness1[4][1] = {};
@@ -982,8 +936,6 @@ void CMFCApplication3View::OnPaint()
 			else
 			{
 #pragma region 1번 꼭짓점 - 면
-				// Cube_isitFront(MyVertex vertex1, MyVertex vertex2, MyVertex vertex3, float camera[3][1], float look[3][1], float lightDirection[3][1], int projNum)
-				// return {dotProd, dotresult1, dotresult2, dotresult3, dotresultparallel}
 				float* frontPtr = Cube_isitFront(newCubeWC[0], newCubeWC[3], newCubeWC[4], camera, look, lightDirection);
 				float meshData[5] = {};
 				int count = 0;
@@ -1180,6 +1132,15 @@ void CMFCApplication3View::OnPaint()
 			}
 		}
 
+		////// 변경된 월드좌표 저장
+		MyVertex newSphereWC[230] = {};
+		float tempVertex[4][1] = {};
+		for (int i = 0; i < 230; i++)
+		{
+			newSphereWC[i].x = sph[i].x; newSphereWC[i].y = sph[i].y; newSphereWC[i].z = sph[i].z;
+		}
+		//////
+
 		float sample[4][1] = {};
 		// sphere 각 점들을 뷰 행렬 변환 시킴
 		for (int i = 0; i < 230; i++)
@@ -1221,7 +1182,11 @@ void CMFCApplication3View::OnPaint()
 				if (isItUpper[i]) break;
 				if (i == 229) bDrawBlock = TRUE;
 			}
-			if (bDrawBlock) continue;
+			if (bDrawBlock)
+			{
+				figure.isFront = FALSE;
+				continue;
+			}
 			//////
 		}
 		else
@@ -1245,22 +1210,13 @@ void CMFCApplication3View::OnPaint()
 				if (isItUpper[i]) break;
 				if (i == 229) bDrawBlock = TRUE;
 			}
-			if (bDrawBlock) continue;
+			if (bDrawBlock)
+			{
+				figure.isFront = FALSE;
+				continue;
+			}
 		}
-		
-
-		//////// z가 -1보다 큰 친구들은 화면에서 지우기 -> 카메라 뒤쪽 절두체에서 투영되는 친구들 제거
-		//BOOL insideFrustum = TRUE;
-		//for (int i = 0; i < 230; i++)
-		//{
-		//	if (sph[i].z > -1)
-		//	{
-		//		insideFrustum = FALSE;
-		//		break;
-		//	}
-		//}
-		//if (!insideFrustum) continue;
-		////////////////////////////////////////////////////////
+		figure.isFront = TRUE;
 
 		float deltaArray[230] = {};
 		// sphere 각 점들을 투영 시킴
@@ -1286,65 +1242,13 @@ void CMFCApplication3View::OnPaint()
 			}
 		}
 
-		//// 화면 밖으로 모든 점이 나가버리면 안그리게 할 것
-		//float pointOfView[2][1] = {};
-		//bool outOfView[230] = {};
-		//for (int i = 0; i < 230; i++)
-		//{
-		//	pointOfView[0][0] = ToScreenX(width, left, sph[i].x); pointOfView[1][0] = ToScreenY(height, top, sph[i].y);
-		//	if (pointOfView[0][0] < 0 || pointOfView[0][0] > width || pointOfView[1][0] < 0 || pointOfView[1][0] > height)
-		//		outOfView[i] = TRUE;
-		//	else outOfView[i] = FALSE;
-		//}
-		//bool totalOut = FALSE;
-		//for (int i = 0; i < 230; i++)
-		//{
-		//	if (outOfView[i]) totalOut = TRUE;
-		//	else
-		//	{
-		//		totalOut = FALSE;
-		//		break;
-		//	}
-		//}
-		//if (totalOut) continue;
-
-
-		// 위치가 이동되었으니 월드좌표계의 좌표들도 변했을 것-> 현재 받아둔 좌표를 다 뒤로 돌려서 새로운 월드좌표를 받아야 함
-		MyVertex newSphereWC[230] = {};
-		float tempVertex[4][1] = {};
+		// picking을 위해 미리 스크린 좌표 저장
 		for (int i = 0; i < 230; i++)
 		{
-			float* tempPtr;
-			int tempCount = 0;
-			if (projNum == 0)
-			{
-				tempVertex[0][0] = sph[i].x * sph[i].z; tempVertex[1][0] = sph[i].y * sph[i].z; tempVertex[2][0] = sph[i].z; tempVertex[3][0] = 1;
-			}
-			else
-			{
-				tempVertex[0][0] = sph[i].x; tempVertex[1][0] = sph[i].y; tempVertex[2][0] = sph[i].z; tempVertex[3][0] = 1;
-			}
-
-			tempPtr = MatrixMulti(projReverse, tempVertex);
-			tempCount = 0;
-			for (int j = 0; j < 4; j++) // 투영 역행렬 = 카메라 좌표계
-			{
-				tempVertex[j][0] = *(tempPtr + tempCount);
-				tempCount++;
-			}
-
-			tempPtr = MatrixMulti(viewReverse, tempVertex);
-			tempCount = 0;
-			for (int j = 0; j < 4; j++) // 뷰 역행렬 = 월드 좌표계
-			{
-				tempVertex[j][0] = *(tempPtr + tempCount);
-				tempCount++;
-			}
-			// 새로운 월드 좌표계 저장
-			newSphereWC[i].x = tempVertex[0][0]; newSphereWC[i].y = tempVertex[1][0]; newSphereWC[i].z = tempVertex[2][0];
-			figure.sphere_justForClick[i].x = tempVertex[0][0]; figure.sphere_justForClick[i].y = tempVertex[1][0]; figure.sphere_justForClick[i].z = tempVertex[2][0];
+			figure.sphere_justForClick[i].x = ToScreenX(width, left, sph[i].x); 
+			figure.sphere_justForClick[i].y = ToScreenY(height, top, sph[i].y); 
 		}
-		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		////
 
 		// 뒷면 잘라내기
 		float vFst[4][1] = {}; // 계산에 쓸 방향 저장용 벡터
@@ -1377,12 +1281,17 @@ void CMFCApplication3View::OnPaint()
 			
 			if ((i % 12) != 0)
 			{
+				//MakeVertexToVertexVector(vFst, newSphereWC[i], newSphereWC[0]);
+				//MakeVertexToVertexVector(vSec, newSphereWC[i + 1], newSphereWC[i]);
 				vFst[0][0] = -newSphereWC[0].x + newSphereWC[i].x;
 				vFst[1][0] = -newSphereWC[0].y + newSphereWC[i].y;
 				vFst[2][0] = -newSphereWC[0].z + newSphereWC[i].z;
 				vSec[0][0] = -newSphereWC[i].x + newSphereWC[i + 1].x;
 				vSec[1][0] = -newSphereWC[i].y + newSphereWC[i + 1].y;
 				vSec[2][0] = -newSphereWC[i].z + newSphereWC[i + 1].z;
+				//MakeVertexToVertexVector(cameraToPolygon1, newSphereWC[0]);
+				//MakeVertexToVertexVector(cameraToPolygon2, newSphereWC[i]);
+				//MakeVertexToVertexVector(cameraToPolygon3, newSphereWC[i + 1]);
 				cameraToPolygon1[0][0] = newSphereWC[0].x;
 				cameraToPolygon1[1][0] = newSphereWC[0].y;
 				cameraToPolygon1[2][0] = newSphereWC[0].z;
@@ -1395,12 +1304,17 @@ void CMFCApplication3View::OnPaint()
 			}
 			else
 			{
+				//MakeVertexToVertexVector(vFst, newSphereWC[i], newSphereWC[0]);
+				//MakeVertexToVertexVector(vSec, newSphereWC[i - 11], newSphereWC[i]);
 				vFst[0][0] = -newSphereWC[0].x + newSphereWC[i].x;
 				vFst[1][0] = -newSphereWC[0].y + newSphereWC[i].y;
 				vFst[2][0] = -newSphereWC[0].z + newSphereWC[i].z;
 				vSec[0][0] = -newSphereWC[i].x + newSphereWC[i - 11].x;
 				vSec[1][0] = -newSphereWC[i].y + newSphereWC[i - 11].y;
 				vSec[2][0] = -newSphereWC[i].z + newSphereWC[i - 11].z;
+				//MakeVertexToVertexVector(cameraToPolygon1, newSphereWC[0]);
+				//MakeVertexToVertexVector(cameraToPolygon2, newSphereWC[i]);
+				//MakeVertexToVertexVector(cameraToPolygon3, newSphereWC[i - 11]);
 				cameraToPolygon1[0][0] = newSphereWC[0].x;
 				cameraToPolygon1[1][0] = newSphereWC[0].y;
 				cameraToPolygon1[2][0] = newSphereWC[0].z;
@@ -2020,6 +1934,15 @@ void CMFCApplication3View::OnPaint()
 			}
 		}
 
+		////// 변경된 월드좌표 저장
+		MyVertex newTorusWC[144] = {};
+		float tempVertex[4][1] = {};
+		for (int i = 0; i < 144; i++)
+		{
+			newTorusWC[i].x = tor[i].x; newTorusWC[i].y = tor[i].y; newTorusWC[i].z = tor[i].z;
+		}
+		//////
+
 #pragma region 뷰 행렬 변환
 
 		float sample[4][1] = {};
@@ -2064,7 +1987,11 @@ void CMFCApplication3View::OnPaint()
 				if (isItUpper[i]) break;
 				if (i == 143) bDrawBlock = TRUE;
 			}
-			if (bDrawBlock) continue;
+			if (bDrawBlock)
+			{
+				figure.isFront = FALSE;
+				continue;
+			}
 			//////
 		}
 		else
@@ -2088,21 +2015,13 @@ void CMFCApplication3View::OnPaint()
 				if (isItUpper[i]) break;
 				if (i == 143) bDrawBlock = TRUE;
 			}
-			if (bDrawBlock) continue;
+			if (bDrawBlock)
+			{
+				figure.isFront = FALSE;
+				continue;
+			}
 		}
-		
-
-		//////// z가 -1보다 큰 친구들은 화면에서 지우기 -> 카메라 뒤쪽 절두체에서 투영되는 친구들 제거
-		//BOOL insideFrustum = TRUE;
-		//for (int i = 0; i < 144; i++)
-		//{
-		//	if (tor[i].z > -1)
-		//	{
-		//		insideFrustum = FALSE;
-		//		break;
-		//	}
-		//}
-		//if (!insideFrustum) continue;
+		figure.isFront = TRUE;
 
 		////// 카메라 기준 가장 먼 곳의 정점부터 그림 그리기
 		// 뷰 좌표 기준 원점까지의 거리를 순서대로 
@@ -2159,66 +2078,15 @@ void CMFCApplication3View::OnPaint()
 				tor[i].y /= tor[i].z;
 			}
 		}
-
 #pragma endregion
 
-		///////////// 화면 밖으로 모든 점이 나가버리면 안그리게 할 것
-		//float pointOfView[2][1] = {};
-		//bool outOfView[144] = {};
-		//for (int i = 0; i < 144; i++)
-		//{
-		//	pointOfView[0][0] = ToScreenX(width, left, tor[i].x); pointOfView[1][0] = ToScreenY(height, top, tor[i].y);
-		//	if (pointOfView[0][0] < 0 || pointOfView[0][0] > width || pointOfView[1][0] < 0 || pointOfView[1][0] > height)
-		//		outOfView[i] = TRUE;
-		//	else outOfView[i] = FALSE;
-		//}
-		//bool totalOut = FALSE;
-		//for (int i = 0; i < 144; i++)
-		//{
-		//	if (outOfView[i]) totalOut = TRUE;
-		//	else
-		//	{
-		//		totalOut = FALSE;
-		//		break;
-		//	}
-		//}
-		//if (totalOut) continue;
-
-		// 위치가 이동되었으니 월드좌표계의 좌표들도 변했을 것-> 현재 받아둔 좌표를 다 뒤로 돌려서 새로운 월드좌표를 받아야 함
-		MyVertex newTorusWC[144] = {};
-		float tempVertex[4][1] = {};
+		// picking을 위해 미리 스크린 좌표들을 저장
 		for (int i = 0; i < 144; i++)
 		{
-			float* tempPtr;
-			int tempCount = 0;
-			if (projNum == 0)
-			{
-				tempVertex[0][0] = tor[i].x * tor[i].z; tempVertex[1][0] = tor[i].y * tor[i].z; tempVertex[2][0] = tor[i].z; tempVertex[3][0] = 1;
-			}
-			else
-			{
-				tempVertex[0][0] = tor[i].x; tempVertex[1][0] = tor[i].y; tempVertex[2][0] = tor[i].z; tempVertex[3][0] = 1;
-			}
-
-			tempPtr = MatrixMulti(projReverse, tempVertex);
-			tempCount = 0;
-			for (int j = 0; j < 4; j++) // 투영 역행렬 = 카메라 좌표계
-			{
-				tempVertex[j][0] = *(tempPtr + tempCount);
-				tempCount++;
-			}
-
-			tempPtr = MatrixMulti(viewReverse, tempVertex);
-			tempCount = 0;
-			for (int j = 0; j < 4; j++) // 뷰 역행렬 = 월드 좌표계
-			{
-				tempVertex[j][0] = *(tempPtr + tempCount);
-				tempCount++;
-			}
-			// 새로운 월드 좌표계 저장
-			newTorusWC[i].x = tempVertex[0][0]; newTorusWC[i].y = tempVertex[1][0]; newTorusWC[i].z = tempVertex[2][0];
-			figure.torus_justForClick[i].x = tempVertex[0][0]; figure.torus_justForClick[i].y = tempVertex[1][0]; figure.torus_justForClick[i].z = tempVertex[2][0];
+			figure.torus_justForClick[i].x = ToScreenX(width, left, tor[i].x); 
+			figure.torus_justForClick[i].y = ToScreenY(height, top, tor[i].y); 
 		}
+		//////
 
 		CBrush torBrush;
 		CBrush* prevBrush;
@@ -3231,48 +3099,12 @@ BOOL CMFCApplication3View::OnEraseBkgnd(CDC* pDC)
 
 void CMFCApplication3View::OnRButtonUp(UINT nFlags, CPoint point)
 {
-#pragma region 스크린 좌표계의 점을 투영 좌표계로 이동
+#pragma region //스크린 좌표계의 점을 투영 좌표계로 이동
 	float az10[4][1];
 	az10[2][0] = 1;
-	az10[0][0] = (point.x - left - width / 2) / (width / 2);
-	az10[1][0] = (point.y - top - height / 2) * (-1) / (height / 2);
-	az10[3][0] = 1; // 화면을 클릭했을 때 얻어지는 투영면에서의 한 지점
-
-	// 뷰 행렬
-	look[0][0] = lookX; look[1][0] = lookY; look[2][0] = lookZ;
-	float view[4][4] = {};
-	camera[0][0] = cameraX; camera[1][0] = cameraY; camera[2][0] = cameraZ;
-	float* viewPtr = ViewMatrix(camera, look);
-	int viewCount = 0;
-	for (int i = 0; i < 4; i++)
-	{
-		for (int j = 0; j < 4; j++)
-		{
-			view[i][j] = *(viewPtr + viewCount);
-			viewCount++;
-		}
-	}
-	// 투영 행렬
-	float proj[4][4] = {};
-	float* pPtr;
-	if (projNum == 0)
-	{
-		pPtr = ProjectionMatrix(width, height, 90);
-	}
-	else
-	{
-		pPtr = ProjectionMatrixParallel(right, left, bottom, top, nPlane, fPlane);
-	}
-
-	int prjCount = 0;
-	for (int i = 0; i < 4; i++)
-	{
-		for (int j = 0; j < 4; j++)
-		{
-			proj[i][j] = *(pPtr + prjCount);
-			prjCount++;
-		}
-	}
+	az10[0][0] = point.x;
+	az10[1][0] = point.y;
+	az10[3][0] = 1; // 화면을 클릭했을 때 얻어지는 스크린에서의 한 지점
 
 #pragma endregion
 	BOOL oneFigureChecked = FALSE;
@@ -3280,54 +3112,21 @@ void CMFCApplication3View::OnRButtonUp(UINT nFlags, CPoint point)
 	for (auto& figure : v_cubeFigure)
 	{
 		figure.isClicked = FALSE;
+		if (!figure.isFront) continue;
 		if (oneFigureChecked) continue;
 
 		MyVertex cub[8] = {};
 		float vertexSample[4][1] = {};
 		int viewCount = 0;
 		float* viewPtr;
-		// 투영 좌표를 기준으로 해보자.
-		for (int i = 0; i < 8; i++)
-		{
-			vertexSample[0][0] = figure.cube_justForClick[i].x;
-			vertexSample[1][0] = figure.cube_justForClick[i].y;
-			vertexSample[2][0] = figure.cube_justForClick[i].z;
-			vertexSample[3][0] = 1;
-			viewPtr = MatrixMulti(view, vertexSample);
-			viewCount = 0;
-			for (int i = 0; i < 4; i++)
-			{
-				vertexSample[i][0] = *(viewPtr + viewCount);
-				viewCount++;
-			}
-			cub[i].x = vertexSample[0][0];
-			cub[i].y = vertexSample[1][0];
-			cub[i].z = vertexSample[2][0];
-		} // 뷰 좌표로 변환시킴
 
+		// 기존에 미리 저장해둔 스크린 좌표들을 가져옴
 		for (int i = 0; i < 8; i++)
 		{
-			vertexSample[0][0] = cub[i].x;
-			vertexSample[1][0] = cub[i].y;
-			vertexSample[2][0] = cub[i].z;
-			vertexSample[3][0] = 1;
-			viewPtr = MatrixMulti(proj, vertexSample);
-			viewCount = 0;
-			for (int i = 0; i < 4; i++)
-			{
-				vertexSample[i][0] = *(viewPtr + viewCount);
-				viewCount++;
-			}
-			cub[i].x = vertexSample[0][0];
-			cub[i].y = vertexSample[1][0];
-			cub[i].z = vertexSample[2][0];
-			if (projNum == 0)
-			{
-				cub[i].x = vertexSample[0][0] / vertexSample[2][0];
-				cub[i].y = vertexSample[1][0] / vertexSample[2][0];
-				cub[i].z = vertexSample[2][0] / vertexSample[2][0];
-			}
-		} // 투영 좌표로 변환시킴
+			cub[i].x = figure.cube_justForClick[i].x;
+			cub[i].y = figure.cube_justForClick[i].y;
+		}
+		////
 
 		MyVertex p1 = {};
 		MyVertex p2 = {};
@@ -3337,9 +3136,12 @@ void CMFCApplication3View::OnRButtonUp(UINT nFlags, CPoint point)
 
 		/////
 #pragma region 각 메쉬에 대한 좌표와 벡터들
-		p1.x = cub[0].x; p1.y = cub[0].y; p1.z = cub[0].z;
+		/*p1.x = cub[0].x; p1.y = cub[0].y; p1.z = cub[0].z;
 		p2.x = cub[3].x; p2.y = cub[3].y; p2.z = cub[3].z;
-		p3.x = cub[4].x; p3.y = cub[4].y; p3.z = cub[4].z;
+		p3.x = cub[4].x; p3.y = cub[4].y; p3.z = cub[4].z;*/
+		p1.x = cub[0].x; p1.y = cub[0].y; p1.z = 0;
+		p2.x = cub[3].x; p2.y = cub[3].y; p2.z = 0;
+		p3.x = cub[4].x; p3.y = cub[4].y; p3.z = 0;
 
 		planeVector[0][0].x = -p1.x + p2.x; planeVector[0][0].y = -p1.y + p2.y; planeVector[0][0].z = -p1.z + p2.z;
 		planeVector[0][1].x = -p2.x + p3.x; planeVector[0][1].y = -p2.y + p3.y; planeVector[0][1].z = -p2.z + p3.z;
@@ -3347,9 +3149,12 @@ void CMFCApplication3View::OnRButtonUp(UINT nFlags, CPoint point)
 
 		originVector[0][0] = p1; originVector[0][1] = p2; originVector[0][2] = p3;
 		/////
-		p1.x = cub[0].x; p1.y = cub[0].y; p1.z = cub[0].z;
+		/*p1.x = cub[0].x; p1.y = cub[0].y; p1.z = cub[0].z;
 		p2.x = cub[4].x; p2.y = cub[4].y; p2.z = cub[4].z;
-		p3.x = cub[1].x; p3.y = cub[1].y; p3.z = cub[1].z;
+		p3.x = cub[1].x; p3.y = cub[1].y; p3.z = cub[1].z;*/
+		p1.x = cub[0].x; p1.y = cub[0].y; p1.z = 0;
+		p2.x = cub[4].x; p2.y = cub[4].y; p2.z = 0;
+		p3.x = cub[1].x; p3.y = cub[1].y; p3.z = 0;
 
 		planeVector[1][0].x = -p1.x + p2.x; planeVector[1][0].y = -p1.y + p2.y; planeVector[1][0].z = -p1.z + p2.z;
 		planeVector[1][1].x = -p2.x + p3.x; planeVector[1][1].y = -p2.y + p3.y; planeVector[1][1].z = -p2.z + p3.z;
@@ -3357,9 +3162,12 @@ void CMFCApplication3View::OnRButtonUp(UINT nFlags, CPoint point)
 
 		originVector[1][0] = p1; originVector[1][1] = p2; originVector[1][2] = p3;
 		/////
-		p1.x = cub[0].x; p1.y = cub[0].y; p1.z = cub[0].z;
+		/*p1.x = cub[0].x; p1.y = cub[0].y; p1.z = cub[0].z;
 		p2.x = cub[1].x; p2.y = cub[1].y; p2.z = cub[1].z;
-		p3.x = cub[3].x; p3.y = cub[3].y; p3.z = cub[3].z;
+		p3.x = cub[3].x; p3.y = cub[3].y; p3.z = cub[3].z;*/
+		p1.x = cub[0].x; p1.y = cub[0].y; p1.z = 0;
+		p2.x = cub[1].x; p2.y = cub[1].y; p2.z = 0;
+		p3.x = cub[3].x; p3.y = cub[3].y; p3.z = 0;
 
 		planeVector[2][0].x = -p1.x + p2.x; planeVector[2][0].y = -p1.y + p2.y; planeVector[2][0].z = -p1.z + p2.z;
 		planeVector[2][1].x = -p2.x + p3.x; planeVector[2][1].y = -p2.y + p3.y; planeVector[2][1].z = -p2.z + p3.z;
@@ -3367,9 +3175,12 @@ void CMFCApplication3View::OnRButtonUp(UINT nFlags, CPoint point)
 
 		originVector[2][0] = p1; originVector[2][1] = p2; originVector[2][2] = p3;
 		/////
-		p1.x = cub[7].x; p1.y = cub[7].y; p1.z = cub[7].z;
+		/*p1.x = cub[7].x; p1.y = cub[7].y; p1.z = cub[7].z;
 		p2.x = cub[4].x; p2.y = cub[4].y; p2.z = cub[4].z;
-		p3.x = cub[3].x; p3.y = cub[3].y; p3.z = cub[3].z;
+		p3.x = cub[3].x; p3.y = cub[3].y; p3.z = cub[3].z;*/
+		p1.x = cub[7].x; p1.y = cub[7].y; p1.z = 0;
+		p2.x = cub[4].x; p2.y = cub[4].y; p2.z = 0;
+		p3.x = cub[3].x; p3.y = cub[3].y; p3.z = 0;
 
 		planeVector[3][0].x = -p1.x + p2.x; planeVector[3][0].y = -p1.y + p2.y; planeVector[3][0].z = -p1.z + p2.z;
 		planeVector[3][1].x = -p2.x + p3.x; planeVector[3][1].y = -p2.y + p3.y; planeVector[3][1].z = -p2.z + p3.z;
@@ -3377,9 +3188,12 @@ void CMFCApplication3View::OnRButtonUp(UINT nFlags, CPoint point)
 
 		originVector[3][0] = p1; originVector[3][1] = p2; originVector[3][2] = p3;
 		/////
-		p1.x = cub[7].x; p1.y = cub[7].y; p1.z = cub[7].z;
+		/*p1.x = cub[7].x; p1.y = cub[7].y; p1.z = cub[7].z;
 		p2.x = cub[6].x; p2.y = cub[6].y; p2.z = cub[6].z;
-		p3.x = cub[4].x; p3.y = cub[4].y; p3.z = cub[4].z;
+		p3.x = cub[4].x; p3.y = cub[4].y; p3.z = cub[4].z;*/
+		p1.x = cub[7].x; p1.y = cub[7].y; p1.z = 0;
+		p2.x = cub[6].x; p2.y = cub[6].y; p2.z = 0;
+		p3.x = cub[4].x; p3.y = cub[4].y; p3.z = 0;
 
 		planeVector[4][0].x = -p1.x + p2.x; planeVector[4][0].y = -p1.y + p2.y; planeVector[4][0].z = -p1.z + p2.z;
 		planeVector[4][1].x = -p2.x + p3.x; planeVector[4][1].y = -p2.y + p3.y; planeVector[4][1].z = -p2.z + p3.z;
@@ -3387,9 +3201,12 @@ void CMFCApplication3View::OnRButtonUp(UINT nFlags, CPoint point)
 
 		originVector[4][0] = p1; originVector[4][1] = p2; originVector[4][2] = p3;
 		/////
-		p1.x = cub[7].x; p1.y = cub[7].y; p1.z = cub[7].z;
+		/*p1.x = cub[7].x; p1.y = cub[7].y; p1.z = cub[7].z;
 		p2.x = cub[3].x; p2.y = cub[3].y; p2.z = cub[3].z;
-		p3.x = cub[6].x; p3.y = cub[6].y; p3.z = cub[6].z;
+		p3.x = cub[6].x; p3.y = cub[6].y; p3.z = cub[6].z;*/
+		p1.x = cub[7].x; p1.y = cub[7].y; p1.z = 0;
+		p2.x = cub[3].x; p2.y = cub[3].y; p2.z = 0;
+		p3.x = cub[6].x; p3.y = cub[6].y; p3.z = 0;
 
 		planeVector[5][0].x = -p1.x + p2.x; planeVector[5][0].y = -p1.y + p2.y; planeVector[5][0].z = -p1.z + p2.z;
 		planeVector[5][1].x = -p2.x + p3.x; planeVector[5][1].y = -p2.y + p3.y; planeVector[5][1].z = -p2.z + p3.z;
@@ -3397,9 +3214,12 @@ void CMFCApplication3View::OnRButtonUp(UINT nFlags, CPoint point)
 
 		originVector[5][0] = p1; originVector[5][1] = p2; originVector[5][2] = p3;
 		/////
-		p1.x = cub[2].x; p1.y = cub[2].y; p1.z = cub[2].z;
+		/*p1.x = cub[2].x; p1.y = cub[2].y; p1.z = cub[2].z;
 		p2.x = cub[1].x; p2.y = cub[1].y; p2.z = cub[1].z;
-		p3.x = cub[6].x; p3.y = cub[6].y; p3.z = cub[6].z;
+		p3.x = cub[6].x; p3.y = cub[6].y; p3.z = cub[6].z;*/
+		p1.x = cub[2].x; p1.y = cub[2].y; p1.z = 0;
+		p2.x = cub[1].x; p2.y = cub[1].y; p2.z = 0;
+		p3.x = cub[6].x; p3.y = cub[6].y; p3.z = 0;
 
 		planeVector[6][0].x = -p1.x + p2.x; planeVector[6][0].y = -p1.y + p2.y; planeVector[6][0].z = -p1.z + p2.z;
 		planeVector[6][1].x = -p2.x + p3.x; planeVector[6][1].y = -p2.y + p3.y; planeVector[6][1].z = -p2.z + p3.z;
@@ -3407,9 +3227,12 @@ void CMFCApplication3View::OnRButtonUp(UINT nFlags, CPoint point)
 
 		originVector[6][0] = p1; originVector[6][1] = p2; originVector[6][2] = p3;
 		/////
-		p1.x = cub[2].x; p1.y = cub[2].y; p1.z = cub[2].z;
+		/*p1.x = cub[2].x; p1.y = cub[2].y; p1.z = cub[2].z;
 		p2.x = cub[3].x; p2.y = cub[3].y; p2.z = cub[3].z;
-		p3.x = cub[1].x; p3.y = cub[1].y; p3.z = cub[1].z;
+		p3.x = cub[1].x; p3.y = cub[1].y; p3.z = cub[1].z;*/
+		p1.x = cub[2].x; p1.y = cub[2].y; p1.z = 0;
+		p2.x = cub[3].x; p2.y = cub[3].y; p2.z = 0;
+		p3.x = cub[1].x; p3.y = cub[1].y; p3.z = 0;
 
 		planeVector[7][0].x = -p1.x + p2.x; planeVector[7][0].y = -p1.y + p2.y; planeVector[7][0].z = -p1.z + p2.z;
 		planeVector[7][1].x = -p2.x + p3.x; planeVector[7][1].y = -p2.y + p3.y; planeVector[7][1].z = -p2.z + p3.z;
@@ -3417,9 +3240,12 @@ void CMFCApplication3View::OnRButtonUp(UINT nFlags, CPoint point)
 
 		originVector[7][0] = p1; originVector[7][1] = p2; originVector[7][2] = p3;
 		/////
-		p1.x = cub[2].x; p1.y = cub[2].y; p1.z = cub[2].z;
+		/*p1.x = cub[2].x; p1.y = cub[2].y; p1.z = cub[2].z;
 		p2.x = cub[6].x; p2.y = cub[6].y; p2.z = cub[6].z;
-		p3.x = cub[3].x; p3.y = cub[3].y; p3.z = cub[3].z;
+		p3.x = cub[3].x; p3.y = cub[3].y; p3.z = cub[3].z;*/
+		p1.x = cub[2].x; p1.y = cub[2].y; p1.z = 0;
+		p2.x = cub[6].x; p2.y = cub[6].y; p2.z = 0;
+		p3.x = cub[3].x; p3.y = cub[3].y; p3.z = 0;
 
 		planeVector[8][0].x = -p1.x + p2.x; planeVector[8][0].y = -p1.y + p2.y; planeVector[8][0].z = -p1.z + p2.z;
 		planeVector[8][1].x = -p2.x + p3.x; planeVector[8][1].y = -p2.y + p3.y; planeVector[8][1].z = -p2.z + p3.z;
@@ -3427,9 +3253,12 @@ void CMFCApplication3View::OnRButtonUp(UINT nFlags, CPoint point)
 
 		originVector[8][0] = p1; originVector[8][1] = p2; originVector[8][2] = p3;
 		/////
-		p1.x = cub[5].x; p1.y = cub[5].y; p1.z = cub[5].z;
+		/*p1.x = cub[5].x; p1.y = cub[5].y; p1.z = cub[5].z;
 		p2.x = cub[6].x; p2.y = cub[6].y; p2.z = cub[6].z;
-		p3.x = cub[1].x; p3.y = cub[1].y; p3.z = cub[1].z;
+		p3.x = cub[1].x; p3.y = cub[1].y; p3.z = cub[1].z;*/
+		p1.x = cub[5].x; p1.y = cub[5].y; p1.z = 0;
+		p2.x = cub[6].x; p2.y = cub[6].y; p2.z = 0;
+		p3.x = cub[1].x; p3.y = cub[1].y; p3.z = 0;
 
 		planeVector[9][0].x = -p1.x + p2.x; planeVector[9][0].y = -p1.y + p2.y; planeVector[9][0].z = -p1.z + p2.z;
 		planeVector[9][1].x = -p2.x + p3.x; planeVector[9][1].y = -p2.y + p3.y; planeVector[9][1].z = -p2.z + p3.z;
@@ -3437,9 +3266,12 @@ void CMFCApplication3View::OnRButtonUp(UINT nFlags, CPoint point)
 
 		originVector[9][0] = p1; originVector[9][1] = p2; originVector[9][2] = p3;
 		/////
-		p1.x = cub[5].x; p1.y = cub[5].y; p1.z = cub[5].z;
+		/*p1.x = cub[5].x; p1.y = cub[5].y; p1.z = cub[5].z;
 		p2.x = cub[1].x; p2.y = cub[1].y; p2.z = cub[1].z;
-		p3.x = cub[4].x; p3.y = cub[4].y; p3.z = cub[4].z;
+		p3.x = cub[4].x; p3.y = cub[4].y; p3.z = cub[4].z;*/
+		p1.x = cub[5].x; p1.y = cub[5].y; p1.z = 0;
+		p2.x = cub[1].x; p2.y = cub[1].y; p2.z = 0;
+		p3.x = cub[4].x; p3.y = cub[4].y; p3.z = 0;
 
 		planeVector[10][0].x = -p1.x + p2.x; planeVector[10][0].y = -p1.y + p2.y; planeVector[10][0].z = -p1.z + p2.z;
 		planeVector[10][1].x = -p2.x + p3.x; planeVector[10][1].y = -p2.y + p3.y; planeVector[10][1].z = -p2.z + p3.z;
@@ -3447,9 +3279,12 @@ void CMFCApplication3View::OnRButtonUp(UINT nFlags, CPoint point)
 
 		originVector[10][0] = p1; originVector[10][1] = p2; originVector[10][2] = p3;
 		/////
-		p1.x = cub[5].x; p1.y = cub[5].y; p1.z = cub[5].z;
+		/*p1.x = cub[5].x; p1.y = cub[5].y; p1.z = cub[5].z;
 		p2.x = cub[4].x; p2.y = cub[4].y; p2.z = cub[4].z;
-		p3.x = cub[6].x; p3.y = cub[6].y; p3.z = cub[6].z;
+		p3.x = cub[6].x; p3.y = cub[6].y; p3.z = cub[6].z;*/
+		p1.x = cub[5].x; p1.y = cub[5].y; p1.z = 0;
+		p2.x = cub[4].x; p2.y = cub[4].y; p2.z = 0;
+		p3.x = cub[6].x; p3.y = cub[6].y; p3.z = 0;
 
 		planeVector[11][0].x = -p1.x + p2.x; planeVector[11][0].y = -p1.y + p2.y; planeVector[11][0].z = -p1.z + p2.z;
 		planeVector[11][1].x = -p2.x + p3.x; planeVector[11][1].y = -p2.y + p3.y; planeVector[11][1].z = -p2.z + p3.z;
@@ -3491,32 +3326,22 @@ void CMFCApplication3View::OnRButtonUp(UINT nFlags, CPoint point)
 				finalResult[k][0] = result1[0][0];  finalResult[k][1] = result1[1][0]; finalResult[k][2] = result1[2][0];
 			}
 
-			if (finalResult[0][0] == finalResult[1][0] && finalResult[0][0] == finalResult[2][0])
+			if (finalResult[0][2] == 0 || finalResult[1][2] == 0 || finalResult[2][2] == 0)
 			{
-				if (finalResult[0][1] == finalResult[1][1] && finalResult[0][1] == finalResult[2][1])
-				{
-					if (finalResult[0][2] == finalResult[1][2] && finalResult[0][2] == finalResult[2][2])
-					{
-						figure.isClicked = TRUE;
-						oneFigureChecked = TRUE;
-						break;
-					}
-					else
-					{
-						if (i != 11) continue;
-						else figure.isClicked = FALSE;
-					}
-				}
-				else
-				{
-					if (i != 11) continue;
-					else figure.isClicked = FALSE;
-				}
+				figure.isClicked = TRUE;
+				oneFigureChecked = TRUE;
+				break;
+			}
+
+			if (finalResult[0][2] == finalResult[1][2] && finalResult[0][2] == finalResult[2][2])
+			{
+				figure.isClicked = TRUE;
+				oneFigureChecked = TRUE;
+				break;
 			}
 			else
 			{
-				if (i != 11) continue;
-				else figure.isClicked = FALSE;
+				if (i == 11) figure.isClicked = FALSE; 
 			}
 		}
 	}
@@ -3524,54 +3349,18 @@ void CMFCApplication3View::OnRButtonUp(UINT nFlags, CPoint point)
 	for (auto& figure : v_sphereFigure)
 	{
 		figure.isClicked = FALSE;
+		if (!figure.isFront) continue;
 		if (oneFigureChecked) continue;
 
 		MyVertex sph[230] = {};
 		float vertexSample[4][1] = {};
 		int viewCount = 0;
 		float* viewPtr;
-		// 뷰 좌표로 변환시킴
+		
 		for (int i = 0; i < 230; i++)
 		{
-			vertexSample[0][0] = figure.sphere_justForClick[i].x;
-			vertexSample[1][0] = figure.sphere_justForClick[i].y;
-			vertexSample[2][0] = figure.sphere_justForClick[i].z;
-			vertexSample[3][0] = 1;
-			viewPtr = MatrixMulti(view, vertexSample);
-			viewCount = 0;
-			for (int i = 0; i < 4; i++)
-			{
-				vertexSample[i][0] = *(viewPtr + viewCount);
-				viewCount++;
-			}
-			sph[i].x = vertexSample[0][0];
-			sph[i].y = vertexSample[1][0];
-			sph[i].z = vertexSample[2][0];
-		}
-
-		// 투영 좌표로 변환시킴
-		for (int i = 0; i < 230; i++)
-		{
-			vertexSample[0][0] = sph[i].x;
-			vertexSample[1][0] = sph[i].y;
-			vertexSample[2][0] = sph[i].z;
-			vertexSample[3][0] = 1;
-			viewPtr = MatrixMulti(proj, vertexSample);
-			viewCount = 0;
-			for (int i = 0; i < 4; i++)
-			{
-				vertexSample[i][0] = *(viewPtr + viewCount);
-				viewCount++;
-			}
-			sph[i].z = vertexSample[2][0];
-			sph[i].x = vertexSample[0][0];
-			sph[i].y = vertexSample[1][0];
-			if (projNum == 0)
-			{
-				sph[i].z = vertexSample[2][0] / vertexSample[2][0];
-				sph[i].x = vertexSample[0][0] / vertexSample[2][0];
-				sph[i].y = vertexSample[1][0] / vertexSample[2][0];
-			}
+			sph[i].x = figure.sphere_justForClick[i].x;
+			sph[i].y = figure.sphere_justForClick[i].y;
 		}
 
 		MyVertex p1 = {};
@@ -3599,10 +3388,10 @@ void CMFCApplication3View::OnRButtonUp(UINT nFlags, CPoint point)
 				p2.x = sph[i].x; p2.y = sph[i].y;
 				p3.x = sph[i + 1].x; p3.y = sph[i + 1].y;
 			}
-			planeVector3[i][0].x = -p1.x + p2.x; planeVector3[i][0].y = -p1.y + p2.y; planeVector3[i][0].z = -p1.z + p2.z;
-			planeVector3[i][1].x = -p2.x + p3.x; planeVector3[i][1].y = -p2.y + p3.y; planeVector3[i][1].z = -p2.z + p3.z;
-			planeVector3[i][2].x = -p3.x + p1.x; planeVector3[i][2].y = -p3.y + p1.y; planeVector3[i][2].z = -p3.z + p1.z;
-			originVector3[i][0] = p1; originVector3[i][1] = p2; originVector3[i][2] = p3;
+			planeVector3[i - 1][0].x = -p1.x + p2.x; planeVector3[i - 1][0].y = -p1.y + p2.y; planeVector3[i - 1][0].z = -p1.z + p2.z;
+			planeVector3[i - 1][1].x = -p2.x + p3.x; planeVector3[i - 1][1].y = -p2.y + p3.y; planeVector3[i - 1][1].z = -p2.z + p3.z;
+			planeVector3[i - 1][2].x = -p3.x + p1.x; planeVector3[i - 1][2].y = -p3.y + p1.y; planeVector3[i - 1][2].z = -p3.z + p1.z;
+			originVector3[i - 1][0] = p1; originVector3[i - 1][1] = p2; originVector3[i - 1][2] = p3;
 		}
 		for (int i = 217; i < 229; i++)
 		{
@@ -3665,7 +3454,7 @@ void CMFCApplication3View::OnRButtonUp(UINT nFlags, CPoint point)
 				vertexToVertex1[0][0] = planeVector3[i][k].x; vertexToVertex1[1][0] = planeVector3[i][k].y;
 				vertexToPoint1[0][0] = -originVector3[i][k].x + az10[0][0]; vertexToPoint1[1][0] = -originVector3[i][k].y + az10[1][0];
 
-				crsPtr = CrossProduct2X2(vertexToPoint1, vertexToPoint1);
+				crsPtr = CrossProduct2X2(vertexToVertex1, vertexToPoint1);
 				count = 0;
 				for (int j = 0; j < 3; j++)
 				{
@@ -3681,32 +3470,23 @@ void CMFCApplication3View::OnRButtonUp(UINT nFlags, CPoint point)
 				}
 				finalResultTri[k][0] = result1[0][0]; finalResultTri[k][1] = result1[1][0]; finalResultTri[k][2] = result1[2][0];
 			}
-			if (finalResultTri[0][0] == finalResultTri[1][0] && finalResultTri[0][0] == finalResultTri[2][0])
+			
+			if (finalResultTri[0][2] == 0 || finalResultTri[1][2] == 0 || finalResultTri[2][2] == 0)
 			{
-				if (finalResultTri[0][1] == finalResultTri[1][1] && finalResultTri[0][1] == finalResultTri[2][1])
-				{
-					if (finalResultTri[0][2] == finalResultTri[1][2] && finalResultTri[0][2] == finalResultTri[2][2])
-					{
-						figure.isClicked = TRUE;
-						oneFigureChecked = TRUE;
-						break;
-					}
-					else
-					{
-						if (i != 23) continue;
-						else figure.isClicked = FALSE;
-					}
-				}
-				else
-				{
-					if (i != 23) continue;
-					else figure.isClicked = FALSE;
-				}
+				figure.isClicked = TRUE;
+				oneFigureChecked = TRUE;
+				break;
+			}
+
+			if (finalResultTri[0][2] == finalResultTri[1][2] && finalResultTri[0][2] == finalResultTri[2][2])
+			{
+				figure.isClicked = TRUE;
+				oneFigureChecked = TRUE;
+				break;
 			}
 			else
 			{
-				if (i != 23) continue;
-				else figure.isClicked = FALSE;
+				if (i == 23) figure.isClicked = FALSE;
 			}
 		}
 		for (int i = 0; i < 216; i++)
@@ -3732,32 +3512,19 @@ void CMFCApplication3View::OnRButtonUp(UINT nFlags, CPoint point)
 				}
 				finalResultRec[k][0] = result1[0][0]; finalResultRec[k][1] = result1[1][0]; finalResultRec[k][2] = result1[2][0];
 			}
-			if (finalResultRec[0][0] == finalResultRec[1][0] && finalResultRec[1][0] == finalResultRec[2][0] && finalResultRec[2][0] == finalResultRec[3][0])
+			
+			if (finalResultRec[0][2] == 0 || finalResultRec[1][2] == 0 || finalResultRec[2][2] == 0 || finalResultRec[3][2] == 0)
 			{
-				if (finalResultRec[0][1] == finalResultRec[1][1] && finalResultRec[1][1] == finalResultRec[2][1] && finalResultRec[2][1] == finalResultRec[3][1])
-				{
-					if (finalResultRec[0][2] == finalResultRec[1][2] && finalResultRec[1][2] == finalResultRec[2][2] && finalResultRec[2][2] == finalResultRec[3][2])
-					{
-						figure.isClicked = TRUE;
-						oneFigureChecked = TRUE;
-						break;
-					}
-					else
-					{
-						if (i != 215) continue;
-						else figure.isClicked = FALSE;
-					}
-				}
-				else
-				{
-					if (i != 215) continue;
-					else figure.isClicked = FALSE;
-				}
+				figure.isClicked = TRUE;
+				oneFigureChecked = TRUE;
+				break;
 			}
-			else
+
+			if (finalResultRec[0][2] == finalResultRec[1][2] && finalResultRec[1][2] == finalResultRec[2][2] && finalResultRec[2][2] == finalResultRec[3][2])
 			{
-				if (i != 215) continue;
-				else figure.isClicked = FALSE;
+				figure.isClicked = TRUE;
+				oneFigureChecked = TRUE;
+				break;
 			}
 		}
 	}
@@ -3765,56 +3532,19 @@ void CMFCApplication3View::OnRButtonUp(UINT nFlags, CPoint point)
 	for (auto& figure : v_torusFigure)
 	{
 		figure.isClicked = FALSE;
+		if (!figure.isFront) continue;
 		if (oneFigureChecked) continue;
 
 		MyVertex tor[144] = {};
 		float vertexSample[4][1] = {};
 		int viewCount = 0;
 		float* viewPtr;
-		// 투영 좌표를 기준으로 해보자.
-		for (int i = 0; i < 144; i++)
-		{
-			vertexSample[0][0] = figure.torus_justForClick[i].x;
-			vertexSample[1][0] = figure.torus_justForClick[i].y;
-			vertexSample[2][0] = figure.torus_justForClick[i].z;
-			vertexSample[3][0] = 1;
-			viewPtr = MatrixMulti(view, vertexSample);
-			viewCount = 0;
-			for (int i = 0; i < 4; i++)
-			{
-				vertexSample[i][0] = *(viewPtr + viewCount);
-				viewCount++;
-			}
-			tor[i].x = vertexSample[0][0];
-			tor[i].y = vertexSample[1][0];
-			tor[i].z = vertexSample[2][0];
-		} // 뷰 좌표로 변환시킴
-
-		for (int i = 0; i < 144; i++)
-		{
-			vertexSample[0][0] = tor[i].x;
-			vertexSample[1][0] = tor[i].y;
-			vertexSample[2][0] = tor[i].z;
-			vertexSample[3][0] = 1;
-			viewPtr = MatrixMulti(proj, vertexSample);
-			viewCount = 0;
-			for (int i = 0; i < 4; i++)
-			{
-				vertexSample[i][0] = *(viewPtr + viewCount);
-				viewCount++;
-			}
-			tor[i].z = vertexSample[2][0];
-			tor[i].x = vertexSample[0][0];
-			tor[i].y = vertexSample[1][0];
-			if (projNum == 0)
-			{
-				tor[i].z = vertexSample[2][0] / vertexSample[2][0];
-				tor[i].x = vertexSample[0][0] / vertexSample[2][0];
-				tor[i].y = vertexSample[1][0] / vertexSample[2][0];
-			}
-		} // 투영 좌표로 변환시킴
 		
-
+		for (int i = 0; i < 144; i++)
+		{
+			tor[i].x = figure.torus_justForClick[i].x;
+			tor[i].y = figure.torus_justForClick[i].y;
+		}
 
 		MyVertex p1 = {};
 		MyVertex p2 = {};
@@ -3899,32 +3629,19 @@ void CMFCApplication3View::OnRButtonUp(UINT nFlags, CPoint point)
 				}
 				finalResultRec[j][0] = result[0][0]; finalResultRec[j][1] = result[1][0]; finalResultRec[j][2] = result[2][0];
 			}
-			if (finalResultRec[0][0] == finalResultRec[1][0] && finalResultRec[1][0] == finalResultRec[2][0] && finalResultRec[2][0] == finalResultRec[3][0])
+			
+			if (finalResultRec[0][2] == 0 || finalResultRec[1][2] == 0 || finalResultRec[2][2] == 0 || finalResultRec[3][2] == 0)
 			{
-				if (finalResultRec[0][1] == finalResultRec[1][1] && finalResultRec[1][1] == finalResultRec[2][1] && finalResultRec[2][1] == finalResultRec[3][1])
-				{
-					if (finalResultRec[0][2] == finalResultRec[1][2] && finalResultRec[1][2] == finalResultRec[2][2] && finalResultRec[2][2] == finalResultRec[3][2])
-					{
-						figure.isClicked = TRUE;
-						oneFigureChecked = TRUE;
-						break;
-					}
-					else
-					{
-						if (i != 143)continue;
-						else figure.isClicked = FALSE;
-					}
-				}
-				else
-				{
-					if (i != 143)continue;
-					else figure.isClicked = FALSE;
-				}
+				figure.isClicked = TRUE;
+				oneFigureChecked = TRUE;
+				break;
 			}
-			else
+
+			if (finalResultRec[0][2] == finalResultRec[1][2] && finalResultRec[1][2] == finalResultRec[2][2] && finalResultRec[2][2] == finalResultRec[3][2])
 			{
-				if (i != 143)continue;
-				else figure.isClicked = FALSE;
+				figure.isClicked = TRUE;
+				oneFigureChecked = TRUE;
+				break;
 			}
 		}
 	}

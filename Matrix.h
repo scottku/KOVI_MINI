@@ -70,3 +70,6 @@ void DrawTorusMesh(int i, int* RGB_array, CDC* memDC, float width, float height,
 
 
 BOOL isItUpperSide(float NormDirectionVector[3][1], float pointOnPlane[3][1], float point[3][1]);
+
+void MakeVertexToVertexVector(float emptyVector[4][1], MyVertex endVertex, MyVertex startVertex);
+void MakeVertexToVertexVector(float emptyVector[3][1], MyVertex endVertex);

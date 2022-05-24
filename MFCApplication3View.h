@@ -32,6 +32,7 @@ typedef struct TorusInfo
 	MyVertex torusOrigin;
 	MyVertex torusOrigin_moved;
 	bool isClicked = FALSE;
+	bool isFront = TRUE;
 } TorusInfo;
 
 typedef struct SphereInfo
@@ -50,6 +51,7 @@ typedef struct SphereInfo
 	MyVertex sphereOrigin;
 	MyVertex sphereOrigin_moved;
 	bool isClicked = FALSE;
+	bool isFront = TRUE;
 } SphereInfo;
 
 typedef struct CubeInfo
@@ -67,6 +69,7 @@ typedef struct CubeInfo
 	int rotZ = 0;
 	MyVertex cubeOrigin;
 	MyVertex cubeOrigin_moved;
+	bool isFront = TRUE;
 	bool isClicked = FALSE;
 } CubeInfo;
 

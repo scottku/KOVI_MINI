@@ -15,91 +15,106 @@ d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(197): warn
 d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(337): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
 d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(341): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
 d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(414): warning C4244: '인수': 'int'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(1140): warning C4244: '인수': 'int'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(1847): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(1850): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(1851): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(1855): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(1856): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(1858): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(1867): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(1870): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(1871): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(1875): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(1876): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(1878): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(1886): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(1889): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(1890): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(1894): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(1895): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(1897): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(1905): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(1908): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(1909): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(1913): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(1914): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(1916): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(1980): warning C4244: '인수': 'int'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(623): warning C4101: 'originToVertex2' :참조되지 않은 지역 변수입니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(622): warning C4101: 'dotResult3' :참조되지 않은 지역 변수입니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(622): warning C4101: 'dotResult2' :참조되지 않은 지역 변수입니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(623): warning C4101: 'originToVertex3' :참조되지 않은 지역 변수입니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(622): warning C4101: 'dotResultParallel' :참조되지 않은 지역 변수입니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(622): warning C4101: 'dotResult1' :참조되지 않은 지역 변수입니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(628): warning C4101: 'prevBrush' :참조되지 않은 지역 변수입니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(625): warning C4101: 'bPtr' :참조되지 않은 지역 변수입니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(623): warning C4101: 'originToVertex1' :참조되지 않은 지역 변수입니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(622): warning C4101: 'dotProd' :참조되지 않은 지역 변수입니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(626): warning C4101: 'bCount' :참조되지 않은 지역 변수입니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(624): warning C4101: 'rgbRate' :참조되지 않은 지역 변수입니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(2227): warning C4101: 'rgbTemp_2' :참조되지 않은 지역 변수입니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(2224): warning C4101: 'prevBrush' :참조되지 않은 지역 변수입니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(3064): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(3068): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(3260): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(3264): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(3951): warning C4018: '<': signed 또는 unsigned가 일치하지 않습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(3970): warning C4018: '<': signed 또는 unsigned가 일치하지 않습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(3985): warning C4018: '<': signed 또는 unsigned가 일치하지 않습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(4004): warning C4018: '<': signed 또는 unsigned가 일치하지 않습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(4019): warning C4018: '<': signed 또는 unsigned가 일치하지 않습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(4038): warning C4018: '<': signed 또는 unsigned가 일치하지 않습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(4244): warning C4244: '+=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(4245): warning C4244: '+=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(4246): warning C4244: '+=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(4255): warning C4244: '+=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(4256): warning C4244: '+=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(4257): warning C4244: '+=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(4265): warning C4244: '+=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(4266): warning C4244: '+=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(4267): warning C4244: '+=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(4278): warning C4244: '-=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(4279): warning C4244: '-=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(4280): warning C4244: '-=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(4288): warning C4244: '-=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(4289): warning C4244: '-=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(4290): warning C4244: '-=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(4298): warning C4244: '-=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(4299): warning C4244: '-=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(4300): warning C4244: '-=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(4311): warning C4244: '+=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(4312): warning C4244: '+=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(4313): warning C4244: '+=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(4321): warning C4244: '+=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(4322): warning C4244: '+=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(4323): warning C4244: '+=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(4331): warning C4244: '+=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(4332): warning C4244: '+=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(4333): warning C4244: '+=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(4344): warning C4244: '-=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(4345): warning C4244: '-=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(4346): warning C4244: '-=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(4354): warning C4244: '-=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(4355): warning C4244: '-=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(4356): warning C4244: '-=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(4364): warning C4244: '-=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(4365): warning C4244: '-=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(4366): warning C4244: '-=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(568): warning C4244: '인수': 'float'에서 'long'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(568): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(569): warning C4244: '인수': 'float'에서 'long'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(569): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(1092): warning C4244: '인수': 'int'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(1248): warning C4244: '인수': 'float'에서 'long'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(1248): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(1249): warning C4244: '인수': 'float'에서 'long'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(1249): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(1761): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(1764): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(1765): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(1769): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(1770): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(1772): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(1781): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(1784): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(1785): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(1789): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(1790): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(1792): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(1800): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(1803): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(1804): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(1808): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(1809): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(1811): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(1819): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(1822): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(1823): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(1827): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(1828): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(1830): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(1894): warning C4244: '인수': 'int'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(2086): warning C4244: '인수': 'float'에서 'long'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(2086): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(2087): warning C4244: '인수': 'float'에서 'long'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(2087): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(577): warning C4101: 'originToVertex2' :참조되지 않은 지역 변수입니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(576): warning C4101: 'dotResult3' :참조되지 않은 지역 변수입니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(576): warning C4101: 'dotResult2' :참조되지 않은 지역 변수입니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(577): warning C4101: 'originToVertex3' :참조되지 않은 지역 변수입니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(576): warning C4101: 'dotResultParallel' :참조되지 않은 지역 변수입니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(576): warning C4101: 'dotResult1' :참조되지 않은 지역 변수입니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(582): warning C4101: 'prevBrush' :참조되지 않은 지역 변수입니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(579): warning C4101: 'bPtr' :참조되지 않은 지역 변수입니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(577): warning C4101: 'originToVertex1' :참조되지 않은 지역 변수입니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(576): warning C4101: 'dotProd' :참조되지 않은 지역 변수입니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(580): warning C4101: 'bCount' :참조되지 않은 지역 변수입니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(578): warning C4101: 'rgbRate' :참조되지 않은 지역 변수입니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(2095): warning C4101: 'rgbTemp_2' :참조되지 않은 지역 변수입니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(2092): warning C4101: 'prevBrush' :참조되지 않은 지역 변수입니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(2932): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(2936): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(3105): warning C4244: '=': 'LONG'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(3106): warning C4244: '=': 'LONG'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(3121): warning C4101: 'viewPtr' :참조되지 않은 지역 변수입니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(3358): warning C4101: 'viewPtr' :참조되지 않은 지역 변수입니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(3541): warning C4101: 'viewPtr' :참조되지 않은 지역 변수입니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(3668): warning C4018: '<': signed 또는 unsigned가 일치하지 않습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(3687): warning C4018: '<': signed 또는 unsigned가 일치하지 않습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(3702): warning C4018: '<': signed 또는 unsigned가 일치하지 않습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(3721): warning C4018: '<': signed 또는 unsigned가 일치하지 않습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(3736): warning C4018: '<': signed 또는 unsigned가 일치하지 않습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(3755): warning C4018: '<': signed 또는 unsigned가 일치하지 않습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(3961): warning C4244: '+=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(3962): warning C4244: '+=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(3963): warning C4244: '+=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(3972): warning C4244: '+=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(3973): warning C4244: '+=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(3974): warning C4244: '+=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(3982): warning C4244: '+=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(3983): warning C4244: '+=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(3984): warning C4244: '+=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(3995): warning C4244: '-=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(3996): warning C4244: '-=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(3997): warning C4244: '-=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(4005): warning C4244: '-=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(4006): warning C4244: '-=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(4007): warning C4244: '-=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(4015): warning C4244: '-=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(4016): warning C4244: '-=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(4017): warning C4244: '-=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(4028): warning C4244: '+=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(4029): warning C4244: '+=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(4030): warning C4244: '+=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(4038): warning C4244: '+=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(4039): warning C4244: '+=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(4040): warning C4244: '+=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(4048): warning C4244: '+=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(4049): warning C4244: '+=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(4050): warning C4244: '+=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(4061): warning C4244: '-=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(4062): warning C4244: '-=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(4063): warning C4244: '-=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(4071): warning C4244: '-=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(4072): warning C4244: '-=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(4073): warning C4244: '-=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(4081): warning C4244: '-=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(4082): warning C4244: '-=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+d:\vs_project\mfcapplication3\mfcapplication3\mfcapplication3view.cpp(4083): warning C4244: '-=': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
   MFCApplication3.vcxproj -> D:\VS_Project\MFCApplication3\Debug\MFCApplication3.exe
   MFCApplication3.vcxproj -> D:\VS_Project\MFCApplication3\Debug\MFCApplication3.pdb (Partial PDB)

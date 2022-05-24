@@ -145,7 +145,7 @@ float* MatrixTranslate(float a[4][1], float x, float y, float z)
 
 float* MatrixNormalize(float a[4][1])
 {
-	float length = (float)sqrt(pow(a[0][0], 2) + (float)pow(a[1][0], 2) + (float)pow(a[2][0], 2));
+	float length = sqrt((float)pow(a[0][0], 2) + (float)pow(a[1][0], 2) + (float)pow(a[2][0], 2));
 
 	float result[4][1];
 	result[0][0] = a[0][0] / length;
@@ -987,4 +987,18 @@ BOOL isItUpperSide(float NormDirectionVector[3][1], float pointOnPlane[3][1], fl
 
 	if (result >= 0) return TRUE;
 	else return FALSE;
+}
+
+
+void MakeVertexToVertexVector(float emptyVector[4][1], MyVertex endVertex, MyVertex startVertex)
+{
+	emptyVector[0][0] = -startVertex.x + endVertex.x;
+	emptyVector[1][0] = -startVertex.y + endVertex.y;
+	emptyVector[2][0] = -startVertex.z + endVertex.z;
+}
+void MakeVertexToVertexVector(float emptyVector[3][1], MyVertex endVertex)
+{
+	emptyVector[0][0] = endVertex.x;
+	emptyVector[1][0] = endVertex.y;
+	emptyVector[2][0] = endVertex.z;
 }
