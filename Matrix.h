@@ -67,3 +67,6 @@ void DrawSphereMesh(int i, int start, CDC* memDC, float width, float height, flo
 
 void DrawTorusLine(CDC* memDCPtr, float width, float height, float left, float top, MyVertex v1, MyVertex v2, MyVertex v3);
 void DrawTorusMesh(int i, int* RGB_array, CDC* memDC, float width, float height, float left, float top, MyVertex v1, MyVertex v2, MyVertex v3);
+
+
+BOOL isItUpperSide(float NormDirectionVector[3][1], float pointOnPlane[3][1], float point[3][1]);

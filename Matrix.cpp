@@ -977,3 +977,14 @@ void DrawTorusMesh(int i, int* RGB_array, CDC* memDC, float width, float height,
 	memDC->SelectObject(prevBrush);
 	torBrush.DeleteObject();
 }
+
+
+BOOL isItUpperSide(float NormDirectionVector[3][1], float pointOnPlane[3][1], float point[3][1])
+{
+	float result = NormDirectionVector[0][0] * (point[0][0] - pointOnPlane[0][0]) + 
+		NormDirectionVector[1][0] * (point[1][0] - pointOnPlane[1][0]) + 
+		NormDirectionVector[2][0] * (point[2][0] - pointOnPlane[2][0]);
+
+	if (result >= 0) return TRUE;
+	else return FALSE;
+}

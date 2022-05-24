@@ -190,6 +190,119 @@ void CMFCApplication3View::OnPaint()
 	newPen.CreatePen(PS_SOLID, 0.5, RGB(255, 255, 255));
 	CPen* oldPen = memDC.SelectObject(&newPen);
 
+	/////////// 백스페이스 컬링 Test
+	// far 평면의 1사분면의 점
+	float farPoint1[4][1] = { {652.37}, {300}, {-300},{1} };
+	// far 평면의 3사분면의 점
+	float farPoint3[4][1] = { {-652.37}, {-300}, {-300}, {1} };
+	// 근평면의 점들
+	float nearPoint1[4][1] = { {1},{1} ,{-1} ,{1} };
+	float nearPoint2[4][1] = { {-1}, {1}, {-1}, {1} };
+	float nearPoint3[4][1] = { {-1}, {-1}, {-1}, {1} };
+	float nearPoint4[4][1] = { {1}, {-1}, {-1}, {1} };
+	// 해당 점들을 이용해 벡터 생성
+	float shortVector3[4][1], longVector3AND12[4][1], shortVector12[4][1], shortVector9[4][1], longVector9AND6[4][1], shortVector6[4][1];
+	for (int i = 0; i < 3; i++)
+	{
+		shortVector3[i][0] = -nearPoint1[i][0] + nearPoint4[i][0];
+		longVector3AND12[i][0] = -nearPoint1[i][0] + farPoint1[i][0];
+		shortVector12[i][0] = -nearPoint1[i][0] + nearPoint2[i][0];
+		shortVector9[i][0] = -nearPoint3[i][0] + nearPoint2[i][0];
+		longVector9AND6[i][0] = -nearPoint3[i][0] + farPoint3[i][0];
+		shortVector6[i][0] = -nearPoint3[i][0] + nearPoint4[i][0];
+	}
+	shortVector3[3][0] = longVector3AND12[3][0] = shortVector12[3][0] = shortVector9[3][0] = longVector9AND6[3][0] = shortVector6[3][0] = 1;
+	// 평면 6개 중 4개에 대한 법선방향벡터 지정(정면 기준 3시 12시 9시 6시 방향의 면)
+	float normOfFrustum3[3][1] = {};
+	float normOfFrustum12[3][1] = {};
+	float normOfFrustum9[3][1] = {};
+	float normOfFrustum6[3][1] = {};
+
+	#pragma region 3시방향 면 법선방향벡터
+	float* frustumPtr = CrossProduct(longVector3AND12, shortVector3);
+	int frustumCount = 0;
+	for (int i = 0; i < 3; i++)
+	{
+		normOfFrustum3[i][0] = *(frustumPtr + frustumCount);
+		frustumCount++;
+	}
+	frustumPtr = MatrixNormalize(normOfFrustum3);
+	frustumCount = 0;
+	for (int i = 0; i < 3; i++)
+	{
+		normOfFrustum3[i][0] = *(frustumPtr + frustumCount);
+		frustumCount++;
+	}
+	#pragma endregion
+	#pragma region 12시방향 면 법선방향벡터
+	frustumPtr = CrossProduct(shortVector12, longVector3AND12);
+	frustumCount = 0;
+	for (int i = 0; i < 3; i++)
+	{
+		normOfFrustum12[i][0] = *(frustumPtr + frustumCount);
+		frustumCount++;
+	}
+	frustumPtr = MatrixNormalize(normOfFrustum12);
+	frustumCount = 0;
+	for (int i = 0; i < 3; i++)
+	{
+		normOfFrustum12[i][0] = *(frustumPtr + frustumCount);
+		frustumCount++;
+	}
+	#pragma endregion
+	#pragma region 9시방향 면 법선방향벡터
+	frustumPtr = CrossProduct(longVector9AND6, shortVector9);
+	frustumCount = 0;
+	for (int i = 0; i < 3; i++)
+	{
+		normOfFrustum9[i][0] = *(frustumPtr + frustumCount);
+		frustumCount++;
+	}
+	frustumPtr = MatrixNormalize(normOfFrustum9);
+	frustumCount = 0;
+	for (int i = 0; i < 3; i++)
+	{
+		normOfFrustum9[i][0] = *(frustumPtr + frustumCount);
+		frustumCount++;
+	}
+	#pragma endregion
+	#pragma region 6시방향 면 법선방향벡터
+	frustumPtr = CrossProduct(shortVector6, longVector9AND6);
+	frustumCount = 0;
+	for (int i = 0; i < 3; i++)
+	{
+		normOfFrustum6[i][0] = *(frustumPtr + frustumCount);
+		frustumCount++;
+	}
+	frustumPtr = MatrixNormalize(normOfFrustum6);
+	frustumCount = 0;
+	for (int i = 0; i < 3; i++)
+	{
+		normOfFrustum6[i][0] = *(frustumPtr + frustumCount);
+		frustumCount++;
+	}
+	#pragma endregion
+	
+	// 만약 평행 투영이면 다른 법선방향벡터를 사용해야함
+	float normOfParallel3[3][1] = { {-1}, {0}, {0} };
+	float pointOn3AND12[3][1] = { {width / 2}, {height / 2}, {-1} };
+	float normOfParallel12[3][1] = { {0}, {-1}, {0} };
+	float normOfParallel9[3][1] = { {1}, {0}, {0} };
+	float pointOn9AND6[3][1] = { {-width / 2}, {-height / 2}, {-1} };
+	float normOfParallel6[3][1] = { {0},{1},{0} };
+	float pointOnFar[3][1] = { {width / 2}, {height / 2}, {-300} };
+
+
+	// 공통으로 사용하는 앞면의 법선방향벡터
+	float normOfNear[3][1] = { { 0 },{ 0 },{ -1 } };
+	// 공통으로 사용하는 뒷면의 법선방향벡터
+	float normOfFar[3][1] = { { 0 },{ 0 },{ 1 } };
+
+	// 특정 점이 해당 면 위쪽에 있는지 체크하는 함수 제작
+	// isItUpperSide(법선방향벡터, 평면위의 한 점, 공간상의 한 점);
+	// 위쪽이라면 식의 값이 양수가 나옴.
+	///////////
+
 #pragma region 뷰 & 투영행렬 만들기 + 역행렬까지
 	look[0][0] = lookX; look[1][0] = lookY; look[2][0] = lookZ;
 	float view[4][4] = {};
@@ -361,7 +474,56 @@ void CMFCApplication3View::OnPaint()
 			cubCount++;
 		}
 
-		////// z가 -1보다 큰 친구들은 화면에서 지우기 -> 카메라 뒤쪽 절두체에서 투영되는 친구들 제거
+		////// 테스트 : 절두체 컬링
+		if (projNum == 0)
+		{
+			BOOL isItUpper[8] = {};
+			for (int i = 0; i < 8; i++)
+			{
+				float vertexOfCube[3][1] = { { cub[i].x },{ cub[i].y },{ cub[i].z } };
+				BOOL result1 = isItUpperSide(normOfFrustum3, nearPoint1, vertexOfCube);
+				BOOL result2 = isItUpperSide(normOfFrustum12, nearPoint1, vertexOfCube);
+				BOOL result3 = isItUpperSide(normOfFrustum9, nearPoint3, vertexOfCube);
+				BOOL result4 = isItUpperSide(normOfFrustum6, nearPoint3, vertexOfCube);
+				BOOL result5 = isItUpperSide(normOfNear, nearPoint3, vertexOfCube);
+				//BOOL result6 = isItUpperSide(normOfFar, farPoint3, vertexOfCube);
+				if (result1 && result2 && result3 && result4 && result5) isItUpper[i] = TRUE;
+				else isItUpper[i] = FALSE;
+			}
+			BOOL bDrawBlock = FALSE;
+			for (int i = 0; i < 8; i++)
+			{
+				if (isItUpper[i]) break;
+				if (i == 7) bDrawBlock = TRUE;
+			}
+			if (bDrawBlock) continue;
+		}
+		else
+		{
+			BOOL isItUpper[8] = {};
+			for (int i = 0; i < 8; i++)
+			{
+				float vertexOfCube[3][1] = { { cub[i].x },{ cub[i].y },{ cub[i].z } };
+				BOOL result1 = isItUpperSide(normOfParallel3, pointOn3AND12, vertexOfCube);
+				BOOL result2 = isItUpperSide(normOfParallel12, pointOn3AND12, vertexOfCube);
+				BOOL result3 = isItUpperSide(normOfParallel9, pointOn9AND6, vertexOfCube);
+				BOOL result4 = isItUpperSide(normOfParallel6, pointOn9AND6, vertexOfCube);
+				BOOL result5 = isItUpperSide(normOfNear, pointOn3AND12, vertexOfCube);
+				//BOOL result6 = isItUpperSide(normOfFar, pointOnFar, vertexOfCube);
+				if (result1 && result2 && result3 && result4 && result5) isItUpper[i] = TRUE;
+				else isItUpper[i] = FALSE;
+			}
+			BOOL bDrawBlock = FALSE;
+			for (int i = 0; i < 8; i++)
+			{
+				if (isItUpper[i]) break;
+				if (i == 7) bDrawBlock = TRUE;
+			}
+			if (bDrawBlock) continue;
+		}
+		
+
+		/*////// z가 -1보다 큰 친구들은 화면에서 지우기 -> 카메라 뒤쪽 절두체에서 투영되는 친구들 제거
 		BOOL insideFrustum = TRUE;
 		for (int i = 0; i < 8; i++)
 		{
@@ -371,7 +533,7 @@ void CMFCApplication3View::OnPaint()
 				break;
 			}
 		}
-		if (!insideFrustum) continue;
+		if (!insideFrustum) continue;*/
 
 		// sphere 각 점들을 투영 시킴
 		for (int i = 0; i < 8; i++)
@@ -396,7 +558,7 @@ void CMFCApplication3View::OnPaint()
 			}
 		}
 
-		/////////// 화면 밖으로 모든 점이 나가버리면 안그리게 할 것
+		/*/////////// 화면 밖으로 모든 점이 나가버리면 안그리게 할 것
 		float pointOfView[2][1] = {};
 		bool outOfView[8] = {};
 		for (int i = 0; i < 8; i++)
@@ -416,7 +578,7 @@ void CMFCApplication3View::OnPaint()
 				break;
 			}
 		}
-		if (totalOut) continue;
+		if (totalOut) continue;*/
 
 		// 위치가 이동되었으니 월드좌표계의 좌표들도 변했을 것-> 현재 가지고 있는 좌표를 뒤로 돌려서 새로운 월드 좌표를 받아야 함
 		MyVertex newCubeWC[8] = {};
@@ -1037,18 +1199,68 @@ void CMFCApplication3View::OnPaint()
 			sphCount++;
 		}
 
-		////// z가 -1보다 큰 친구들은 화면에서 지우기 -> 카메라 뒤쪽 절두체에서 투영되는 친구들 제거
-		BOOL insideFrustum = TRUE;
-		for (int i = 0; i < 230; i++)
+		////// 테스트 : 절두체 컬링
+		if (projNum == 0)
 		{
-			if (sph[i].z > -1)
+			BOOL isItUpper[230] = {};
+			for (int i = 0; i < 230; i++)
 			{
-				insideFrustum = FALSE;
-				break;
+				float vertexOfCube[3][1] = { { sph[i].x },{ sph[i].y },{ sph[i].z } };
+				BOOL result1 = isItUpperSide(normOfFrustum3, nearPoint1, vertexOfCube);
+				BOOL result2 = isItUpperSide(normOfFrustum12, nearPoint1, vertexOfCube);
+				BOOL result3 = isItUpperSide(normOfFrustum9, nearPoint3, vertexOfCube);
+				BOOL result4 = isItUpperSide(normOfFrustum6, nearPoint3, vertexOfCube);
+				BOOL result5 = isItUpperSide(normOfNear, nearPoint3, vertexOfCube);
+				//BOOL result6 = isItUpperSide(normOfFar, farPoint3, vertexOfCube);
+				if (result1 && result2 && result3 && result4 && result5) isItUpper[i] = TRUE;
+				else isItUpper[i] = FALSE;
 			}
+			BOOL bDrawBlock = FALSE;
+			for (int i = 0; i < 230; i++)
+			{
+				if (isItUpper[i]) break;
+				if (i == 229) bDrawBlock = TRUE;
+			}
+			if (bDrawBlock) continue;
+			//////
 		}
-		if (!insideFrustum) continue;
-		//////////////////////////////////////////////////////
+		else
+		{
+			BOOL isItUpper[230] = {};
+			for (int i = 0; i < 230; i++)
+			{
+				float vertexOfCube[3][1] = { { sph[i].x },{ sph[i].y },{ sph[i].z } };
+				BOOL result1 = isItUpperSide(normOfParallel3, pointOn3AND12, vertexOfCube);
+				BOOL result2 = isItUpperSide(normOfParallel12, pointOn3AND12, vertexOfCube);
+				BOOL result3 = isItUpperSide(normOfParallel9, pointOn9AND6, vertexOfCube);
+				BOOL result4 = isItUpperSide(normOfParallel6, pointOn9AND6, vertexOfCube);
+				BOOL result5 = isItUpperSide(normOfNear, pointOn3AND12, vertexOfCube);
+				//BOOL result6 = isItUpperSide(normOfFar, pointOnFar, vertexOfCube);
+				if (result1 && result2 && result3 && result4 && result5) isItUpper[i] = TRUE;
+				else isItUpper[i] = FALSE;
+			}
+			BOOL bDrawBlock = FALSE;
+			for (int i = 0; i < 230; i++)
+			{
+				if (isItUpper[i]) break;
+				if (i == 229) bDrawBlock = TRUE;
+			}
+			if (bDrawBlock) continue;
+		}
+		
+
+		//////// z가 -1보다 큰 친구들은 화면에서 지우기 -> 카메라 뒤쪽 절두체에서 투영되는 친구들 제거
+		//BOOL insideFrustum = TRUE;
+		//for (int i = 0; i < 230; i++)
+		//{
+		//	if (sph[i].z > -1)
+		//	{
+		//		insideFrustum = FALSE;
+		//		break;
+		//	}
+		//}
+		//if (!insideFrustum) continue;
+		////////////////////////////////////////////////////////
 
 		float deltaArray[230] = {};
 		// sphere 각 점들을 투영 시킴
@@ -1074,28 +1286,28 @@ void CMFCApplication3View::OnPaint()
 			}
 		}
 
-#pragma region 화면 밖으로 모든 점이 나가버리면 안그리게 할 것
-		float pointOfView[2][1] = {};
-		bool outOfView[230] = {};
-		for (int i = 0; i < 230; i++)
-		{
-			pointOfView[0][0] = ToScreenX(width, left, sph[i].x); pointOfView[1][0] = ToScreenY(height, top, sph[i].y);
-			if (pointOfView[0][0] < 0 || pointOfView[0][0] > width || pointOfView[1][0] < 0 || pointOfView[1][0] > height)
-				outOfView[i] = TRUE;
-			else outOfView[i] = FALSE;
-		}
-		bool totalOut = FALSE;
-		for (int i = 0; i < 230; i++)
-		{
-			if (outOfView[i]) totalOut = TRUE;
-			else
-			{
-				totalOut = FALSE;
-				break;
-			}
-		}
-		if (totalOut) continue;
-#pragma endregion 
+		//// 화면 밖으로 모든 점이 나가버리면 안그리게 할 것
+		//float pointOfView[2][1] = {};
+		//bool outOfView[230] = {};
+		//for (int i = 0; i < 230; i++)
+		//{
+		//	pointOfView[0][0] = ToScreenX(width, left, sph[i].x); pointOfView[1][0] = ToScreenY(height, top, sph[i].y);
+		//	if (pointOfView[0][0] < 0 || pointOfView[0][0] > width || pointOfView[1][0] < 0 || pointOfView[1][0] > height)
+		//		outOfView[i] = TRUE;
+		//	else outOfView[i] = FALSE;
+		//}
+		//bool totalOut = FALSE;
+		//for (int i = 0; i < 230; i++)
+		//{
+		//	if (outOfView[i]) totalOut = TRUE;
+		//	else
+		//	{
+		//		totalOut = FALSE;
+		//		break;
+		//	}
+		//}
+		//if (totalOut) continue;
+
 
 		// 위치가 이동되었으니 월드좌표계의 좌표들도 변했을 것-> 현재 받아둔 좌표를 다 뒤로 돌려서 새로운 월드좌표를 받아야 함
 		MyVertex newSphereWC[230] = {};
@@ -1830,17 +2042,67 @@ void CMFCApplication3View::OnPaint()
 		}
 #pragma endregion
 
-		////// z가 -1보다 큰 친구들은 화면에서 지우기 -> 카메라 뒤쪽 절두체에서 투영되는 친구들 제거
-		BOOL insideFrustum = TRUE;
-		for (int i = 0; i < 144; i++)
+		////// 테스트 : 절두체 컬링
+		if (projNum == 0)
 		{
-			if (tor[i].z > -1)
+			BOOL isItUpper[144] = {};
+			for (int i = 0; i < 144; i++)
 			{
-				insideFrustum = FALSE;
-				break;
+				float vertexOfCube[3][1] = { { tor[i].x },{ tor[i].y },{ tor[i].z } };
+				BOOL result1 = isItUpperSide(normOfFrustum3, nearPoint1, vertexOfCube);
+				BOOL result2 = isItUpperSide(normOfFrustum12, nearPoint1, vertexOfCube);
+				BOOL result3 = isItUpperSide(normOfFrustum9, nearPoint3, vertexOfCube);
+				BOOL result4 = isItUpperSide(normOfFrustum6, nearPoint3, vertexOfCube);
+				BOOL result5 = isItUpperSide(normOfNear, nearPoint3, vertexOfCube);
+				//BOOL result6 = isItUpperSide(normOfFar, farPoint3, vertexOfCube);
+				if (result1 && result2 && result3 && result4 && result5) isItUpper[i] = TRUE;
+				else isItUpper[i] = FALSE;
 			}
+			BOOL bDrawBlock = FALSE;
+			for (int i = 0; i < 144; i++)
+			{
+				if (isItUpper[i]) break;
+				if (i == 143) bDrawBlock = TRUE;
+			}
+			if (bDrawBlock) continue;
+			//////
 		}
-		if (!insideFrustum) continue;
+		else
+		{
+			BOOL isItUpper[144] = {};
+			for (int i = 0; i < 144; i++)
+			{
+				float vertexOfCube[3][1] = { { tor[i].x },{ tor[i].y },{ tor[i].z } };
+				BOOL result1 = isItUpperSide(normOfParallel3, pointOn3AND12, vertexOfCube);
+				BOOL result2 = isItUpperSide(normOfParallel12, pointOn3AND12, vertexOfCube);
+				BOOL result3 = isItUpperSide(normOfParallel9, pointOn9AND6, vertexOfCube);
+				BOOL result4 = isItUpperSide(normOfParallel6, pointOn9AND6, vertexOfCube);
+				BOOL result5 = isItUpperSide(normOfNear, pointOn3AND12, vertexOfCube);
+				//BOOL result6 = isItUpperSide(normOfFar, pointOnFar, vertexOfCube);
+				if (result1 && result2 && result3 && result4 && result5) isItUpper[i] = TRUE;
+				else isItUpper[i] = FALSE;
+			}
+			BOOL bDrawBlock = FALSE;
+			for (int i = 0; i < 144; i++)
+			{
+				if (isItUpper[i]) break;
+				if (i == 143) bDrawBlock = TRUE;
+			}
+			if (bDrawBlock) continue;
+		}
+		
+
+		//////// z가 -1보다 큰 친구들은 화면에서 지우기 -> 카메라 뒤쪽 절두체에서 투영되는 친구들 제거
+		//BOOL insideFrustum = TRUE;
+		//for (int i = 0; i < 144; i++)
+		//{
+		//	if (tor[i].z > -1)
+		//	{
+		//		insideFrustum = FALSE;
+		//		break;
+		//	}
+		//}
+		//if (!insideFrustum) continue;
 
 		////// 카메라 기준 가장 먼 곳의 정점부터 그림 그리기
 		// 뷰 좌표 기준 원점까지의 거리를 순서대로 
@@ -1900,27 +2162,27 @@ void CMFCApplication3View::OnPaint()
 
 #pragma endregion
 
-		/////////// 화면 밖으로 모든 점이 나가버리면 안그리게 할 것
-		float pointOfView[2][1] = {};
-		bool outOfView[144] = {};
-		for (int i = 0; i < 144; i++)
-		{
-			pointOfView[0][0] = ToScreenX(width, left, tor[i].x); pointOfView[1][0] = ToScreenY(height, top, tor[i].y);
-			if (pointOfView[0][0] < 0 || pointOfView[0][0] > width || pointOfView[1][0] < 0 || pointOfView[1][0] > height)
-				outOfView[i] = TRUE;
-			else outOfView[i] = FALSE;
-		}
-		bool totalOut = FALSE;
-		for (int i = 0; i < 144; i++)
-		{
-			if (outOfView[i]) totalOut = TRUE;
-			else
-			{
-				totalOut = FALSE;
-				break;
-			}
-		}
-		if (totalOut) continue;
+		///////////// 화면 밖으로 모든 점이 나가버리면 안그리게 할 것
+		//float pointOfView[2][1] = {};
+		//bool outOfView[144] = {};
+		//for (int i = 0; i < 144; i++)
+		//{
+		//	pointOfView[0][0] = ToScreenX(width, left, tor[i].x); pointOfView[1][0] = ToScreenY(height, top, tor[i].y);
+		//	if (pointOfView[0][0] < 0 || pointOfView[0][0] > width || pointOfView[1][0] < 0 || pointOfView[1][0] > height)
+		//		outOfView[i] = TRUE;
+		//	else outOfView[i] = FALSE;
+		//}
+		//bool totalOut = FALSE;
+		//for (int i = 0; i < 144; i++)
+		//{
+		//	if (outOfView[i]) totalOut = TRUE;
+		//	else
+		//	{
+		//		totalOut = FALSE;
+		//		break;
+		//	}
+		//}
+		//if (totalOut) continue;
 
 		// 위치가 이동되었으니 월드좌표계의 좌표들도 변했을 것-> 현재 받아둔 좌표를 다 뒤로 돌려서 새로운 월드좌표를 받아야 함
 		MyVertex newTorusWC[144] = {};
@@ -3829,10 +4091,11 @@ BOOL CMFCApplication3View::PreTranslateMessage(MSG* pMsg)
 		float sampleVectorZ[4][1] = {};
 		float sampleVectorY[4][1] = {};
 		float sampleVectorX[4][1] = {};
+		float upVector[3][1] = { {0}, {1}, {0} };
 		float* newAxisPtr;
 		if (pMsg->wParam == 'W')
 		{
-			if (rotateXCount < 120)
+			if (rotateXCount < 6)
 			{
 				newAxisPtr = vectorRotation(camAxisZ, camAxisX, -15);
 				camCount = 0;
@@ -3841,27 +4104,27 @@ BOOL CMFCApplication3View::PreTranslateMessage(MSG* pMsg)
 					camAxisZ[i][0] = *(newAxisPtr + camCount);
 					camCount++;
 				}
-				for (int i = 0; i < 3; i++)
-				{
+				/*for (int i = 0; i < 3; i++)
+					{
 					sampleVectorX[i][0] = camAxisX[i][0];
 					sampleVectorZ[i][0] = camAxisZ[i][0];
-				}
-				sampleVectorX[3][0] = 1; sampleVectorZ[3][0] = 1;
+					}
+					sampleVectorX[3][0] = 1; sampleVectorZ[3][0] = 1;
 
-				newAxisPtr = CrossProduct(sampleVectorZ, sampleVectorX);
-				camCount = 0;
-				for (int i = 0; i < 3; i++)
-				{
+					newAxisPtr = CrossProduct(sampleVectorZ, sampleVectorX);
+					camCount = 0;
+					for (int i = 0; i < 3; i++)
+					{
 					camAxisY[i][0] = *(newAxisPtr + camCount);
 					camCount++;
-				}
+					}*/
 				lookX = camAxisZ[0][0]; lookY = camAxisZ[1][0]; lookZ = camAxisZ[2][0];
 				rotateXCount++;
 			}
 		}
 		if (pMsg->wParam == 'S')
 		{
-			if (rotateXCount > -120)
+			if (rotateXCount > -6)
 			{
 				newAxisPtr = vectorRotation(camAxisZ, camAxisX, 15);
 				camCount = 0;
@@ -3873,6 +4136,7 @@ BOOL CMFCApplication3View::PreTranslateMessage(MSG* pMsg)
 				lookX = camAxisZ[0][0]; lookY = camAxisZ[1][0]; lookZ = camAxisZ[2][0];
 				rotateXCount--;
 			}
+
 		}
 		if (pMsg->wParam == 'A')
 		{

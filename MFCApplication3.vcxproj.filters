@@ -74,6 +74,9 @@
     <ClCompile Include="View_구그리는코드쪽만일단최적화.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="View_절두체 컬링 전(최종ver).cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="MFCApplication3.rc">
