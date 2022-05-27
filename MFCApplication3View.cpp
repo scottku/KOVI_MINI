@@ -1,9 +1,9 @@
-// MFCApplication3View.cpp : CMFCApplication3View Å¬·¡½ºÀÇ ±¸Çö
+ï»¿// MFCApplication3View.cpp : CMFCApplication3View í´ë˜ìŠ¤ì˜ êµ¬í˜„
 //
 
 #include "stdafx.h"
-// SHARED_HANDLERS´Â ¹Ì¸® º¸±â, Ãà¼ÒÆÇ ±×¸² ¹× °Ë»ö ÇÊÅÍ Ã³¸®±â¸¦ ±¸ÇöÇÏ´Â ATL ÇÁ·ÎÁ§Æ®¿¡¼­ Á¤ÀÇÇÒ ¼ö ÀÖÀ¸¸ç
-// ÇØ´ç ÇÁ·ÎÁ§Æ®¿Í ¹®¼­ ÄÚµå¸¦ °øÀ¯ÇÏµµ·Ï ÇØ Áİ´Ï´Ù.
+// SHARED_HANDLERSëŠ” ë¯¸ë¦¬ ë³´ê¸°, ì¶•ì†ŒíŒ ê·¸ë¦¼ ë° ê²€ìƒ‰ í•„í„° ì²˜ë¦¬ê¸°ë¥¼ êµ¬í˜„í•˜ëŠ” ATL í”„ë¡œì íŠ¸ì—ì„œ ì •ì˜í•  ìˆ˜ ìˆìœ¼ë©°
+// í•´ë‹¹ í”„ë¡œì íŠ¸ì™€ ë¬¸ì„œ ì½”ë“œë¥¼ ê³µìœ í•˜ë„ë¡ í•´ ì¤ë‹ˆë‹¤.
 #ifndef SHARED_HANDLERS
 #include "MFCApplication3.h"
 #endif
@@ -16,7 +16,7 @@
 #include <cmath>
 #include <math.h>
 
-// ¸¸µç ÆÄÀÏµé
+// ë§Œë“  íŒŒì¼ë“¤
 #include "Matrix.h"
 //////////////
 
@@ -34,7 +34,7 @@ extern int frameNum;
 IMPLEMENT_DYNCREATE(CMFCApplication3View, CView)
 
 BEGIN_MESSAGE_MAP(CMFCApplication3View, CView)
-	// Ç¥ÁØ ÀÎ¼â ¸í·ÉÀÔ´Ï´Ù.
+	// í‘œì¤€ ì¸ì‡„ ëª…ë ¹ì…ë‹ˆë‹¤.
 	ON_COMMAND(ID_FILE_PRINT, &CView::OnFilePrint)
 	ON_COMMAND(ID_FILE_PRINT_DIRECT, &CView::OnFilePrint)
 	ON_COMMAND(ID_FILE_PRINT_PREVIEW, &CView::OnFilePrintPreview)
@@ -44,11 +44,11 @@ BEGIN_MESSAGE_MAP(CMFCApplication3View, CView)
 	ON_WM_RBUTTONUP()
 END_MESSAGE_MAP()
 
-// CMFCApplication3View »ı¼º/¼Ò¸ê
+// CMFCApplication3View ìƒì„±/ì†Œë©¸
 
 CMFCApplication3View::CMFCApplication3View()
 {
-	// TODO: ¿©±â¿¡ »ı¼º ÄÚµå¸¦ Ãß°¡ÇÕ´Ï´Ù.
+	// TODO: ì—¬ê¸°ì— ìƒì„± ì½”ë“œë¥¼ ì¶”ê°€í•©ë‹ˆë‹¤.
 	v_torusFigure = {};
 	cameraX = 0;
 	cameraY = 0;
@@ -57,9 +57,11 @@ CMFCApplication3View::CMFCApplication3View()
 	cameraRotateY = 5;
 	rotateXCount = 0;
 	rotateYCount = 0;
-	lookX = -cos(62 * M_PI / 180);
+	//lookX = -cos(62 * M_PI / 180);
+	//lookZ = -sin(62 * M_PI / 180);
+	lookX = 0;
 	lookY = 0;
-	lookZ = -sin(62 * M_PI / 180);
+	lookZ = -1;
 	moveDirX.x = 0;
 	moveDirX.y = 0;
 	width = 0;
@@ -77,24 +79,32 @@ CMFCApplication3View::CMFCApplication3View()
 	look[0][0] = lookX;
 	look[1][0] = lookY;
 	look[2][0] = lookZ;
-	fPlane = 300;
+	fPlane = 326.5;
 	nPlane = 1;
+	camAxisX[0][0] = -1; camAxisX[1][0] = 0; camAxisX[2][0] = 0;
+	camAxisY[0][0] = 0; camAxisY[1][0] = 1; camAxisY[2][0] = 0;
+	camAxisZ[0][0] = lookX; camAxisZ[1][0] = lookY; camAxisZ[2][0] = lookZ;
 }
 
 CMFCApplication3View::~CMFCApplication3View()
 {
-
+	v_cubeFigure.clear();
+	v_sphereFigure.clear();
+	v_torusFigure.clear();
+	vector<CubeInfo>().swap(v_cubeFigure);
+	vector<SphereInfo>().swap(v_sphereFigure);
+	vector<TorusInfo>().swap(v_torusFigure);
 }
 
 BOOL CMFCApplication3View::PreCreateWindow(CREATESTRUCT& cs)
 {
-	// TODO: CREATESTRUCT cs¸¦ ¼öÁ¤ÇÏ¿© ¿©±â¿¡¼­
-	//  Window Å¬·¡½º ¶Ç´Â ½ºÅ¸ÀÏÀ» ¼öÁ¤ÇÕ´Ï´Ù.
+	// TODO: CREATESTRUCT csë¥¼ ìˆ˜ì •í•˜ì—¬ ì—¬ê¸°ì—ì„œ
+	//  Window í´ë˜ìŠ¤ ë˜ëŠ” ìŠ¤íƒ€ì¼ì„ ìˆ˜ì •í•©ë‹ˆë‹¤.
 
 	return CView::PreCreateWindow(cs);
 }
 
-// CMFCApplication3View ±×¸®±â
+// CMFCApplication3View ê·¸ë¦¬ê¸°
 
 void CMFCApplication3View::OnDraw(CDC* /*pDC*/)
 {
@@ -103,30 +113,31 @@ void CMFCApplication3View::OnDraw(CDC* /*pDC*/)
 	if (!pDoc)
 		return;
 
-	// TODO: ¿©±â¿¡ ¿ø½Ã µ¥ÀÌÅÍ¿¡ ´ëÇÑ ±×¸®±â ÄÚµå¸¦ Ãß°¡ÇÕ´Ï´Ù.
+	// TODO: ì—¬ê¸°ì— ì›ì‹œ ë°ì´í„°ì— ëŒ€í•œ ê·¸ë¦¬ê¸° ì½”ë“œë¥¼ ì¶”ê°€í•©ë‹ˆë‹¤.
 }
 
 
-// CMFCApplication3View ÀÎ¼â
+// CMFCApplication3View ì¸ì‡„
 
 BOOL CMFCApplication3View::OnPreparePrinting(CPrintInfo* pInfo)
 {
-	// ±âº»ÀûÀÎ ÁØºñ
+	// ê¸°ë³¸ì ì¸ ì¤€ë¹„
+	
 	return DoPreparePrinting(pInfo);
 }
 
 void CMFCApplication3View::OnBeginPrinting(CDC* /*pDC*/, CPrintInfo* /*pInfo*/)
 {
-	// TODO: ÀÎ¼âÇÏ±â Àü¿¡ Ãß°¡ ÃÊ±âÈ­ ÀÛ¾÷À» Ãß°¡ÇÕ´Ï´Ù.
+	// TODO: ì¸ì‡„í•˜ê¸° ì „ì— ì¶”ê°€ ì´ˆê¸°í™” ì‘ì—…ì„ ì¶”ê°€í•©ë‹ˆë‹¤.
 }
 
 void CMFCApplication3View::OnEndPrinting(CDC* /*pDC*/, CPrintInfo* /*pInfo*/)
 {
-	// TODO: ÀÎ¼â ÈÄ Á¤¸® ÀÛ¾÷À» Ãß°¡ÇÕ´Ï´Ù.
+	// TODO: ì¸ì‡„ í›„ ì •ë¦¬ ì‘ì—…ì„ ì¶”ê°€í•©ë‹ˆë‹¤.
 }
 
 
-// CMFCApplication3View Áø´Ü
+// CMFCApplication3View ì§„ë‹¨
 
 #ifdef _DEBUG
 void CMFCApplication3View::AssertValid() const
@@ -139,7 +150,7 @@ void CMFCApplication3View::Dump(CDumpContext& dc) const
 	CView::Dump(dc);
 }
 
-CMFCApplication3Doc* CMFCApplication3View::GetDocument() const // µğ¹ö±×µÇÁö ¾ÊÀº ¹öÀüÀº ÀÎ¶óÀÎÀ¸·Î ÁöÁ¤µË´Ï´Ù.
+CMFCApplication3Doc* CMFCApplication3View::GetDocument() const // ë””ë²„ê·¸ë˜ì§€ ì•Šì€ ë²„ì „ì€ ì¸ë¼ì¸ìœ¼ë¡œ ì§€ì •ë©ë‹ˆë‹¤.
 {
 	ASSERT(m_pDocument->IsKindOf(RUNTIME_CLASS(CMFCApplication3Doc)));
 	return (CMFCApplication3Doc*)m_pDocument;
@@ -147,7 +158,7 @@ CMFCApplication3Doc* CMFCApplication3View::GetDocument() const // µğ¹ö±×µÇÁö ¾ÊÀ
 #endif //_DEBUG
 
 
-// CMFCApplication3View ¸Ş½ÃÁö Ã³¸®±â
+// CMFCApplication3View ë©”ì‹œì§€ ì²˜ë¦¬ê¸°
 void CMFCApplication3View::OnPaint()
 {
 	if (figureNum == -1)
@@ -159,7 +170,7 @@ void CMFCApplication3View::OnPaint()
 		return;
 	}
 
-	// ±×¸®±â ÁØºñ
+	// ê·¸ë¦¬ê¸° ì¤€ë¹„
 	CPaintDC cdc(this);
 	CRect rect;
 	GetClientRect(&rect);
@@ -179,7 +190,7 @@ void CMFCApplication3View::OnPaint()
 	myBitmap.CreateCompatibleBitmap(&cdc, rect.Width(), rect.Height());
 	pOldBitmap = memDC.SelectObject(&myBitmap);
 
-	// ¸Ş¸ğ¸® DC¿¡ ±×¸®±â
+	// ë©”ëª¨ë¦¬ DCì— ê·¸ë¦¬ê¸°
 	CBrush bgBrush(RGB(0, 0, 255));
 	CBrush* pOldBrush = memDC.SelectObject(&bgBrush);
 	memDC.PatBlt(0, 0, rect.Width(), rect.Height(), /*WHITENESS*/ PATCOPY);
@@ -190,17 +201,17 @@ void CMFCApplication3View::OnPaint()
 	newPen.CreatePen(PS_SOLID, 0.5, RGB(255, 255, 255));
 	CPen* oldPen = memDC.SelectObject(&newPen);
 
-	/////////// ÀıµÎÃ¼ ÄÃ¸µ Test
-	// far Æò¸éÀÇ 1»çºĞ¸éÀÇ Á¡
-	float farPoint1[4][1] = { {652.37}, {300}, {-300},{1} };
-	// far Æò¸éÀÇ 3»çºĞ¸éÀÇ Á¡
-	float farPoint3[4][1] = { {-652.37}, {-300}, {-300}, {1} };
-	// ±ÙÆò¸éÀÇ Á¡µé
-	float nearPoint1[4][1] = { {1},{1} ,{-1} ,{1} };
-	float nearPoint2[4][1] = { {-1}, {1}, {-1}, {1} };
-	float nearPoint3[4][1] = { {-1}, {-1}, {-1}, {1} };
-	float nearPoint4[4][1] = { {1}, {-1}, {-1}, {1} };
-	// ÇØ´ç Á¡µéÀ» ÀÌ¿ëÇØ º¤ÅÍ »ı¼º
+	/////////// ì ˆë‘ì²´ ì»¬ë§ ì¤€ë¹„
+	// far í‰ë©´ì˜ 1ì‚¬ë¶„ë©´ì˜ ì 
+	float farPoint1[4][1] = { { fPlane * (width / height) },{ fPlane },{ -fPlane },{ 1 } };
+	// far í‰ë©´ì˜ 3ì‚¬ë¶„ë©´ì˜ ì 
+	float farPoint3[4][1] = { { -fPlane * (width / height) },{ -fPlane },{ -fPlane },{ 1 } };
+	// ê·¼í‰ë©´ì˜ ì ë“¤
+	float nearPoint1[4][1] = { { 1 },{ 1 } ,{ -1 } ,{ 1 } };
+	float nearPoint2[4][1] = { { -1 },{ 1 },{ -1 },{ 1 } };
+	float nearPoint3[4][1] = { { -1 },{ -1 },{ -1 },{ 1 } };
+	float nearPoint4[4][1] = { { 1 },{ -1 },{ -1 },{ 1 } };
+	// í•´ë‹¹ ì ë“¤ì„ ì´ìš©í•´ ë²¡í„° ìƒì„±
 	float shortVector3[4][1], longVector3AND12[4][1], shortVector12[4][1], shortVector9[4][1], longVector9AND6[4][1], shortVector6[4][1];
 	for (int i = 0; i < 3; i++)
 	{
@@ -212,13 +223,13 @@ void CMFCApplication3View::OnPaint()
 		shortVector6[i][0] = -nearPoint3[i][0] + nearPoint4[i][0];
 	}
 	shortVector3[3][0] = longVector3AND12[3][0] = shortVector12[3][0] = shortVector9[3][0] = longVector9AND6[3][0] = shortVector6[3][0] = 1;
-	// Æò¸é 6°³ Áß 4°³¿¡ ´ëÇÑ ¹ı¼±¹æÇâº¤ÅÍ ÁöÁ¤(Á¤¸é ±âÁØ 3½Ã 12½Ã 9½Ã 6½Ã ¹æÇâÀÇ ¸é)
+	// í‰ë©´ 6ê°œ ì¤‘ 4ê°œì— ëŒ€í•œ ë²•ì„ ë°©í–¥ë²¡í„° ì§€ì •(ì •ë©´ ê¸°ì¤€ 3ì‹œ 12ì‹œ 9ì‹œ 6ì‹œ ë°©í–¥ì˜ ë©´)
 	float normOfFrustum3[3][1] = {};
 	float normOfFrustum12[3][1] = {};
 	float normOfFrustum9[3][1] = {};
 	float normOfFrustum6[3][1] = {};
 
-	#pragma region 3½Ã¹æÇâ ¸é ¹ı¼±¹æÇâº¤ÅÍ
+#pragma region 3ì‹œë°©í–¥ ë©´ ë²•ì„ ë°©í–¥ë²¡í„°
 	float* frustumPtr = CrossProduct(longVector3AND12, shortVector3);
 	int frustumCount = 0;
 	for (int i = 0; i < 3; i++)
@@ -233,8 +244,8 @@ void CMFCApplication3View::OnPaint()
 		normOfFrustum3[i][0] = *(frustumPtr + frustumCount);
 		frustumCount++;
 	}
-	#pragma endregion
-	#pragma region 12½Ã¹æÇâ ¸é ¹ı¼±¹æÇâº¤ÅÍ
+#pragma endregion
+#pragma region 12ì‹œë°©í–¥ ë©´ ë²•ì„ ë°©í–¥ë²¡í„°
 	frustumPtr = CrossProduct(shortVector12, longVector3AND12);
 	frustumCount = 0;
 	for (int i = 0; i < 3; i++)
@@ -249,8 +260,8 @@ void CMFCApplication3View::OnPaint()
 		normOfFrustum12[i][0] = *(frustumPtr + frustumCount);
 		frustumCount++;
 	}
-	#pragma endregion
-	#pragma region 9½Ã¹æÇâ ¸é ¹ı¼±¹æÇâº¤ÅÍ
+#pragma endregion
+#pragma region 9ì‹œë°©í–¥ ë©´ ë²•ì„ ë°©í–¥ë²¡í„°
 	frustumPtr = CrossProduct(longVector9AND6, shortVector9);
 	frustumCount = 0;
 	for (int i = 0; i < 3; i++)
@@ -265,8 +276,8 @@ void CMFCApplication3View::OnPaint()
 		normOfFrustum9[i][0] = *(frustumPtr + frustumCount);
 		frustumCount++;
 	}
-	#pragma endregion
-	#pragma region 6½Ã¹æÇâ ¸é ¹ı¼±¹æÇâº¤ÅÍ
+#pragma endregion
+#pragma region 6ì‹œë°©í–¥ ë©´ ë²•ì„ ë°©í–¥ë²¡í„°
 	frustumPtr = CrossProduct(shortVector6, longVector9AND6);
 	frustumCount = 0;
 	for (int i = 0; i < 3; i++)
@@ -281,29 +292,25 @@ void CMFCApplication3View::OnPaint()
 		normOfFrustum6[i][0] = *(frustumPtr + frustumCount);
 		frustumCount++;
 	}
-	#pragma endregion
-	
-	// ¸¸¾à ÆòÇà Åõ¿µÀÌ¸é ´Ù¸¥ ¹ı¼±¹æÇâº¤ÅÍ¸¦ »ç¿ëÇØ¾ßÇÔ
-	float normOfParallel3[3][1] = { {-1}, {0}, {0} };
-	float pointOn3AND12[3][1] = { {width / 2}, {height / 2}, {-1} };
-	float normOfParallel12[3][1] = { {0}, {-1}, {0} };
-	float normOfParallel9[3][1] = { {1}, {0}, {0} };
-	float pointOn9AND6[3][1] = { {-width / 2}, {-height / 2}, {-1} };
-	float normOfParallel6[3][1] = { {0},{1},{0} };
-	float pointOnFar[3][1] = { {width / 2}, {height / 2}, {-300} };
+#pragma endregion
+
+	// ë§Œì•½ í‰í–‰ íˆ¬ì˜ì´ë©´ ë‹¤ë¥¸ ë²•ì„ ë°©í–¥ë²¡í„°ë¥¼ ì‚¬ìš©í•´ì•¼í•¨
+	float normOfParallel3[3][1] = { { -1 },{ 0 },{ 0 } };
+	float pointOn3AND12[3][1] = { { width / 2 },{ height / 2 },{ -1 } };
+	float normOfParallel12[3][1] = { { 0 },{ -1 },{ 0 } };
+	float normOfParallel9[3][1] = { { 1 },{ 0 },{ 0 } };
+	float pointOn9AND6[3][1] = { { -width / 2 },{ -height / 2 },{ -1 } };
+	float normOfParallel6[3][1] = { { 0 },{ 1 },{ 0 } };
+	float pointOnFar[3][1] = { { width / 2 },{ height / 2 },{ -300 } };
 
 
-	// °øÅëÀ¸·Î »ç¿ëÇÏ´Â ¾Õ¸éÀÇ ¹ı¼±¹æÇâº¤ÅÍ
+	// ê³µí†µìœ¼ë¡œ ì‚¬ìš©í•˜ëŠ” ì•ë©´ì˜ ë²•ì„ ë°©í–¥ë²¡í„°
 	float normOfNear[3][1] = { { 0 },{ 0 },{ -1 } };
-	// °øÅëÀ¸·Î »ç¿ëÇÏ´Â µŞ¸éÀÇ ¹ı¼±¹æÇâº¤ÅÍ
+	// ê³µí†µìœ¼ë¡œ ì‚¬ìš©í•˜ëŠ” ë’·ë©´ì˜ ë²•ì„ ë°©í–¥ë²¡í„°
 	float normOfFar[3][1] = { { 0 },{ 0 },{ 1 } };
-
-	// Æ¯Á¤ Á¡ÀÌ ÇØ´ç ¸é À§ÂÊ¿¡ ÀÖ´ÂÁö Ã¼Å©ÇÏ´Â ÇÔ¼ö Á¦ÀÛ
-	// isItUpperSide(¹ı¼±¹æÇâº¤ÅÍ, Æò¸éÀ§ÀÇ ÇÑ Á¡, °ø°£»óÀÇ ÇÑ Á¡);
-	// À§ÂÊÀÌ¶ó¸é ½ÄÀÇ °ªÀÌ ¾ç¼ö°¡ ³ª¿È.
 	///////////
 
-#pragma region ºä & Åõ¿µÇà·Ä ¸¸µé±â + ¿ªÇà·Ä±îÁö
+#pragma region ë·° & íˆ¬ì˜í–‰ë ¬ ë§Œë“¤ê¸° + ì—­í–‰ë ¬ê¹Œì§€
 	look[0][0] = lookX; look[1][0] = lookY; look[2][0] = lookZ;
 	float view[4][4] = {};
 	camera[0][0] = cameraX; camera[1][0] = cameraY; camera[2][0] = cameraZ;
@@ -317,7 +324,7 @@ void CMFCApplication3View::OnPaint()
 			viewCount++;
 		}
 	}
-	// ºä ¿ªÇà·Ä
+	// ë·° ì—­í–‰ë ¬
 	float viewReverse[4][4] = {};
 	viewPtr = MatrixReverse(view);
 	viewCount = 0;
@@ -329,7 +336,7 @@ void CMFCApplication3View::OnPaint()
 			viewCount++;
 		}
 	}
-	// Åõ¿µ Çà·Ä
+	// íˆ¬ì˜ í–‰ë ¬
 	float proj[4][4] = {};
 	float* pPtr;
 	if (projNum == 0)
@@ -349,7 +356,7 @@ void CMFCApplication3View::OnPaint()
 			prjCount++;
 		}
 	}
-	// Åõ¿µ ¿ªÇà·Ä
+	// íˆ¬ì˜ ì—­í–‰ë ¬
 	float projReverse[4][4] = {};
 	pPtr = MatrixReverse(proj);
 	prjCount = 0;
@@ -361,7 +368,7 @@ void CMFCApplication3View::OnPaint()
 			prjCount++;
 		}
 	}
-	// ºû ¹æÇâ¿¡ ´ëÇÑ ¹æÇâº¤ÅÍ »ı¼º
+	// ë¹› ë°©í–¥ì— ëŒ€í•œ ë°©í–¥ë²¡í„° ìƒì„±
 	float lightDirection41[4][1] = { { lightDirX },{ lightDirY },{ lightDirZ },{ 1 } };
 	float* lPtr = MatrixNormalize(lightDirection41);
 	float lightDirection[3][1] = {};
@@ -383,9 +390,9 @@ void CMFCApplication3View::OnPaint()
 			cub_original[i] = figure.cube[i];
 			count++;
 		}
-		if (figure.length != figure.originLength) // Å©±â º¯°æÀÌ µÈ Ä£±¸¶ó¸é?
+		if (figure.length != figure.originLength) // í¬ê¸° ë³€ê²½ì´ ëœ ì¹œêµ¬ë¼ë©´?
 		{
-			MyVertex* makingCube = pCube(figure.length, figure.cubeOrigin.x, figure.cubeOrigin.y, figure.cubeOrigin.z); // ´Ù½Ã ¸¸µé¾î¼­ ³Ö¾îÁÜ
+			MyVertex* makingCube = pCube(figure.length, figure.cubeOrigin.x, figure.cubeOrigin.y, figure.cubeOrigin.z); // ë‹¤ì‹œ ë§Œë“¤ì–´ì„œ ë„£ì–´ì¤Œ
 			int cubeCount = 0;
 			for (int i = 0; i < 8; i++)
 			{
@@ -395,20 +402,20 @@ void CMFCApplication3View::OnPaint()
 			}
 		}
 
-		////// ¿ùµå ÁÂÇ¥°è¿¡¼­ È¸Àü½ÃÅ°±â
+		////// ì›”ë“œ ì¢Œí‘œê³„ì—ì„œ íšŒì „ì‹œí‚¤ê¸°
 		float originInView[4][1] = {};
 		originInView[0][0] = figure.cubeOrigin.x; originInView[1][0] = figure.cubeOrigin.y; originInView[2][0] = figure.cubeOrigin.z; originInView[3][0] = 1;
 		float* fPtr = MatrixMulti(view, originInView);
 		int sampleCount = 0;
 
-		for (int i = 0; i < 8; i++) // ¿ùµå ÁÂÇ¥°è¿¡¼­ÀÇ Å¥ºê Áß½ÉÀ» ¿øÁ¡À¸·Î ¿Å±â¸é¼­ ³ª¸ÓÁö Á¡µéµµ ´Ù µ¿ÀÏÇÏ°Ô ¿Å°ÜÁÜ
+		for (int i = 0; i < 8; i++) // ì›”ë“œ ì¢Œí‘œê³„ì—ì„œì˜ íë¸Œ ì¤‘ì‹¬ì„ ì›ì ìœ¼ë¡œ ì˜®ê¸°ë©´ì„œ ë‚˜ë¨¸ì§€ ì ë“¤ë„ ë‹¤ ë™ì¼í•˜ê²Œ ì˜®ê²¨ì¤Œ
 		{
 			cub[i].x -= originInView[0][0];
 			cub[i].y -= originInView[1][0];
 			cub[i].z -= originInView[2][0];
 		}
 
-		for (int i = 0; i < 8; i++) // ÇØ´ç Á¡µéÀ» ÃàÀ» ±âÁØÀ¸·Î È¸Àü
+		for (int i = 0; i < 8; i++) // í•´ë‹¹ ì ë“¤ì„ ì¶•ì„ ê¸°ì¤€ìœ¼ë¡œ íšŒì „
 		{
 			float sample[4][1] = { { cub[i].x },{ cub[i].y },{ cub[i].z },{ 1 } };
 			float* rotPtr = MatrixRotate(sample, figure.rotX, figure.rotY, 0);
@@ -421,15 +428,14 @@ void CMFCApplication3View::OnPaint()
 			cub[i].x = sample[0][0]; cub[i].y = sample[1][0]; cub[i].z = sample[2][0];
 		}
 
-		for (int i = 0; i < 8; i++) // ´Ù½Ã Å¥ºêÀÇ Áß½ÉÀ» ¿øÁ¡¿¡¼­ ¿ø·¡ÀÇ Áß½ÉÀ¸·Î º¹±¸
+		for (int i = 0; i < 8; i++) // ë‹¤ì‹œ íë¸Œì˜ ì¤‘ì‹¬ì„ ì›ì ì—ì„œ ì›ë˜ì˜ ì¤‘ì‹¬ìœ¼ë¡œ ë³µêµ¬
 		{
 			cub[i].x += originInView[0][0];
 			cub[i].y += originInView[1][0];
 			cub[i].z += originInView[2][0];
 		}
-		////////////////////////////////////////////
 
-		////// ¿ùµå ÁÂÇ¥°è¿¡¼­ x, yÃàÀ¸·Î ÆòÇàÀÌµ¿ ½ÃÅ°±â
+		////// ì›”ë“œ ì¢Œí‘œê³„ì—ì„œ x, yì¶•ìœ¼ë¡œ í‰í–‰ì´ë™ ì‹œí‚¤ê¸°
 		if (figure.moveY != 0)
 		{
 			for (int i = 0; i < 8; i++)
@@ -455,17 +461,15 @@ void CMFCApplication3View::OnPaint()
 			}
 		}
 
-		////////
 		MyVertex newCubeWC[8] = {};
 		float tempVertex[4][1] = {};
 		for (int i = 0; i < 8; i++)
 		{
 			newCubeWC[i].x = cub[i].x; newCubeWC[i].y = cub[i].y; newCubeWC[i].z = cub[i].z;
 		}
-		////////
 
 		float sample[4][1] = {};
-		// sphere °¢ Á¡µéÀ» ºä Çà·Ä º¯È¯ ½ÃÅ´
+		// sphere ê° ì ë“¤ì„ ë·° í–‰ë ¬ ë³€í™˜ ì‹œí‚´
 		for (int i = 0; i < 8; i++)
 		{
 			sample[0][0] = cub[i].x;
@@ -483,7 +487,7 @@ void CMFCApplication3View::OnPaint()
 			cubCount++;
 		}
 
-		////// Å×½ºÆ® : ÀıµÎÃ¼ ÄÃ¸µ
+		////// ì ˆë‘ì²´ ì»¬ë§
 		if (projNum == 0)
 		{
 			BOOL isItUpper[8] = {};
@@ -496,6 +500,7 @@ void CMFCApplication3View::OnPaint()
 				BOOL result4 = isItUpperSide(normOfFrustum6, nearPoint3, vertexOfCube);
 				BOOL result5 = isItUpperSide(normOfNear, nearPoint3, vertexOfCube);
 				//BOOL result6 = isItUpperSide(normOfFar, farPoint3, vertexOfCube);
+				//if (result1 && result2 && result3 && result4 && result5 && result6) isItUpper[i] = TRUE;
 				if (result1 && result2 && result3 && result4 && result5) isItUpper[i] = TRUE;
 				else isItUpper[i] = FALSE;
 			}
@@ -523,6 +528,7 @@ void CMFCApplication3View::OnPaint()
 				BOOL result4 = isItUpperSide(normOfParallel6, pointOn9AND6, vertexOfCube);
 				BOOL result5 = isItUpperSide(normOfNear, pointOn3AND12, vertexOfCube);
 				//BOOL result6 = isItUpperSide(normOfFar, pointOnFar, vertexOfCube);
+				//if (result1 && result2 && result3 && result4 && result5 && result6) isItUpper[i] = TRUE;
 				if (result1 && result2 && result3 && result4 && result5) isItUpper[i] = TRUE;
 				else isItUpper[i] = FALSE;
 			}
@@ -539,7 +545,8 @@ void CMFCApplication3View::OnPaint()
 			}
 		}
 		figure.isFront = TRUE;
-		// sphere °¢ Á¡µéÀ» Åõ¿µ ½ÃÅ´
+		
+		// sphere ê° ì ë“¤ì„ íˆ¬ì˜ ì‹œí‚´
 		for (int i = 0; i < 8; i++)
 		{
 			sample[0][0] = cub[i].x;
@@ -562,11 +569,11 @@ void CMFCApplication3View::OnPaint()
 			}
 		}
 
-		// pickingÀ» À§ÇØ ½ºÅ©¸°¿¡ ÂïÈù Á¡µéÀÇ °ªÀ» ¹Ì¸® ÀúÀå
+		// pickingì„ ìœ„í•´ ìŠ¤í¬ë¦°ì— ì°íŒ ì ë“¤ì˜ ê°’ì„ ë¯¸ë¦¬ ì €ì¥
 		for (int i = 0; i < 8; i++)
 		{
-			figure.cube_justForClick[i].x = ToScreenX(width, left, cub[i].x); 
-			figure.cube_justForClick[i].y = ToScreenY(height, top, cub[i].y); 
+			figure.cube_justForClick[i].x = ToScreenX(width, left, cub[i].x);
+			figure.cube_justForClick[i].y = ToScreenY(height, top, cub[i].y);
 			figure.cube_justForClick[i].z = 0;
 		}
 
@@ -584,7 +591,7 @@ void CMFCApplication3View::OnPaint()
 		{
 			if (figure.isClicked)
 			{
-#pragma region 1¹ø ²ÀÁşÁ¡ - ¸é
+#pragma region 1ë²ˆ ê¼­ì§“ì  - ë©´
 				float* frontPtr = Cube_isitFront(newCubeWC[0], newCubeWC[3], newCubeWC[4], camera, look, lightDirection);
 				float meshData[5] = {};
 				int count = 0;
@@ -613,7 +620,7 @@ void CMFCApplication3View::OnPaint()
 				}
 				CubeMeshDraw(projNum, meshData, memDCPtr, width, height, left, top, cub[0], cub[1], cub[3]);
 #pragma endregion
-#pragma region 2¹ø ²ÀÁşÁ¡
+#pragma region 2ë²ˆ ê¼­ì§“ì 
 				frontPtr = Cube_isitFront(newCubeWC[7], newCubeWC[4], newCubeWC[3], camera, look, lightDirection);
 				count = 0;
 				for (int i = 0; i < 5; i++)
@@ -641,7 +648,7 @@ void CMFCApplication3View::OnPaint()
 				}
 				CubeMeshDraw(projNum, meshData, memDCPtr, width, height, left, top, cub[7], cub[3], cub[6]);
 #pragma endregion
-#pragma region 3¹ø ²ÀÁşÁ¡
+#pragma region 3ë²ˆ ê¼­ì§“ì 
 				frontPtr = Cube_isitFront(newCubeWC[2], newCubeWC[1], newCubeWC[6], camera, look, lightDirection);
 				count = 0;
 				for (int i = 0; i < 5; i++)
@@ -669,7 +676,7 @@ void CMFCApplication3View::OnPaint()
 				}
 				CubeMeshDraw(projNum, meshData, memDCPtr, width, height, left, top, cub[2], cub[6], cub[3]);
 #pragma endregion
-#pragma region 4¹ø ²ÀÁşÁ¡
+#pragma region 4ë²ˆ ê¼­ì§“ì 
 				frontPtr = Cube_isitFront(newCubeWC[5], newCubeWC[6], newCubeWC[1], camera, look, lightDirection);
 				count = 0;
 				for (int i = 0; i < 5; i++)
@@ -700,7 +707,7 @@ void CMFCApplication3View::OnPaint()
 			}
 			else
 			{
-#pragma region 1¹ø ²ÀÁşÁ¡ - ¼±
+#pragma region 1ë²ˆ ê¼­ì§“ì  - ì„ 
 				float* frontPtr = Cube_isitFront(newCubeWC[0], newCubeWC[3], newCubeWC[4], camera, look, lightDirection);
 				float meshData[5] = {};
 				int count = 0;
@@ -729,7 +736,7 @@ void CMFCApplication3View::OnPaint()
 				}
 				CubeLineDraw(projNum, meshData, memDCPtr, width, height, left, top, cub[0], cub[1], cub[3]);
 #pragma endregion
-#pragma region 2¹ø ²ÀÁşÁ¡
+#pragma region 2ë²ˆ ê¼­ì§“ì 
 				frontPtr = Cube_isitFront(newCubeWC[7], newCubeWC[4], newCubeWC[3], camera, look, lightDirection);
 				count = 0;
 				for (int i = 0; i < 5; i++)
@@ -757,7 +764,7 @@ void CMFCApplication3View::OnPaint()
 				}
 				CubeLineDraw(projNum, meshData, memDCPtr, width, height, left, top, cub[7], cub[3], cub[6]);
 #pragma endregion
-#pragma region 3¹ø ²ÀÁşÁ¡
+#pragma region 3ë²ˆ ê¼­ì§“ì 
 				frontPtr = Cube_isitFront(newCubeWC[2], newCubeWC[1], newCubeWC[6], camera, look, lightDirection);
 				count = 0;
 				for (int i = 0; i < 5; i++)
@@ -785,7 +792,7 @@ void CMFCApplication3View::OnPaint()
 				}
 				CubeLineDraw(projNum, meshData, memDCPtr, width, height, left, top, cub[2], cub[6], cub[3]);
 #pragma endregion
-#pragma region 4¹ø ²ÀÁşÁ¡
+#pragma region 4ë²ˆ ê¼­ì§“ì 
 				frontPtr = Cube_isitFront(newCubeWC[5], newCubeWC[6], newCubeWC[1], camera, look, lightDirection);
 				count = 0;
 				for (int i = 0; i < 5; i++)
@@ -819,7 +826,7 @@ void CMFCApplication3View::OnPaint()
 		{
 			if (figure.isClicked)
 			{
-#pragma region 1¹ø ²ÀÁşÁ¡ - ¼±
+#pragma region 1ë²ˆ ê¼­ì§“ì  - ì„ 
 				float* frontPtr = Cube_isitFront(newCubeWC[0], newCubeWC[3], newCubeWC[4], camera, look, lightDirection);
 				float meshData[5] = {};
 				int count = 0;
@@ -848,7 +855,7 @@ void CMFCApplication3View::OnPaint()
 				}
 				CubeLineDraw(projNum, meshData, memDCPtr, width, height, left, top, cub[0], cub[1], cub[3]);
 #pragma endregion
-#pragma region 2¹ø ²ÀÁşÁ¡
+#pragma region 2ë²ˆ ê¼­ì§“ì 
 				frontPtr = Cube_isitFront(newCubeWC[7], newCubeWC[4], newCubeWC[3], camera, look, lightDirection);
 				count = 0;
 				for (int i = 0; i < 5; i++)
@@ -876,7 +883,7 @@ void CMFCApplication3View::OnPaint()
 				}
 				CubeLineDraw(projNum, meshData, memDCPtr, width, height, left, top, cub[7], cub[3], cub[6]);
 #pragma endregion
-#pragma region 3¹ø ²ÀÁşÁ¡
+#pragma region 3ë²ˆ ê¼­ì§“ì 
 				frontPtr = Cube_isitFront(newCubeWC[2], newCubeWC[1], newCubeWC[6], camera, look, lightDirection);
 				count = 0;
 				for (int i = 0; i < 5; i++)
@@ -904,7 +911,7 @@ void CMFCApplication3View::OnPaint()
 				}
 				CubeLineDraw(projNum, meshData, memDCPtr, width, height, left, top, cub[2], cub[6], cub[3]);
 #pragma endregion
-#pragma region 4¹ø ²ÀÁşÁ¡
+#pragma region 4ë²ˆ ê¼­ì§“ì 
 				frontPtr = Cube_isitFront(newCubeWC[5], newCubeWC[6], newCubeWC[1], camera, look, lightDirection);
 				count = 0;
 				for (int i = 0; i < 5; i++)
@@ -935,7 +942,7 @@ void CMFCApplication3View::OnPaint()
 			}
 			else
 			{
-#pragma region 1¹ø ²ÀÁşÁ¡ - ¸é
+#pragma region 1ë²ˆ ê¼­ì§“ì  - ë©´
 				float* frontPtr = Cube_isitFront(newCubeWC[0], newCubeWC[3], newCubeWC[4], camera, look, lightDirection);
 				float meshData[5] = {};
 				int count = 0;
@@ -964,7 +971,7 @@ void CMFCApplication3View::OnPaint()
 				}
 				CubeMeshDraw(projNum, meshData, memDCPtr, width, height, left, top, cub[0], cub[1], cub[3]);
 #pragma endregion
-#pragma region 2¹ø ²ÀÁşÁ¡
+#pragma region 2ë²ˆ ê¼­ì§“ì 
 				frontPtr = Cube_isitFront(newCubeWC[7], newCubeWC[4], newCubeWC[3], camera, look, lightDirection);
 				count = 0;
 				for (int i = 0; i < 5; i++)
@@ -992,7 +999,7 @@ void CMFCApplication3View::OnPaint()
 				}
 				CubeMeshDraw(projNum, meshData, memDCPtr, width, height, left, top, cub[7], cub[3], cub[6]);
 #pragma endregion
-#pragma region 3¹ø ²ÀÁşÁ¡
+#pragma region 3ë²ˆ ê¼­ì§“ì 
 				frontPtr = Cube_isitFront(newCubeWC[2], newCubeWC[1], newCubeWC[6], camera, look, lightDirection);
 				count = 0;
 				for (int i = 0; i < 5; i++)
@@ -1020,7 +1027,7 @@ void CMFCApplication3View::OnPaint()
 				}
 				CubeMeshDraw(projNum, meshData, memDCPtr, width, height, left, top, cub[2], cub[6], cub[3]);
 #pragma endregion
-#pragma region 4¹ø ²ÀÁşÁ¡
+#pragma region 4ë²ˆ ê¼­ì§“ì 
 				frontPtr = Cube_isitFront(newCubeWC[5], newCubeWC[6], newCubeWC[1], camera, look, lightDirection);
 				count = 0;
 				for (int i = 0; i < 5; i++)
@@ -1054,7 +1061,7 @@ void CMFCApplication3View::OnPaint()
 
 	for (auto& figure : v_sphereFigure)
 	{
-		// vector·ÎºÎÅÍ ±¸ ÁÂÇ¥ ¹Ş¾Æ¿À±â
+		// vectorë¡œë¶€í„° êµ¬ ì¢Œí‘œ ë°›ì•„ì˜¤ê¸°
 		int count = 0;
 		MyVertex sph[230] = {};
 		for (int i = 0; i < 230; i++) {
@@ -1062,8 +1069,8 @@ void CMFCApplication3View::OnPaint()
 			count++;
 		}
 
-		if (figure.radius != figure.originRadius) // Å©±â º¯°æÀÌ µÈ Ä£±¸¶ó¸é?
-		{ // ´Ù½Ã ¸¸µé¾î¼­ ³Ö¾îÁÜ
+		if (figure.radius != figure.originRadius) // í¬ê¸° ë³€ê²½ì´ ëœ ì¹œêµ¬ë¼ë©´?
+		{ // ë‹¤ì‹œ ë§Œë“¤ì–´ì„œ ë„£ì–´ì¤Œ
 			MyVertex* makingSphere = pSphere(figure.radius, figure.sphereOrigin.x, figure.sphereOrigin.y, figure.sphereOrigin.z);
 			int sphereCount = 0;
 			for (int i = 0; i < 230; i++)
@@ -1073,20 +1080,20 @@ void CMFCApplication3View::OnPaint()
 			}
 		}
 
-		////// ¿ùµå ÁÂÇ¥°è¿¡¼­ È¸Àü½ÃÅ°±â
+		////// ì›”ë“œ ì¢Œí‘œê³„ì—ì„œ íšŒì „ì‹œí‚¤ê¸°
 		float originInView[4][1] = {};
 		originInView[0][0] = figure.sphereOrigin.x; originInView[1][0] = figure.sphereOrigin.y; originInView[2][0] = figure.sphereOrigin.z; originInView[3][0] = 1;
 		float* fPtr = MatrixMulti(view, originInView);
 		int sampleCount = 0;
 
-		for (int i = 0; i < 230; i++) // ¿ùµå ÁÂÇ¥°è¿¡¼­ÀÇ Å¥ºê Áß½ÉÀ» ¿øÁ¡À¸·Î ¿Å±â¸é¼­ ³ª¸ÓÁö Á¡µéµµ ´Ù µ¿ÀÏÇÏ°Ô ¿Å°ÜÁÜ
+		for (int i = 0; i < 230; i++) // ì›”ë“œ ì¢Œí‘œê³„ì—ì„œì˜ íë¸Œ ì¤‘ì‹¬ì„ ì›ì ìœ¼ë¡œ ì˜®ê¸°ë©´ì„œ ë‚˜ë¨¸ì§€ ì ë“¤ë„ ë‹¤ ë™ì¼í•˜ê²Œ ì˜®ê²¨ì¤Œ
 		{
 			sph[i].x -= originInView[0][0];
 			sph[i].y -= originInView[1][0];
 			sph[i].z -= originInView[2][0];
 		}
 
-		for (int i = 0; i < 230; i++) // ÇØ´ç Á¡µéÀ» ÃàÀ» ±âÁØÀ¸·Î È¸Àü
+		for (int i = 0; i < 230; i++) // í•´ë‹¹ ì ë“¤ì„ ì¶•ì„ ê¸°ì¤€ìœ¼ë¡œ íšŒì „
 		{
 			float sample[4][1] = { { sph[i].x },{ sph[i].y },{ sph[i].z },{ 1 } };
 			float* rotPtr = MatrixRotate(sample, figure.rotX, figure.rotY, 0);
@@ -1099,14 +1106,14 @@ void CMFCApplication3View::OnPaint()
 			sph[i].x = sample[0][0]; sph[i].y = sample[1][0]; sph[i].z = sample[2][0];
 		}
 
-		for (int i = 0; i < 230; i++) // ´Ù½Ã Å¥ºêÀÇ Áß½ÉÀ» ¿øÁ¡¿¡¼­ ¿ø·¡ÀÇ Áß½ÉÀ¸·Î º¹±¸
+		for (int i = 0; i < 230; i++) // ë‹¤ì‹œ íë¸Œì˜ ì¤‘ì‹¬ì„ ì›ì ì—ì„œ ì›ë˜ì˜ ì¤‘ì‹¬ìœ¼ë¡œ ë³µêµ¬
 		{
 			sph[i].x += originInView[0][0];
 			sph[i].y += originInView[1][0];
 			sph[i].z += originInView[2][0];
 		}
 
-		////// ¿ùµå ÁÂÇ¥°è¿¡¼­ x, yÃàÀ¸·Î ÆòÇàÀÌµ¿ ½ÃÅ°±â
+		////// ì›”ë“œ ì¢Œí‘œê³„ì—ì„œ x, yì¶•ìœ¼ë¡œ í‰í–‰ì´ë™ ì‹œí‚¤ê¸°
 		if (figure.moveY != 0)
 		{
 			for (int i = 0; i < 230; i++)
@@ -1132,7 +1139,7 @@ void CMFCApplication3View::OnPaint()
 			}
 		}
 
-		////// º¯°æµÈ ¿ùµåÁÂÇ¥ ÀúÀå
+		////// ë³€ê²½ëœ ì›”ë“œì¢Œí‘œ ì €ì¥
 		MyVertex newSphereWC[230] = {};
 		float tempVertex[4][1] = {};
 		for (int i = 0; i < 230; i++)
@@ -1142,7 +1149,7 @@ void CMFCApplication3View::OnPaint()
 		//////
 
 		float sample[4][1] = {};
-		// sphere °¢ Á¡µéÀ» ºä Çà·Ä º¯È¯ ½ÃÅ´
+		// sphere ê° ì ë“¤ì„ ë·° í–‰ë ¬ ë³€í™˜ ì‹œí‚´
 		for (int i = 0; i < 230; i++)
 		{
 			sample[0][0] = sph[i].x;
@@ -1160,7 +1167,7 @@ void CMFCApplication3View::OnPaint()
 			sphCount++;
 		}
 
-		////// Å×½ºÆ® : ÀıµÎÃ¼ ÄÃ¸µ
+		////// ì ˆë‘ì²´ ì»¬ë§
 		if (projNum == 0)
 		{
 			BOOL isItUpper[230] = {};
@@ -1173,6 +1180,7 @@ void CMFCApplication3View::OnPaint()
 				BOOL result4 = isItUpperSide(normOfFrustum6, nearPoint3, vertexOfCube);
 				BOOL result5 = isItUpperSide(normOfNear, nearPoint3, vertexOfCube);
 				//BOOL result6 = isItUpperSide(normOfFar, farPoint3, vertexOfCube);
+				//if (result1 && result2 && result3 && result4 && result5 && result6) isItUpper[i] = TRUE;
 				if (result1 && result2 && result3 && result4 && result5) isItUpper[i] = TRUE;
 				else isItUpper[i] = FALSE;
 			}
@@ -1187,7 +1195,6 @@ void CMFCApplication3View::OnPaint()
 				figure.isFront = FALSE;
 				continue;
 			}
-			//////
 		}
 		else
 		{
@@ -1201,6 +1208,7 @@ void CMFCApplication3View::OnPaint()
 				BOOL result4 = isItUpperSide(normOfParallel6, pointOn9AND6, vertexOfCube);
 				BOOL result5 = isItUpperSide(normOfNear, pointOn3AND12, vertexOfCube);
 				//BOOL result6 = isItUpperSide(normOfFar, pointOnFar, vertexOfCube);
+				//if (result1 && result2 && result3 && result4 && result5 && result6) isItUpper[i] = TRUE;
 				if (result1 && result2 && result3 && result4 && result5) isItUpper[i] = TRUE;
 				else isItUpper[i] = FALSE;
 			}
@@ -1219,7 +1227,7 @@ void CMFCApplication3View::OnPaint()
 		figure.isFront = TRUE;
 
 		float deltaArray[230] = {};
-		// sphere °¢ Á¡µéÀ» Åõ¿µ ½ÃÅ´
+		// sphere ê° ì ë“¤ì„ íˆ¬ì˜ ì‹œí‚´
 		for (int i = 0; i < 230; i++)
 		{
 			sample[0][0] = sph[i].x;
@@ -1242,29 +1250,28 @@ void CMFCApplication3View::OnPaint()
 			}
 		}
 
-		// pickingÀ» À§ÇØ ¹Ì¸® ½ºÅ©¸° ÁÂÇ¥ ÀúÀå
+		// pickingì„ ìœ„í•´ ë¯¸ë¦¬ ìŠ¤í¬ë¦° ì¢Œí‘œ ì €ì¥
 		for (int i = 0; i < 230; i++)
 		{
-			figure.sphere_justForClick[i].x = ToScreenX(width, left, sph[i].x); 
-			figure.sphere_justForClick[i].y = ToScreenY(height, top, sph[i].y); 
+			figure.sphere_justForClick[i].x = ToScreenX(width, left, sph[i].x);
+			figure.sphere_justForClick[i].y = ToScreenY(height, top, sph[i].y);
 		}
-		////
 
-		// µŞ¸é Àß¶ó³»±â
-		float vFst[4][1] = {}; // °è»ê¿¡ ¾µ ¹æÇâ ÀúÀå¿ë º¤ÅÍ
-		float vSec[4][1] = {}; // °è»ê¿¡ ¾µ ¹æÇâ ÀúÀå¿ë º¤ÅÍ
+		// ë°±ìŠ¤í˜ì´ìŠ¤ ì»¬ë§
+		float vFst[4][1] = {}; // ê³„ì‚°ì— ì“¸ ë°©í–¥ ì €ì¥ìš© ë²¡í„°
+		float vSec[4][1] = {}; // ê³„ì‚°ì— ì“¸ ë°©í–¥ ì €ì¥ìš© ë²¡í„°
 		float fst2x2[2][1] = {};
 		float sec2x2[2][1] = {};
 		int isVisableDot1[12] = {};
 		int isVisable[216] = {};
-		int isVisableDot2[12] = {};// ´«¿¡ º¸ÀÌ´Â ºÎºĞ¸¸ Ã¼Å©ÇÒ °ÍÀÌ¹Ç·Î ´«¿¡ ¾Èº¸ÀÌ´Â Á¤Á¡µéÀº 0À¸·Î ¹Ù²ã¹ö¸± °èÈ¹
+		int isVisableDot2[12] = {};// ëˆˆì— ë³´ì´ëŠ” ë¶€ë¶„ë§Œ ì²´í¬í•  ê²ƒì´ë¯€ë¡œ ëˆˆì— ì•ˆë³´ì´ëŠ” ì •ì ë“¤ì€ 0ìœ¼ë¡œ ë°”ê¿”ë²„ë¦´ ê³„íš
 		int countInt = 0;
-		float cameraToPolygon1[3][1] = {}; // Ä«¸Ş¶ó -> Á¤Á¡ º¤ÅÍ
-		float cameraToPolygon2[3][1] = {}; // Ä«¸Ş¶ó -> Á¤Á¡ º¤ÅÍ
-		float cameraToPolygon3[3][1] = {}; // Ä«¸Ş¶ó -> Á¤Á¡ º¤ÅÍ
-		float vPolygon1[3][1] = {}; // Ä«¸Ş¶ó -> Á¤Á¡ º¤ÅÍ °è»ê¿ë ÀÓ½Ã ¹è¿­
-		float vPolygon2[3][1] = {}; // Ä«¸Ş¶ó -> Á¤Á¡ º¤ÅÍ °è»ê¿ë ÀÓ½Ã ¹è¿­
-		float vPolygon3[3][1] = {}; // Ä«¸Ş¶ó -> Á¤Á¡ º¤ÅÍ °è»ê¿ë ÀÓ½Ã ¹è¿­
+		float cameraToPolygon1[3][1] = {}; // ì¹´ë©”ë¼ -> ì •ì  ë²¡í„°
+		float cameraToPolygon2[3][1] = {}; // ì¹´ë©”ë¼ -> ì •ì  ë²¡í„°
+		float cameraToPolygon3[3][1] = {}; // ì¹´ë©”ë¼ -> ì •ì  ë²¡í„°
+		float vPolygon1[3][1] = {}; // ì¹´ë©”ë¼ -> ì •ì  ë²¡í„° ê³„ì‚°ìš© ì„ì‹œ ë°°ì—´
+		float vPolygon2[3][1] = {}; // ì¹´ë©”ë¼ -> ì •ì  ë²¡í„° ê³„ì‚°ìš© ì„ì‹œ ë°°ì—´
+		float vPolygon3[3][1] = {}; // ì¹´ë©”ë¼ -> ì •ì  ë²¡í„° ê³„ì‚°ìš© ì„ì‹œ ë°°ì—´
 
 		CBrush sphBrush;
 		CBrush* prevBrush;
@@ -1274,56 +1281,26 @@ void CMFCApplication3View::OnPaint()
 		int rgbTemp217_228[12];
 		int rgbTemp1_216_2[216];
 
-#pragma region Ã¹¹øÂ° »ï°¢ Æú¸®°ï
-		for (int i = 1; i < 13; i++) // ¿øÀÇ °¡Àå ³¡Á¡°ú ¿·ÀÇ 12°³ÀÇ Á¡µé »çÀÌÀÇ ¸é
+#pragma region ì²«ë²ˆì§¸ ì‚¼ê° í´ë¦¬ê³¤
+		for (int i = 1; i < 13; i++) // ì›ì˜ ê°€ì¥ ëì ê³¼ ì˜†ì˜ 12ê°œì˜ ì ë“¤ ì‚¬ì´ì˜ ë©´
 		{
 			float cross[3][1] = {};
-			
+
 			if ((i % 12) != 0)
 			{
-				//MakeVertexToVertexVector(vFst, newSphereWC[i], newSphereWC[0]);
-				//MakeVertexToVertexVector(vSec, newSphereWC[i + 1], newSphereWC[i]);
-				vFst[0][0] = -newSphereWC[0].x + newSphereWC[i].x;
-				vFst[1][0] = -newSphereWC[0].y + newSphereWC[i].y;
-				vFst[2][0] = -newSphereWC[0].z + newSphereWC[i].z;
-				vSec[0][0] = -newSphereWC[i].x + newSphereWC[i + 1].x;
-				vSec[1][0] = -newSphereWC[i].y + newSphereWC[i + 1].y;
-				vSec[2][0] = -newSphereWC[i].z + newSphereWC[i + 1].z;
-				//MakeVertexToVertexVector(cameraToPolygon1, newSphereWC[0]);
-				//MakeVertexToVertexVector(cameraToPolygon2, newSphereWC[i]);
-				//MakeVertexToVertexVector(cameraToPolygon3, newSphereWC[i + 1]);
-				cameraToPolygon1[0][0] = newSphereWC[0].x;
-				cameraToPolygon1[1][0] = newSphereWC[0].y;
-				cameraToPolygon1[2][0] = newSphereWC[0].z;
-				cameraToPolygon2[0][0] = newSphereWC[i].x;
-				cameraToPolygon2[1][0] = newSphereWC[i].y;
-				cameraToPolygon2[2][0] = newSphereWC[i].z;
-				cameraToPolygon3[0][0] = newSphereWC[i + 1].x;
-				cameraToPolygon3[1][0] = newSphereWC[i + 1].y;
-				cameraToPolygon3[2][0] = newSphereWC[i + 1].z;
+				MakeVertexToVertexVector(vFst, newSphereWC[i], newSphereWC[0]);
+				MakeVertexToVertexVector(vSec, newSphereWC[i + 1], newSphereWC[i]);
+				MakeVertexToVertexVector(cameraToPolygon1, newSphereWC[0]);
+				MakeVertexToVertexVector(cameraToPolygon2, newSphereWC[i]);
+				MakeVertexToVertexVector(cameraToPolygon3, newSphereWC[i + 1]);
 			}
 			else
 			{
-				//MakeVertexToVertexVector(vFst, newSphereWC[i], newSphereWC[0]);
-				//MakeVertexToVertexVector(vSec, newSphereWC[i - 11], newSphereWC[i]);
-				vFst[0][0] = -newSphereWC[0].x + newSphereWC[i].x;
-				vFst[1][0] = -newSphereWC[0].y + newSphereWC[i].y;
-				vFst[2][0] = -newSphereWC[0].z + newSphereWC[i].z;
-				vSec[0][0] = -newSphereWC[i].x + newSphereWC[i - 11].x;
-				vSec[1][0] = -newSphereWC[i].y + newSphereWC[i - 11].y;
-				vSec[2][0] = -newSphereWC[i].z + newSphereWC[i - 11].z;
-				//MakeVertexToVertexVector(cameraToPolygon1, newSphereWC[0]);
-				//MakeVertexToVertexVector(cameraToPolygon2, newSphereWC[i]);
-				//MakeVertexToVertexVector(cameraToPolygon3, newSphereWC[i - 11]);
-				cameraToPolygon1[0][0] = newSphereWC[0].x;
-				cameraToPolygon1[1][0] = newSphereWC[0].y;
-				cameraToPolygon1[2][0] = newSphereWC[0].z;
-				cameraToPolygon2[0][0] = newSphereWC[i].x;
-				cameraToPolygon2[1][0] = newSphereWC[i].y;
-				cameraToPolygon2[2][0] = newSphereWC[i].z;
-				cameraToPolygon3[0][0] = newSphereWC[i - 11].x;
-				cameraToPolygon3[1][0] = newSphereWC[i - 11].y;
-				cameraToPolygon3[2][0] = newSphereWC[i - 11].z;
+				MakeVertexToVertexVector(vFst, newSphereWC[i], newSphereWC[0]);
+				MakeVertexToVertexVector(vSec, newSphereWC[i - 11], newSphereWC[i]);
+				MakeVertexToVertexVector(cameraToPolygon1, newSphereWC[0]);
+				MakeVertexToVertexVector(cameraToPolygon2, newSphereWC[i]);
+				MakeVertexToVertexVector(cameraToPolygon3, newSphereWC[i - 11]);
 			}
 			vFst[3][0] = 1; vSec[3][0] = 1;
 
@@ -1386,39 +1363,19 @@ void CMFCApplication3View::OnPaint()
 
 			if ((i % 12) == 0)
 			{
-				vFst[0][0] = -newSphereWC[i].x + newSphereWC[i + 12].x;
-				vFst[1][0] = -newSphereWC[i].y + newSphereWC[i + 12].y;
-				vFst[2][0] = -newSphereWC[i].z + newSphereWC[i + 12].z;
-				vSec[0][0] = -newSphereWC[i + 12].x + newSphereWC[i + 1].x;
-				vSec[1][0] = -newSphereWC[i + 12].y + newSphereWC[i + 1].y;
-				vSec[2][0] = -newSphereWC[i + 12].z + newSphereWC[i + 1].z;
-				cameraToPolygon1[0][0] = newSphereWC[i].x;
-				cameraToPolygon1[1][0] = newSphereWC[i].y;
-				cameraToPolygon1[2][0] = newSphereWC[i].z;
-				cameraToPolygon2[0][0] = newSphereWC[i + 12].x;
-				cameraToPolygon2[1][0] = newSphereWC[i + 12].y;
-				cameraToPolygon2[2][0] = newSphereWC[i + 12].z;
-				cameraToPolygon3[0][0] = newSphereWC[i + 1].x;
-				cameraToPolygon3[1][0] = newSphereWC[i + 1].y;
-				cameraToPolygon3[2][0] = newSphereWC[i + 1].z;
+				MakeVertexToVertexVector(vFst, newSphereWC[i + 12], newSphereWC[i]);
+				MakeVertexToVertexVector(vSec, newSphereWC[i + 1], newSphereWC[i + 12]);
+				MakeVertexToVertexVector(cameraToPolygon1, newSphereWC[i]);
+				MakeVertexToVertexVector(cameraToPolygon2, newSphereWC[i + 12]);
+				MakeVertexToVertexVector(cameraToPolygon3, newSphereWC[i + 1]);
 			}
 			else
 			{
-				vFst[0][0] = -newSphereWC[i].x + newSphereWC[i + 12].x;
-				vFst[1][0] = -newSphereWC[i].y + newSphereWC[i + 12].y;
-				vFst[2][0] = -newSphereWC[i].z + newSphereWC[i + 12].z;
-				vSec[0][0] = -newSphereWC[i + 12].x + newSphereWC[i + 13].x;
-				vSec[1][0] = -newSphereWC[i + 12].y + newSphereWC[i + 13].y;
-				vSec[2][0] = -newSphereWC[i + 12].z + newSphereWC[i + 13].z;
-				cameraToPolygon1[0][0] = newSphereWC[i].x;
-				cameraToPolygon1[1][0] = newSphereWC[i].y;
-				cameraToPolygon1[2][0] = newSphereWC[i].z;
-				cameraToPolygon2[0][0] = newSphereWC[i + 12].x;
-				cameraToPolygon2[1][0] = newSphereWC[i + 12].y;
-				cameraToPolygon2[2][0] = newSphereWC[i + 12].z;
-				cameraToPolygon3[0][0] = newSphereWC[i + 13].x;
-				cameraToPolygon3[1][0] = newSphereWC[i + 13].y;
-				cameraToPolygon3[2][0] = newSphereWC[i + 13].z;
+				MakeVertexToVertexVector(vFst, newSphereWC[i + 12], newSphereWC[i]);
+				MakeVertexToVertexVector(vSec, newSphereWC[i + 13], newSphereWC[i + 12]);
+				MakeVertexToVertexVector(cameraToPolygon1, newSphereWC[i]);
+				MakeVertexToVertexVector(cameraToPolygon2, newSphereWC[i + 12]);
+				MakeVertexToVertexVector(cameraToPolygon3, newSphereWC[i + 13]);
 			}
 			vFst[3][0] = 1; vSec[3][0] = 1;
 
@@ -1482,39 +1439,19 @@ void CMFCApplication3View::OnPaint()
 
 			if ((i % 12) != 0)
 			{
-				vFst[0][0] = -newSphereWC[i].x + newSphereWC[229].x;
-				vFst[1][0] = -newSphereWC[i].y + newSphereWC[229].y;
-				vFst[2][0] = -newSphereWC[i].z + newSphereWC[229].z;
-				vSec[0][0] = -newSphereWC[i].x + newSphereWC[i + 1].x;
-				vSec[1][0] = -newSphereWC[i].y + newSphereWC[i + 1].y;
-				vSec[2][0] = -newSphereWC[i].z + newSphereWC[i + 1].z;
-				cameraToPolygon1[0][0] = newSphereWC[i].x;
-				cameraToPolygon1[1][0] = newSphereWC[i].y;
-				cameraToPolygon1[2][0] = newSphereWC[i].z;
-				cameraToPolygon2[0][0] = newSphereWC[229].x;
-				cameraToPolygon2[1][0] = newSphereWC[229].y;
-				cameraToPolygon2[2][0] = newSphereWC[229].z;
-				cameraToPolygon3[0][0] = newSphereWC[i + 1].x;
-				cameraToPolygon3[1][0] = newSphereWC[i + 1].y;
-				cameraToPolygon3[2][0] = newSphereWC[i + 1].z;
+				MakeVertexToVertexVector(vFst, newSphereWC[229], newSphereWC[i]);
+				MakeVertexToVertexVector(vSec, newSphereWC[i + 1], newSphereWC[i]);
+				MakeVertexToVertexVector(cameraToPolygon1, newSphereWC[i]);
+				MakeVertexToVertexVector(cameraToPolygon2, newSphereWC[229]);
+				MakeVertexToVertexVector(cameraToPolygon3, newSphereWC[i + 1]);
 			}
 			else
 			{
-				vFst[0][0] = -newSphereWC[i].x + newSphereWC[229].x;
-				vFst[1][0] = -newSphereWC[i].y + newSphereWC[229].y;
-				vFst[2][0] = -newSphereWC[i].z + newSphereWC[229].z;
-				vSec[0][0] = -newSphereWC[i].x + newSphereWC[i - 11].x;
-				vSec[1][0] = -newSphereWC[i].y + newSphereWC[i - 11].y;
-				vSec[2][0] = -newSphereWC[i].z + newSphereWC[i - 11].z;
-				cameraToPolygon1[0][0] = newSphereWC[i].x;
-				cameraToPolygon1[1][0] = newSphereWC[i].y;
-				cameraToPolygon1[2][0] = newSphereWC[i].z;
-				cameraToPolygon2[0][0] = newSphereWC[229].x;
-				cameraToPolygon2[1][0] = newSphereWC[229].y;
-				cameraToPolygon2[2][0] = newSphereWC[229].z;
-				cameraToPolygon3[0][0] = newSphereWC[i - 11].x;
-				cameraToPolygon3[1][0] = newSphereWC[i - 11].y;
-				cameraToPolygon3[2][0] = newSphereWC[i - 11].z;
+				MakeVertexToVertexVector(vFst, newSphereWC[229], newSphereWC[i]);
+				MakeVertexToVertexVector(vSec, newSphereWC[i - 11], newSphereWC[i]);
+				MakeVertexToVertexVector(cameraToPolygon1, newSphereWC[i]);
+				MakeVertexToVertexVector(cameraToPolygon2, newSphereWC[229]);
+				MakeVertexToVertexVector(cameraToPolygon3, newSphereWC[i - 11]);
 			}
 			vFst[3][0] = 1; vSec[3][0] = 1;
 
@@ -1578,7 +1515,7 @@ void CMFCApplication3View::OnPaint()
 				for (int i = 1; i < 13; i++)
 				{
 					if (isVisableDot1[i - 1] == 0) continue;
-					DrawSphereLine(i, memDCPtr, width, height, left, top, sph[0], sph[i], sph[i-11], sph[i+1]);
+					DrawSphereLine(i, memDCPtr, width, height, left, top, sph[0], sph[i], sph[i - 11], sph[i + 1]);
 				}
 				for (int i = 1; i < 217; i++)
 				{
@@ -1651,7 +1588,7 @@ void CMFCApplication3View::OnPaint()
 		}
 #pragma endregion
 
-#pragma region µÎ¹øÂ° »ï°¢ Æú¸®°ï -> °¡Àå ³¡ÂÊÀÇ ²ÀÁşÁ¡µéÀÌ¶ûÀº ´õÀÌ»ó ÀÌÀ» ÇÊ¿ä ¾øÀ½
+#pragma region ë‘ë²ˆì§¸ ì‚¼ê° í´ë¦¬ê³¤ -> ê°€ì¥ ëìª½ì˜ ê¼­ì§“ì ë“¤ì´ë‘ì€ ë”ì´ìƒ ì´ì„ í•„ìš” ì—†ìŒ
 		countInt = 0;
 		for (int i = 1; i < 217; i++)
 		{
@@ -1659,39 +1596,19 @@ void CMFCApplication3View::OnPaint()
 
 			if ((i % 12) == 0)
 			{
-				vFst[0][0] = -newSphereWC[i + 1].x + newSphereWC[i - 11].x;
-				vFst[1][0] = -newSphereWC[i + 1].y + newSphereWC[i - 11].y;
-				vFst[2][0] = -newSphereWC[i + 1].z + newSphereWC[i - 11].z;
-				vSec[0][0] = -newSphereWC[i - 11].x + newSphereWC[i].x;
-				vSec[1][0] = -newSphereWC[i - 11].y + newSphereWC[i].y;
-				vSec[2][0] = -newSphereWC[i - 11].z + newSphereWC[i].z;
-				cameraToPolygon1[0][0] = newSphereWC[i].x;
-				cameraToPolygon1[1][0] = newSphereWC[i].y;
-				cameraToPolygon1[2][0] = newSphereWC[i].z;
-				cameraToPolygon2[0][0] = newSphereWC[i - 11].x;
-				cameraToPolygon2[1][0] = newSphereWC[i - 11].y;
-				cameraToPolygon2[2][0] = newSphereWC[i - 11].z;
-				cameraToPolygon3[0][0] = newSphereWC[i + 1].x;
-				cameraToPolygon3[1][0] = newSphereWC[i + 1].y;
-				cameraToPolygon3[2][0] = newSphereWC[i + 1].z;
+				MakeVertexToVertexVector(vFst, newSphereWC[i - 11], newSphereWC[i + 1]);
+				MakeVertexToVertexVector(vSec, newSphereWC[i], newSphereWC[i - 11]);
+				MakeVertexToVertexVector(cameraToPolygon1, newSphereWC[i]);
+				MakeVertexToVertexVector(cameraToPolygon2, newSphereWC[i - 11]);
+				MakeVertexToVertexVector(cameraToPolygon3, newSphereWC[i + 1]);
 			}
 			else
 			{
-				vFst[0][0] = -newSphereWC[i + 13].x + newSphereWC[i + 1].x;
-				vFst[1][0] = -newSphereWC[i + 13].y + newSphereWC[i + 1].y;
-				vFst[2][0] = -newSphereWC[i + 13].z + newSphereWC[i + 1].z;
-				vSec[0][0] = -newSphereWC[i + 1].x + newSphereWC[i].x;
-				vSec[1][0] = -newSphereWC[i + 1].y + newSphereWC[i].y;
-				vSec[2][0] = -newSphereWC[i + 1].z + newSphereWC[i].z;
-				cameraToPolygon1[0][0] = newSphereWC[i].x;
-				cameraToPolygon1[1][0] = newSphereWC[i].y;
-				cameraToPolygon1[2][0] = newSphereWC[i].z;
-				cameraToPolygon2[0][0] = newSphereWC[i + 1].x;
-				cameraToPolygon2[1][0] = newSphereWC[i + 1].y;
-				cameraToPolygon2[2][0] = newSphereWC[i + 1].z;
-				cameraToPolygon3[0][0] = newSphereWC[i + 13].x;
-				cameraToPolygon3[1][0] = newSphereWC[i + 13].y;
-				cameraToPolygon3[2][0] = newSphereWC[i + 13].z;
+				MakeVertexToVertexVector(vFst, newSphereWC[i + 1], newSphereWC[i + 13]);
+				MakeVertexToVertexVector(vSec, newSphereWC[i], newSphereWC[i + 1]);
+				MakeVertexToVertexVector(cameraToPolygon1, newSphereWC[i]);
+				MakeVertexToVertexVector(cameraToPolygon2, newSphereWC[i + 1]);
+				MakeVertexToVertexVector(cameraToPolygon3, newSphereWC[i + 13]);
 			}
 			vFst[3][0] = 1; vSec[3][0] = 1;
 
@@ -1841,22 +1758,22 @@ void CMFCApplication3View::OnPaint()
 
 	for (auto& figure : v_torusFigure)
 	{
-#pragma region ÁÂÇ¥°è º¯È¯ ÈÄ ±×¸®±â
-		// ¿øµé³¢¸® ±×¸®±â
+#pragma region ì¢Œí‘œê³„ ë³€í™˜ í›„ ê·¸ë¦¬ê¸°
+		// ì›ë“¤ë¼ë¦¬ ê·¸ë¦¬ê¸°
 		float dotFst[4][1] = {};
 		float dotSec[4][1] = {};
 		int myInt[144] = {};
 		int mySecInt[144] = {};
 		int countInt = 0;
-		int fstResult = 0; // Ã³À½ »ï°¢Çü ±×¸± ¶§ i=0 ÀÏ ¶§ Á¶°Ç ¿ë
-		int secResult = 0; // µÎ¹øÂ° »ï°¢Çü ±×¸± ¶§ i=0 ÀÏ ¶§ Á¶°Ç ¿ë
-		float cameraToPolygon1[3][1] = {}; // Ä«¸Ş¶ó -> Á¤Á¡ º¤ÅÍ
-		float cameraToPolygon2[3][1] = {}; // Ä«¸Ş¶ó -> Á¤Á¡ º¤ÅÍ
-		float cameraToPolygon3[3][1] = {}; // Ä«¸Ş¶ó -> Á¤Á¡ º¤ÅÍ
-		float vPolygon1[3][1] = {}; // Ä«¸Ş¶ó -> Á¤Á¡ º¤ÅÍ °è»ê¿ë ÀÓ½Ã ¹è¿­
-		float vPolygon2[3][1] = {}; // Ä«¸Ş¶ó -> Á¤Á¡ º¤ÅÍ °è»ê¿ë ÀÓ½Ã ¹è¿­
-		float vPolygon3[3][1] = {}; // Ä«¸Ş¶ó -> Á¤Á¡ º¤ÅÍ °è»ê¿ë ÀÓ½Ã ¹è¿­
-									// ¹è¿­¿¡¼­ ¹Ş¾Æ¿Â Æ÷ÀÎÅÍ·Î vertex °¡Á®¿À±â
+		int fstResult = 0; // ì²˜ìŒ ì‚¼ê°í˜• ê·¸ë¦´ ë•Œ i=0 ì¼ ë•Œ ì¡°ê±´ ìš©
+		int secResult = 0; // ë‘ë²ˆì§¸ ì‚¼ê°í˜• ê·¸ë¦´ ë•Œ i=0 ì¼ ë•Œ ì¡°ê±´ ìš©
+		float cameraToPolygon1[3][1] = {}; // ì¹´ë©”ë¼ -> ì •ì  ë²¡í„°
+		float cameraToPolygon2[3][1] = {}; // ì¹´ë©”ë¼ -> ì •ì  ë²¡í„°
+		float cameraToPolygon3[3][1] = {}; // ì¹´ë©”ë¼ -> ì •ì  ë²¡í„°
+		float vPolygon1[3][1] = {}; // ì¹´ë©”ë¼ -> ì •ì  ë²¡í„° ê³„ì‚°ìš© ì„ì‹œ ë°°ì—´
+		float vPolygon2[3][1] = {}; // ì¹´ë©”ë¼ -> ì •ì  ë²¡í„° ê³„ì‚°ìš© ì„ì‹œ ë°°ì—´
+		float vPolygon3[3][1] = {}; // ì¹´ë©”ë¼ -> ì •ì  ë²¡í„° ê³„ì‚°ìš© ì„ì‹œ ë°°ì—´
+									
 		int count = 0;
 		MyVertex tor[144] = {};
 		for (int i = 0; i < 144; i++) {
@@ -1864,8 +1781,8 @@ void CMFCApplication3View::OnPaint()
 			count++;
 		}
 
-		if (figure.torusRadius != figure.originTorusRadius) // Å©±â º¯°æÀÌ µÈ Ä£±¸¶ó¸é?
-		{ // ´Ù½Ã ¸¸µé¾î¼­ ³Ö¾îÁÜ
+		if (figure.torusRadius != figure.originTorusRadius) // í¬ê¸° ë³€ê²½ì´ ëœ ì¹œêµ¬ë¼ë©´?
+		{ // ë‹¤ì‹œ ë§Œë“¤ì–´ì„œ ë„£ì–´ì¤Œ
 			MyVertex* makingTorus = pTorus(figure.torusOrigin.x, figure.torusOrigin.y, figure.torusOrigin.z, figure.torusLongRadius, figure.torusRadius);
 			int torusCount = 0;
 			for (int i = 0; i < 144; i++)
@@ -1875,20 +1792,20 @@ void CMFCApplication3View::OnPaint()
 			}
 		}
 
-		////// ¿ùµå ÁÂÇ¥°è¿¡¼­ È¸Àü½ÃÅ°±â
+		////// ì›”ë“œ ì¢Œí‘œê³„ì—ì„œ íšŒì „ì‹œí‚¤ê¸°
 		float originInView[4][1] = {};
 		originInView[0][0] = figure.torusOrigin.x; originInView[1][0] = figure.torusOrigin.y; originInView[2][0] = figure.torusOrigin.z; originInView[3][0] = 1;
 		float* fPtr = MatrixMulti(view, originInView);
 		int sampleCount = 0;
 
-		for (int i = 0; i < 144; i++) // ¿ùµå ÁÂÇ¥°è¿¡¼­ÀÇ Å¥ºê Áß½ÉÀ» ¿øÁ¡À¸·Î ¿Å±â¸é¼­ ³ª¸ÓÁö Á¡µéµµ ´Ù µ¿ÀÏÇÏ°Ô ¿Å°ÜÁÜ
+		for (int i = 0; i < 144; i++) // ì›”ë“œ ì¢Œí‘œê³„ì—ì„œì˜ íë¸Œ ì¤‘ì‹¬ì„ ì›ì ìœ¼ë¡œ ì˜®ê¸°ë©´ì„œ ë‚˜ë¨¸ì§€ ì ë“¤ë„ ë‹¤ ë™ì¼í•˜ê²Œ ì˜®ê²¨ì¤Œ
 		{
 			tor[i].x -= originInView[0][0];
 			tor[i].y -= originInView[1][0];
 			tor[i].z -= originInView[2][0];
 		}
 
-		for (int i = 0; i < 144; i++) // ÇØ´ç Á¡µéÀ» ÃàÀ» ±âÁØÀ¸·Î È¸Àü
+		for (int i = 0; i < 144; i++) // í•´ë‹¹ ì ë“¤ì„ ì¶•ì„ ê¸°ì¤€ìœ¼ë¡œ íšŒì „
 		{
 			float sample[4][1] = { { tor[i].x },{ tor[i].y },{ tor[i].z },{ 1 } };
 			float* rotPtr = MatrixRotate(sample, figure.rotX, figure.rotY, 0);
@@ -1901,14 +1818,14 @@ void CMFCApplication3View::OnPaint()
 			tor[i].x = sample[0][0]; tor[i].y = sample[1][0]; tor[i].z = sample[2][0];
 		}
 
-		for (int i = 0; i < 144; i++) // ´Ù½Ã Å¥ºêÀÇ Áß½ÉÀ» ¿øÁ¡¿¡¼­ ¿ø·¡ÀÇ Áß½ÉÀ¸·Î º¹±¸
+		for (int i = 0; i < 144; i++) // ë‹¤ì‹œ íë¸Œì˜ ì¤‘ì‹¬ì„ ì›ì ì—ì„œ ì›ë˜ì˜ ì¤‘ì‹¬ìœ¼ë¡œ ë³µêµ¬
 		{
 			tor[i].x += originInView[0][0];
 			tor[i].y += originInView[1][0];
 			tor[i].z += originInView[2][0];
 		}
 
-		////// ¿ùµå ÁÂÇ¥°è¿¡¼­ x, yÃàÀ¸·Î ÆòÇàÀÌµ¿ ½ÃÅ°±â
+		////// ì›”ë“œ ì¢Œí‘œê³„ì—ì„œ x, yì¶•ìœ¼ë¡œ í‰í–‰ì´ë™ ì‹œí‚¤ê¸°
 		if (figure.moveY != 0)
 		{
 			for (int i = 0; i < 144; i++)
@@ -1934,19 +1851,18 @@ void CMFCApplication3View::OnPaint()
 			}
 		}
 
-		////// º¯°æµÈ ¿ùµåÁÂÇ¥ ÀúÀå
+		////// ë³€ê²½ëœ ì›”ë“œì¢Œí‘œ ì €ì¥
 		MyVertex newTorusWC[144] = {};
 		float tempVertex[4][1] = {};
 		for (int i = 0; i < 144; i++)
 		{
 			newTorusWC[i].x = tor[i].x; newTorusWC[i].y = tor[i].y; newTorusWC[i].z = tor[i].z;
 		}
-		//////
 
-#pragma region ºä Çà·Ä º¯È¯
+#pragma region ë·° í–‰ë ¬ ë³€í™˜
 
 		float sample[4][1] = {};
-		// torus °¢ Á¡µéÀ» ºä Çà·Ä º¯È¯ ½ÃÅ´
+		// torus ê° ì ë“¤ì„ ë·° í–‰ë ¬ ë³€í™˜ ì‹œí‚´
 		for (int i = 0; i < 144; i++)
 		{
 			sample[0][0] = tor[i].x;
@@ -1965,7 +1881,7 @@ void CMFCApplication3View::OnPaint()
 		}
 #pragma endregion
 
-		////// Å×½ºÆ® : ÀıµÎÃ¼ ÄÃ¸µ
+		////// ì ˆë‘ì²´ ì»¬ë§
 		if (projNum == 0)
 		{
 			BOOL isItUpper[144] = {};
@@ -1978,6 +1894,7 @@ void CMFCApplication3View::OnPaint()
 				BOOL result4 = isItUpperSide(normOfFrustum6, nearPoint3, vertexOfCube);
 				BOOL result5 = isItUpperSide(normOfNear, nearPoint3, vertexOfCube);
 				//BOOL result6 = isItUpperSide(normOfFar, farPoint3, vertexOfCube);
+				//if (result1 && result2 && result3 && result4 && result5 && result6) isItUpper[i] = TRUE;
 				if (result1 && result2 && result3 && result4 && result5) isItUpper[i] = TRUE;
 				else isItUpper[i] = FALSE;
 			}
@@ -1992,7 +1909,6 @@ void CMFCApplication3View::OnPaint()
 				figure.isFront = FALSE;
 				continue;
 			}
-			//////
 		}
 		else
 		{
@@ -2006,6 +1922,7 @@ void CMFCApplication3View::OnPaint()
 				BOOL result4 = isItUpperSide(normOfParallel6, pointOn9AND6, vertexOfCube);
 				BOOL result5 = isItUpperSide(normOfNear, pointOn3AND12, vertexOfCube);
 				//BOOL result6 = isItUpperSide(normOfFar, pointOnFar, vertexOfCube);
+				//if (result1 && result2 && result3 && result4 && result5 && result6) isItUpper[i] = TRUE;
 				if (result1 && result2 && result3 && result4 && result5) isItUpper[i] = TRUE;
 				else isItUpper[i] = FALSE;
 			}
@@ -2023,8 +1940,8 @@ void CMFCApplication3View::OnPaint()
 		}
 		figure.isFront = TRUE;
 
-		////// Ä«¸Ş¶ó ±âÁØ °¡Àå ¸Õ °÷ÀÇ Á¤Á¡ºÎÅÍ ±×¸² ±×¸®±â
-		// ºä ÁÂÇ¥ ±âÁØ ¿øÁ¡±îÁöÀÇ °Å¸®¸¦ ¼ø¼­´ë·Î 
+		////// ì¹´ë©”ë¼ ê¸°ì¤€ ê°€ì¥ ë¨¼ ê³³ì˜ ì •ì ë¶€í„° ê·¸ë¦¼ ê·¸ë¦¬ê¸°
+		// ë·° ì¢Œí‘œ ê¸°ì¤€ ì›ì ê¹Œì§€ì˜ ê±°ë¦¬ë¥¼ ìˆœì„œëŒ€ë¡œ 
 		float originToVertexLength[144] = {};
 		int fromFarToNear[144] = {};
 		float vertexSample[3][1] = {};
@@ -2036,9 +1953,9 @@ void CMFCApplication3View::OnPaint()
 			vertexSample[2][0] = tor[i].z;
 			distance = vectorLength(vertexSample);
 			originToVertexLength[i] = distance;
-		} // °¢ Á¤Á¡¿¡¼­ Ä«¸Ş¶ó±îÁöÀÇ °Å¸®¸¦ Ã¼Å©
+		} // ê° ì •ì ì—ì„œ ì¹´ë©”ë¼ê¹Œì§€ì˜ ê±°ë¦¬ë¥¼ ì²´í¬
 		int num = 0;
-		for (int i = 0; i < 144; i++) // °¡Àå Å«(¸Õ) °Í ºÎÅÍ ¹è¿­¿¡ ³ÖÀ½
+		for (int i = 0; i < 144; i++) // ê°€ì¥ í°(ë¨¼) ê²ƒ ë¶€í„° ë°°ì—´ì— ë„£ìŒ
 		{
 			float biggerOne = -1;
 			for (int j = 0; j < 144; j++)
@@ -2053,10 +1970,8 @@ void CMFCApplication3View::OnPaint()
 			fromFarToNear[i] = num;
 		}
 
-		//////////////////////////////////////////////////////////////////////
-
-#pragma region Åõ¿µ Çà·Ä º¯È¯
-		// ºä º¯È¯ ÇÑ Á¡µé Åõ¿µ º¯È¯
+#pragma region íˆ¬ì˜ í–‰ë ¬ ë³€í™˜
+		// ë·° ë³€í™˜ í•œ ì ë“¤ íˆ¬ì˜ ë³€í™˜
 		for (int i = 0; i < 144; i++)
 		{
 			sample[0][0] = tor[i].x;
@@ -2080,13 +1995,12 @@ void CMFCApplication3View::OnPaint()
 		}
 #pragma endregion
 
-		// pickingÀ» À§ÇØ ¹Ì¸® ½ºÅ©¸° ÁÂÇ¥µéÀ» ÀúÀå
+		// pickingì„ ìœ„í•´ ë¯¸ë¦¬ ìŠ¤í¬ë¦° ì¢Œí‘œë“¤ì„ ì €ì¥
 		for (int i = 0; i < 144; i++)
 		{
-			figure.torus_justForClick[i].x = ToScreenX(width, left, tor[i].x); 
-			figure.torus_justForClick[i].y = ToScreenY(height, top, tor[i].y); 
+			figure.torus_justForClick[i].x = ToScreenX(width, left, tor[i].x);
+			figure.torus_justForClick[i].y = ToScreenY(height, top, tor[i].y);
 		}
-		//////
 
 		CBrush torBrush;
 		CBrush* prevBrush;
@@ -2094,7 +2008,7 @@ void CMFCApplication3View::OnPaint()
 		int rgbTemp[144];
 		int rgbTemp_2[144];
 
-#pragma region Ã¹¹øÂ° »ï°¢ Æú¸®°ï 
+#pragma region ì²«ë²ˆì§¸ ì‚¼ê° í´ë¦¬ê³¤ 
 		//for (int i = 0; i < 144; i++)
 		for (auto i : fromFarToNear)
 		{
@@ -2102,78 +2016,38 @@ void CMFCApplication3View::OnPaint()
 			{
 				if (i >= 132)
 				{
-					dotFst[0][0] = -newTorusWC[i].x + newTorusWC[i - 132].x;
-					dotSec[0][0] = -newTorusWC[i - 132].x + newTorusWC[i - 11].x;
-					dotFst[1][0] = -newTorusWC[i].y + newTorusWC[i - 132].y;
-					dotSec[1][0] = -newTorusWC[i - 132].y + newTorusWC[i - 11].y;
-					dotFst[2][0] = -newTorusWC[i].z + newTorusWC[i - 132].z;
-					dotSec[2][0] = -newTorusWC[i - 132].z + newTorusWC[i - 11].z;
-					cameraToPolygon1[0][0] = newTorusWC[i].x;
-					cameraToPolygon1[1][0] = newTorusWC[i].y;
-					cameraToPolygon1[2][0] = newTorusWC[i].z;
-					cameraToPolygon2[0][0] = newTorusWC[i - 132].x;
-					cameraToPolygon2[1][0] = newTorusWC[i - 132].y;
-					cameraToPolygon2[2][0] = newTorusWC[i - 132].z;
-					cameraToPolygon3[0][0] = newTorusWC[i - 11].x;
-					cameraToPolygon3[1][0] = newTorusWC[i - 11].y;
-					cameraToPolygon3[2][0] = newTorusWC[i - 11].z;
+					MakeVertexToVertexVector(dotFst, newTorusWC[i - 132], newTorusWC[i]);
+					MakeVertexToVertexVector(dotSec, newTorusWC[i - 11], newTorusWC[i - 132]);
+					MakeVertexToVertexVector(cameraToPolygon1, newTorusWC[i]);
+					MakeVertexToVertexVector(cameraToPolygon2, newTorusWC[i - 132]);
+					MakeVertexToVertexVector(cameraToPolygon3, newTorusWC[i - 11]);
 				}
 				else
 				{
-					dotFst[0][0] = -newTorusWC[i].x + newTorusWC[i + 12].x;
-					dotSec[0][0] = -newTorusWC[i + 12].x + newTorusWC[i - 11].x;
-					dotFst[1][0] = -newTorusWC[i].y + newTorusWC[i + 12].y;
-					dotSec[1][0] = -newTorusWC[i + 12].y + newTorusWC[i - 11].y;
-					dotFst[2][0] = -newTorusWC[i].z + newTorusWC[i + 12].z;
-					dotSec[2][0] = -newTorusWC[i + 12].z + newTorusWC[i - 11].z;
-					cameraToPolygon1[0][0] = newTorusWC[i].x;
-					cameraToPolygon1[1][0] = newTorusWC[i].y;
-					cameraToPolygon1[2][0] = newTorusWC[i].z;
-					cameraToPolygon2[0][0] = newTorusWC[i + 12].x;
-					cameraToPolygon2[1][0] = newTorusWC[i + 12].y;
-					cameraToPolygon2[2][0] = newTorusWC[i + 12].z;
-					cameraToPolygon3[0][0] = newTorusWC[i - 11].x;
-					cameraToPolygon3[1][0] = newTorusWC[i - 11].y;
-					cameraToPolygon3[2][0] = newTorusWC[i - 11].z;
+					MakeVertexToVertexVector(dotFst, newTorusWC[i + 12], newTorusWC[i]);
+					MakeVertexToVertexVector(dotSec, newTorusWC[i - 11], newTorusWC[i + 12]);
+					MakeVertexToVertexVector(cameraToPolygon1, newTorusWC[i]);
+					MakeVertexToVertexVector(cameraToPolygon2, newTorusWC[i + 12]);
+					MakeVertexToVertexVector(cameraToPolygon3, newTorusWC[i - 11]);
 				}
 			}
 			else
 			{
 				if (i >= 132)
 				{
-					dotFst[0][0] = -newTorusWC[i].x + newTorusWC[i - 132].x;
-					dotSec[0][0] = -newTorusWC[i - 132].x + newTorusWC[i + 1].x;
-					dotFst[1][0] = -newTorusWC[i].y + newTorusWC[i - 132].y;
-					dotSec[1][0] = -newTorusWC[i - 132].y + newTorusWC[i + 1].y;
-					dotFst[2][0] = -newTorusWC[i].z + newTorusWC[i - 132].z;
-					dotSec[2][0] = -newTorusWC[i - 132].z + newTorusWC[i + 1].z;
-					cameraToPolygon1[0][0] = newTorusWC[i].x;
-					cameraToPolygon1[1][0] = newTorusWC[i].y;
-					cameraToPolygon1[2][0] = newTorusWC[i].z;
-					cameraToPolygon2[0][0] = newTorusWC[i - 132].x;
-					cameraToPolygon2[1][0] = newTorusWC[i - 132].y;
-					cameraToPolygon2[2][0] = newTorusWC[i - 132].z;
-					cameraToPolygon3[0][0] = newTorusWC[i + 1].x;
-					cameraToPolygon3[1][0] = newTorusWC[i + 1].y;
-					cameraToPolygon3[2][0] = newTorusWC[i + 1].z;
+					MakeVertexToVertexVector(dotFst, newTorusWC[i - 132], newTorusWC[i]);
+					MakeVertexToVertexVector(dotSec, newTorusWC[i + 1], newTorusWC[i - 132]);
+					MakeVertexToVertexVector(cameraToPolygon1, newTorusWC[i]);
+					MakeVertexToVertexVector(cameraToPolygon2, newTorusWC[i - 132]);
+					MakeVertexToVertexVector(cameraToPolygon3, newTorusWC[i + 1]);
 				}
 				else
 				{
-					dotFst[0][0] = -newTorusWC[i].x + newTorusWC[i + 12].x;
-					dotSec[0][0] = -newTorusWC[i + 12].x + newTorusWC[i + 1].x;
-					dotFst[1][0] = -newTorusWC[i].y + newTorusWC[i + 12].y;
-					dotSec[1][0] = -newTorusWC[i + 12].y + newTorusWC[i + 1].y;
-					dotFst[2][0] = -newTorusWC[i].z + newTorusWC[i + 12].z;
-					dotSec[2][0] = -newTorusWC[i + 12].z + newTorusWC[i + 1].z;
-					cameraToPolygon1[0][0] = newTorusWC[i].x;
-					cameraToPolygon1[1][0] = newTorusWC[i].y;
-					cameraToPolygon1[2][0] = newTorusWC[i].z;
-					cameraToPolygon2[0][0] = newTorusWC[i + 12].x;
-					cameraToPolygon2[1][0] = newTorusWC[i + 12].y;
-					cameraToPolygon2[2][0] = newTorusWC[i + 12].z;
-					cameraToPolygon3[0][0] = newTorusWC[i + 1].x;
-					cameraToPolygon3[1][0] = newTorusWC[i + 1].y;
-					cameraToPolygon3[2][0] = newTorusWC[i + 1].z;
+					MakeVertexToVertexVector(dotFst, newTorusWC[i + 12], newTorusWC[i]);
+					MakeVertexToVertexVector(dotSec, newTorusWC[i + 1], newTorusWC[i + 12]);
+					MakeVertexToVertexVector(cameraToPolygon1, newTorusWC[i]);
+					MakeVertexToVertexVector(cameraToPolygon2, newTorusWC[i + 12]);
+					MakeVertexToVertexVector(cameraToPolygon3, newTorusWC[i + 1]);
 				}
 			}
 			dotFst[3][0] = 1;
@@ -2242,19 +2116,19 @@ void CMFCApplication3View::OnPaint()
 			myInt[countInt] = i;
 			countInt++;
 		}
-		// i = 0 ÀÏ¶§¸¸ µû·Î ±×·ÁÁÖ±â -> 0ÀÏ¶§´Â °Ç³Ê¶Ù°Ô ±×·Á³õ¾ÒÀ½.
+		// i = 0 ì¼ë•Œë§Œ ë”°ë¡œ ê·¸ë ¤ì£¼ê¸° -> 0ì¼ë•ŒëŠ” ê±´ë„ˆë›°ê²Œ ê·¸ë ¤ë†“ì•˜ìŒ.
 		int rgbCount;
 		if (frameNum == 1)
 		{
 			if (fstResult == 1)
 			{
 				if (figure.isClicked == FALSE)
-				{// ¼±À¸·Î ±×¸®±â
+				{// ì„ ìœ¼ë¡œ ê·¸ë¦¬ê¸°
 					DrawTorusLine(memDCPtr, width, height, left, top, tor[0], tor[1], tor[12]);
 				}
 				else
 				{
-					// ¸éÀ¸·Î ±×¸®±â
+					// ë©´ìœ¼ë¡œ ê·¸ë¦¬ê¸°
 					DrawTorusMesh(0, rgbTemp, memDCPtr, width, height, left, top, tor[0], tor[1], tor[12]);
 
 				}
@@ -2268,12 +2142,12 @@ void CMFCApplication3View::OnPaint()
 					{
 						if (figure.isClicked == FALSE)
 						{
-							// ¼±À¸·Î ±×¸®±â
+							// ì„ ìœ¼ë¡œ ê·¸ë¦¬ê¸°
 							DrawTorusLine(memDCPtr, width, height, left, top, tor[i], tor[i - 11], tor[i - 132]);
 						}
 						else
 						{
-							// ¸éÀ¸·Î ±×¸®±â
+							// ë©´ìœ¼ë¡œ ê·¸ë¦¬ê¸°
 							DrawTorusMesh(i, rgbTemp, memDCPtr, width, height, left, top, tor[i], tor[i - 11], tor[i - 132]);
 						}
 					}
@@ -2281,12 +2155,12 @@ void CMFCApplication3View::OnPaint()
 					{
 						if (figure.isClicked == FALSE)
 						{
-							// ¼±À¸·Î ±×¸®±â
+							// ì„ ìœ¼ë¡œ ê·¸ë¦¬ê¸°
 							DrawTorusLine(memDCPtr, width, height, left, top, tor[i], tor[i - 11], tor[i + 12]);
 						}
 						else
 						{
-							// ¸éÀ¸·Î ±×¸®±â
+							// ë©´ìœ¼ë¡œ ê·¸ë¦¬ê¸°
 							DrawTorusMesh(i, rgbTemp, memDCPtr, width, height, left, top, tor[i], tor[i - 11], tor[i + 12]);
 						}
 					}
@@ -2297,12 +2171,12 @@ void CMFCApplication3View::OnPaint()
 					{
 						if (figure.isClicked == FALSE)
 						{
-							// ¼±À¸·Î ±×¸®±â
+							// ì„ ìœ¼ë¡œ ê·¸ë¦¬ê¸°
 							DrawTorusLine(memDCPtr, width, height, left, top, tor[i], tor[i + 1], tor[i - 132]);
 						}
 						else
 						{
-							// ¸éÀ¸·Î ±×¸®±â
+							// ë©´ìœ¼ë¡œ ê·¸ë¦¬ê¸°
 							DrawTorusMesh(i, rgbTemp, memDCPtr, width, height, left, top, tor[i], tor[i + 1], tor[i - 132]);
 						}
 					}
@@ -2310,12 +2184,12 @@ void CMFCApplication3View::OnPaint()
 					{
 						if (figure.isClicked == FALSE)
 						{
-							// ¼±À¸·Î ±×¸®±â
+							// ì„ ìœ¼ë¡œ ê·¸ë¦¬ê¸°
 							DrawTorusLine(memDCPtr, width, height, left, top, tor[i], tor[i + 1], tor[i + 12]);
 						}
 						else
 						{
-							// ¸éÀ¸·Î ±×¸®±â
+							// ë©´ìœ¼ë¡œ ê·¸ë¦¬ê¸°
 							DrawTorusMesh(i, rgbTemp, memDCPtr, width, height, left, top, tor[i], tor[i + 1], tor[i + 12]);
 						}
 					}
@@ -2327,12 +2201,12 @@ void CMFCApplication3View::OnPaint()
 			if (fstResult == 1)
 			{
 				if (figure.isClicked)
-				{// ¼±À¸·Î ±×¸®±â
+				{// ì„ ìœ¼ë¡œ ê·¸ë¦¬ê¸°
 					DrawTorusLine(memDCPtr, width, height, left, top, tor[0], tor[1], tor[12]);
 				}
 				else
 				{
-					// ¸éÀ¸·Î ±×¸®±â
+					// ë©´ìœ¼ë¡œ ê·¸ë¦¬ê¸°
 					DrawTorusMesh(0, rgbTemp, memDCPtr, width, height, left, top, tor[0], tor[1], tor[12]);
 				}
 			}
@@ -2347,12 +2221,12 @@ void CMFCApplication3View::OnPaint()
 					{
 						if (figure.isClicked)
 						{
-							// ¼±À¸·Î ±×¸®±â
+							// ì„ ìœ¼ë¡œ ê·¸ë¦¬ê¸°
 							DrawTorusLine(memDCPtr, width, height, left, top, tor[i], tor[i - 11], tor[i - 132]);
 						}
 						else
 						{
-							// ¸éÀ¸·Î ±×¸®±â
+							// ë©´ìœ¼ë¡œ ê·¸ë¦¬ê¸°
 							DrawTorusMesh(i, rgbTemp, memDCPtr, width, height, left, top, tor[i], tor[i - 11], tor[i - 132]);
 						}
 					}
@@ -2360,12 +2234,12 @@ void CMFCApplication3View::OnPaint()
 					{
 						if (figure.isClicked)
 						{
-							// ¼±À¸·Î ±×¸®±â
+							// ì„ ìœ¼ë¡œ ê·¸ë¦¬ê¸°
 							DrawTorusLine(memDCPtr, width, height, left, top, tor[i], tor[i - 11], tor[i + 12]);
 						}
 						else
 						{
-							// ¸éÀ¸·Î ±×¸®±â
+							// ë©´ìœ¼ë¡œ ê·¸ë¦¬ê¸°
 							DrawTorusMesh(i, rgbTemp, memDCPtr, width, height, left, top, tor[i], tor[i - 11], tor[i + 12]);
 						}
 					}
@@ -2376,12 +2250,12 @@ void CMFCApplication3View::OnPaint()
 					{
 						if (figure.isClicked)
 						{
-							// ¼±À¸·Î ±×¸®±â
+							// ì„ ìœ¼ë¡œ ê·¸ë¦¬ê¸°
 							DrawTorusLine(memDCPtr, width, height, left, top, tor[i], tor[i + 1], tor[i - 132]);
 						}
 						else
 						{
-							// ¸éÀ¸·Î ±×¸®±â
+							// ë©´ìœ¼ë¡œ ê·¸ë¦¬ê¸°
 							DrawTorusMesh(i, rgbTemp, memDCPtr, width, height, left, top, tor[i], tor[i + 1], tor[i - 132]);
 						}
 					}
@@ -2389,12 +2263,12 @@ void CMFCApplication3View::OnPaint()
 					{
 						if (figure.isClicked)
 						{
-							// ¼±À¸·Î ±×¸®±â
+							// ì„ ìœ¼ë¡œ ê·¸ë¦¬ê¸°
 							DrawTorusLine(memDCPtr, width, height, left, top, tor[i], tor[i + 1], tor[i + 12]);
 						}
 						else
 						{
-							// ¸éÀ¸·Î ±×¸®±â
+							// ë©´ìœ¼ë¡œ ê·¸ë¦¬ê¸°
 							DrawTorusMesh(i, rgbTemp, memDCPtr, width, height, left, top, tor[i], tor[i + 1], tor[i + 12]);
 						}
 					}
@@ -2403,7 +2277,7 @@ void CMFCApplication3View::OnPaint()
 		}
 		//////
 #pragma endregion
-#pragma region µÎ¹øÂ° »ï°¢ Æú¸®°ï ±×¸®±â
+#pragma region ë‘ë²ˆì§¸ ì‚¼ê° í´ë¦¬ê³¤ ê·¸ë¦¬ê¸°
 		countInt = 0;
 		//for (int i = 0; i < 144; i++)
 		for (auto i : fromFarToNear)
@@ -2412,78 +2286,38 @@ void CMFCApplication3View::OnPaint()
 			{
 				if (i == 0)
 				{
-					dotFst[0][0] = -newTorusWC[i].x + newTorusWC[i + 132].x;
-					dotSec[0][0] = -newTorusWC[i + 132].x + newTorusWC[i + 11].x;
-					dotFst[1][0] = -newTorusWC[i].y + newTorusWC[i + 132].y;
-					dotSec[1][0] = -newTorusWC[i + 132].y + newTorusWC[i + 11].y;
-					dotFst[2][0] = -newTorusWC[i].z + newTorusWC[i + 132].z;
-					dotSec[2][0] = -newTorusWC[i + 132].z + newTorusWC[i + 11].z;
-					cameraToPolygon1[0][0] = newTorusWC[i].x;
-					cameraToPolygon1[1][0] = newTorusWC[i].y;
-					cameraToPolygon1[2][0] = newTorusWC[i].z;
-					cameraToPolygon2[0][0] = newTorusWC[i + 132].x;
-					cameraToPolygon2[1][0] = newTorusWC[i + 132].y;
-					cameraToPolygon2[2][0] = newTorusWC[i + 132].z;
-					cameraToPolygon3[0][0] = newTorusWC[i + 11].x;
-					cameraToPolygon3[1][0] = newTorusWC[i + 11].y;
-					cameraToPolygon3[2][0] = newTorusWC[i + 11].z;
+					MakeVertexToVertexVector(dotFst, newTorusWC[i + 132], newTorusWC[i]);
+					MakeVertexToVertexVector(dotSec, newTorusWC[i + 11], newTorusWC[i + 132]);
+					MakeVertexToVertexVector(cameraToPolygon1, newTorusWC[i]);
+					MakeVertexToVertexVector(cameraToPolygon2, newTorusWC[i + 132]);
+					MakeVertexToVertexVector(cameraToPolygon3, newTorusWC[i + 11]);
 				}
 				else
 				{
-					dotFst[0][0] = -newTorusWC[i].x + newTorusWC[i - 12].x;
-					dotSec[0][0] = -newTorusWC[i - 12].x + newTorusWC[i + 11].x;
-					dotFst[1][0] = -newTorusWC[i].y + newTorusWC[i - 12].y;
-					dotSec[1][0] = -newTorusWC[i - 12].y + newTorusWC[i + 11].y;
-					dotFst[2][0] = -newTorusWC[i].z + newTorusWC[i - 12].z;
-					dotSec[2][0] = -newTorusWC[i - 12].z + newTorusWC[i + 11].z;
-					cameraToPolygon1[0][0] = newTorusWC[i].x;
-					cameraToPolygon1[1][0] = newTorusWC[i].y;
-					cameraToPolygon1[2][0] = newTorusWC[i].z;
-					cameraToPolygon2[0][0] = newTorusWC[i - 12].x;
-					cameraToPolygon2[1][0] = newTorusWC[i - 12].y;
-					cameraToPolygon2[2][0] = newTorusWC[i - 12].z;
-					cameraToPolygon3[0][0] = newTorusWC[i + 11].x;
-					cameraToPolygon3[1][0] = newTorusWC[i + 11].y;
-					cameraToPolygon3[2][0] = newTorusWC[i + 11].z;
+					MakeVertexToVertexVector(dotFst, newTorusWC[i - 12], newTorusWC[i]);
+					MakeVertexToVertexVector(dotSec, newTorusWC[i + 11], newTorusWC[i - 12]);
+					MakeVertexToVertexVector(cameraToPolygon1, newTorusWC[i]);
+					MakeVertexToVertexVector(cameraToPolygon2, newTorusWC[i - 12]);
+					MakeVertexToVertexVector(cameraToPolygon3, newTorusWC[i + 11]);
 				}
 			}
 			else
 			{
 				if (i < 12)
 				{
-					dotFst[0][0] = -newTorusWC[i].x + newTorusWC[i + 132].x;
-					dotSec[0][0] = -newTorusWC[i + 132].x + newTorusWC[i - 1].x;
-					dotFst[1][0] = -newTorusWC[i].y + newTorusWC[i + 132].y;
-					dotSec[1][0] = -newTorusWC[i + 132].y + newTorusWC[i - 1].y;
-					dotFst[2][0] = -newTorusWC[i].z + newTorusWC[i + 132].z;
-					dotSec[2][0] = -newTorusWC[i + 132].z + newTorusWC[i - 1].z;
-					cameraToPolygon1[0][0] = newTorusWC[i].x;
-					cameraToPolygon1[1][0] = newTorusWC[i].y;
-					cameraToPolygon1[2][0] = newTorusWC[i].z;
-					cameraToPolygon2[0][0] = newTorusWC[i + 132].x;
-					cameraToPolygon2[1][0] = newTorusWC[i + 132].y;
-					cameraToPolygon2[2][0] = newTorusWC[i + 132].z;
-					cameraToPolygon3[0][0] = newTorusWC[i - 1].x;
-					cameraToPolygon3[1][0] = newTorusWC[i - 1].y;
-					cameraToPolygon3[2][0] = newTorusWC[i - 1].z;
+					MakeVertexToVertexVector(dotFst, newTorusWC[i + 132], newTorusWC[i]);
+					MakeVertexToVertexVector(dotSec, newTorusWC[i - 1], newTorusWC[i + 132]);
+					MakeVertexToVertexVector(cameraToPolygon1, newTorusWC[i]);
+					MakeVertexToVertexVector(cameraToPolygon2, newTorusWC[i + 132]);
+					MakeVertexToVertexVector(cameraToPolygon3, newTorusWC[i - 1]);
 				}
 				else
 				{
-					dotFst[0][0] = -newTorusWC[i].x + newTorusWC[i - 12].x;
-					dotSec[0][0] = -newTorusWC[i - 12].x + newTorusWC[i - 1].x;
-					dotFst[1][0] = -newTorusWC[i].y + newTorusWC[i - 12].y;
-					dotSec[1][0] = -newTorusWC[i - 12].y + newTorusWC[i - 1].y;
-					dotFst[2][0] = -newTorusWC[i].z + newTorusWC[i - 12].z;
-					dotSec[2][0] = -newTorusWC[i - 12].z + newTorusWC[i - 1].z;
-					cameraToPolygon1[0][0] = newTorusWC[i].x;
-					cameraToPolygon1[1][0] = newTorusWC[i].y;
-					cameraToPolygon1[2][0] = newTorusWC[i].z;
-					cameraToPolygon2[0][0] = newTorusWC[i - 12].x;
-					cameraToPolygon2[1][0] = newTorusWC[i - 12].y;
-					cameraToPolygon2[2][0] = newTorusWC[i - 12].z;
-					cameraToPolygon3[0][0] = newTorusWC[i - 1].x;
-					cameraToPolygon3[1][0] = newTorusWC[i - 1].y;
-					cameraToPolygon3[2][0] = newTorusWC[i - 1].z;
+					MakeVertexToVertexVector(dotFst, newTorusWC[i - 12], newTorusWC[i]);
+					MakeVertexToVertexVector(dotSec, newTorusWC[i - 1], newTorusWC[i - 12]);
+					MakeVertexToVertexVector(cameraToPolygon1, newTorusWC[i]);
+					MakeVertexToVertexVector(cameraToPolygon2, newTorusWC[i - 12]);
+					MakeVertexToVertexVector(cameraToPolygon3, newTorusWC[i - 1]);
 				}
 			}
 			dotFst[3][0] = 1;
@@ -2552,7 +2386,7 @@ void CMFCApplication3View::OnPaint()
 			mySecInt[countInt] = i;
 			countInt++;
 		}
-		// i = 0 ÀÏ¶§¸¸ µû·Î ±×·ÁÁÖ±â -> 0ÀÏ¶§´Â °Ç³Ê¶Ù°Ô ±×·Á³õ¾ÒÀ½.
+		// i = 0 ì¼ë•Œë§Œ ë”°ë¡œ ê·¸ë ¤ì£¼ê¸° -> 0ì¼ë•ŒëŠ” ê±´ë„ˆë›°ê²Œ ê·¸ë ¤ë†“ì•˜ìŒ.
 		rgbCount = 0;
 		if (frameNum == 1)
 		{
@@ -2560,12 +2394,12 @@ void CMFCApplication3View::OnPaint()
 			{
 				if (figure.isClicked == FALSE)
 				{
-					// ¼±À¸·Î ±×¸®±â
+					// ì„ ìœ¼ë¡œ ê·¸ë¦¬ê¸°
 					DrawTorusLine(memDCPtr, width, height, left, top, tor[0], tor[11], tor[132]);
 				}
 				else
 				{
-					// ¸éÀ¸·Î ±×¸®±â
+					// ë©´ìœ¼ë¡œ ê·¸ë¦¬ê¸°
 					DrawTorusMesh(0, rgbTemp, memDCPtr, width, height, left, top, tor[0], tor[11], tor[132]);
 				}
 			}
@@ -2577,12 +2411,12 @@ void CMFCApplication3View::OnPaint()
 				{
 					if (figure.isClicked == FALSE)
 					{
-						// ¼±À¸·Î ±×¸®±â
+						// ì„ ìœ¼ë¡œ ê·¸ë¦¬ê¸°
 						DrawTorusLine(memDCPtr, width, height, left, top, tor[i], tor[i + 11], tor[i - 12]);
 					}
 					else
 					{
-						// ¸éÀ¸·Î ±×¸®±â
+						// ë©´ìœ¼ë¡œ ê·¸ë¦¬ê¸°
 						DrawTorusMesh(i, rgbTemp, memDCPtr, width, height, left, top, tor[i], tor[i + 11], tor[i - 12]);
 					}
 				}
@@ -2592,12 +2426,12 @@ void CMFCApplication3View::OnPaint()
 					{
 						if (figure.isClicked == FALSE)
 						{
-							// ¼±À¸·Î ±×¸®±â
+							// ì„ ìœ¼ë¡œ ê·¸ë¦¬ê¸°
 							DrawTorusLine(memDCPtr, width, height, left, top, tor[i], tor[i - 1], tor[i + 132]);
 						}
 						else
 						{
-							// ¸éÀ¸·Î ±×¸®±â
+							// ë©´ìœ¼ë¡œ ê·¸ë¦¬ê¸°
 							DrawTorusMesh(i, rgbTemp, memDCPtr, width, height, left, top, tor[i], tor[i - 1], tor[i + 132]);
 						}
 					}
@@ -2605,12 +2439,12 @@ void CMFCApplication3View::OnPaint()
 					{
 						if (figure.isClicked == FALSE)
 						{
-							// ¼±À¸·Î ±×¸®±â
+							// ì„ ìœ¼ë¡œ ê·¸ë¦¬ê¸°
 							DrawTorusLine(memDCPtr, width, height, left, top, tor[i], tor[i - 1], tor[i - 12]);
 						}
 						else
 						{
-							// ¸éÀ¸·Î ±×¸®±â
+							// ë©´ìœ¼ë¡œ ê·¸ë¦¬ê¸°
 							DrawTorusMesh(i, rgbTemp, memDCPtr, width, height, left, top, tor[i], tor[i - 1], tor[i - 12]);
 						}
 					}
@@ -2623,12 +2457,12 @@ void CMFCApplication3View::OnPaint()
 			{
 				if (figure.isClicked)
 				{
-					// ¼±À¸·Î ±×¸®±â
+					// ì„ ìœ¼ë¡œ ê·¸ë¦¬ê¸°
 					DrawTorusLine(memDCPtr, width, height, left, top, tor[0], tor[11], tor[132]);
 				}
 				else
 				{
-					// ¸éÀ¸·Î ±×¸®±â
+					// ë©´ìœ¼ë¡œ ê·¸ë¦¬ê¸°
 					DrawTorusMesh(0, rgbTemp, memDCPtr, width, height, left, top, tor[0], tor[11], tor[132]);
 				}
 			}
@@ -2640,12 +2474,12 @@ void CMFCApplication3View::OnPaint()
 				{
 					if (figure.isClicked)
 					{
-						// ¼±À¸·Î ±×¸®±â
+						// ì„ ìœ¼ë¡œ ê·¸ë¦¬ê¸°
 						DrawTorusLine(memDCPtr, width, height, left, top, tor[i], tor[i + 11], tor[i - 12]);
 					}
 					else
 					{
-						// ¸éÀ¸·Î ±×¸®±â
+						// ë©´ìœ¼ë¡œ ê·¸ë¦¬ê¸°
 						DrawTorusMesh(i, rgbTemp, memDCPtr, width, height, left, top, tor[i], tor[i + 11], tor[i - 12]);
 					}
 				}
@@ -2655,12 +2489,12 @@ void CMFCApplication3View::OnPaint()
 					{
 						if (figure.isClicked)
 						{
-							// ¼±À¸·Î ±×¸®±â
+							// ì„ ìœ¼ë¡œ ê·¸ë¦¬ê¸°
 							DrawTorusLine(memDCPtr, width, height, left, top, tor[i], tor[i - 1], tor[i + 132]);
 						}
 						else
 						{
-							// ¸éÀ¸·Î ±×¸®±â
+							// ë©´ìœ¼ë¡œ ê·¸ë¦¬ê¸°
 							DrawTorusMesh(i, rgbTemp, memDCPtr, width, height, left, top, tor[i], tor[i - 1], tor[i + 132]);
 						}
 					}
@@ -2668,12 +2502,12 @@ void CMFCApplication3View::OnPaint()
 					{
 						if (figure.isClicked)
 						{
-							// ¼±À¸·Î ±×¸®±â
+							// ì„ ìœ¼ë¡œ ê·¸ë¦¬ê¸°
 							DrawTorusLine(memDCPtr, width, height, left, top, tor[i], tor[i - 1], tor[i - 12]);
 						}
 						else
 						{
-							// ¸éÀ¸·Î ±×¸®±â
+							// ë©´ìœ¼ë¡œ ê·¸ë¦¬ê¸°
 							DrawTorusMesh(i, rgbTemp, memDCPtr, width, height, left, top, tor[i], tor[i - 1], tor[i - 12]);
 						}
 					}
@@ -2683,7 +2517,7 @@ void CMFCApplication3View::OnPaint()
 
 #pragma endregion
 
-#pragma region ¸éÀÌ °ãÃÄº¸ÀÌ´Â°ÍÀ» ÇØ°áÇÏ±â À§ÇØ Ã³À½ ±×¸°ºÎºĞ Áß ¾ÕºÎºĞ¸¸ ´Ù½Ã ±×·ÁÁÜ -> Ä«¸Ş¶ó·ÎºÎÅÍ Á¤Á¡±îÁöÀÇ °Å¸®°¡ °¡±î¿î ºÎºĞ
+#pragma region ë©´ì´ ê²¹ì³ë³´ì´ëŠ”ê²ƒì„ í•´ê²°í•˜ê¸° ìœ„í•´ ì²˜ìŒ ê·¸ë¦°ë¶€ë¶„ ì¤‘ ì•ë¶€ë¶„ë§Œ ë‹¤ì‹œ ê·¸ë ¤ì¤Œ -> ì¹´ë©”ë¼ë¡œë¶€í„° ì •ì ê¹Œì§€ì˜ ê±°ë¦¬ê°€ ê°€ê¹Œìš´ ë¶€ë¶„
 		int countFor96 = 0;
 		int whereIs0 = 0;
 		if (frameNum == 1)
@@ -2702,12 +2536,12 @@ void CMFCApplication3View::OnPaint()
 				if (whereIs0 > 95)
 				{
 					if (figure.isClicked == FALSE)
-					{// ¼±À¸·Î ±×¸®±â
+					{// ì„ ìœ¼ë¡œ ê·¸ë¦¬ê¸°
 						DrawTorusLine(memDCPtr, width, height, left, top, tor[0], tor[1], tor[12]);
 					}
 					else
 					{
-						// ¸éÀ¸·Î ±×¸®±â
+						// ë©´ìœ¼ë¡œ ê·¸ë¦¬ê¸°
 						DrawTorusMesh(0, rgbTemp, memDCPtr, width, height, left, top, tor[0], tor[1], tor[12]);
 					}
 				}
@@ -2726,12 +2560,12 @@ void CMFCApplication3View::OnPaint()
 					{
 						if (figure.isClicked == FALSE)
 						{
-							// ¼±À¸·Î ±×¸®±â
+							// ì„ ìœ¼ë¡œ ê·¸ë¦¬ê¸°
 							DrawTorusLine(memDCPtr, width, height, left, top, tor[i], tor[i - 11], tor[i - 132]);
 						}
 						else
 						{
-							// ¸éÀ¸·Î ±×¸®±â
+							// ë©´ìœ¼ë¡œ ê·¸ë¦¬ê¸°
 							DrawTorusMesh(i, rgbTemp, memDCPtr, width, height, left, top, tor[i], tor[i - 11], tor[i - 132]);
 						}
 					}
@@ -2739,12 +2573,12 @@ void CMFCApplication3View::OnPaint()
 					{
 						if (figure.isClicked == FALSE)
 						{
-							// ¼±À¸·Î ±×¸®±â
+							// ì„ ìœ¼ë¡œ ê·¸ë¦¬ê¸°
 							DrawTorusLine(memDCPtr, width, height, left, top, tor[i], tor[i - 11], tor[i + 12]);
 						}
 						else
 						{
-							// ¸éÀ¸·Î ±×¸®±â
+							// ë©´ìœ¼ë¡œ ê·¸ë¦¬ê¸°
 							DrawTorusMesh(i, rgbTemp, memDCPtr, width, height, left, top, tor[i], tor[i - 11], tor[i + 12]);
 						}
 					}
@@ -2755,12 +2589,12 @@ void CMFCApplication3View::OnPaint()
 					{
 						if (figure.isClicked == FALSE)
 						{
-							// ¼±À¸·Î ±×¸®±â
+							// ì„ ìœ¼ë¡œ ê·¸ë¦¬ê¸°
 							DrawTorusLine(memDCPtr, width, height, left, top, tor[i], tor[i + 1], tor[i - 132]);
 						}
 						else
 						{
-							// ¸éÀ¸·Î ±×¸®±â
+							// ë©´ìœ¼ë¡œ ê·¸ë¦¬ê¸°
 							DrawTorusMesh(i, rgbTemp, memDCPtr, width, height, left, top, tor[i], tor[i + 1], tor[i - 132]);
 						}
 					}
@@ -2768,12 +2602,12 @@ void CMFCApplication3View::OnPaint()
 					{
 						if (figure.isClicked == FALSE)
 						{
-							// ¼±À¸·Î ±×¸®±â
+							// ì„ ìœ¼ë¡œ ê·¸ë¦¬ê¸°
 							DrawTorusLine(memDCPtr, width, height, left, top, tor[i], tor[i + 1], tor[i + 12]);
 						}
 						else
 						{
-							// ¸éÀ¸·Î ±×¸®±â
+							// ë©´ìœ¼ë¡œ ê·¸ë¦¬ê¸°
 							DrawTorusMesh(i, rgbTemp, memDCPtr, width, height, left, top, tor[i], tor[i + 1], tor[i + 12]);
 						}
 					}
@@ -2796,12 +2630,12 @@ void CMFCApplication3View::OnPaint()
 				if (whereIs0 > 95)
 				{
 					if (figure.isClicked)
-					{// ¼±À¸·Î ±×¸®±â
+					{// ì„ ìœ¼ë¡œ ê·¸ë¦¬ê¸°
 						DrawTorusLine(memDCPtr, width, height, left, top, tor[0], tor[1], tor[12]);
 					}
 					else
 					{
-						// ¸éÀ¸·Î ±×¸®±â
+						// ë©´ìœ¼ë¡œ ê·¸ë¦¬ê¸°
 						DrawTorusMesh(0, rgbTemp, memDCPtr, width, height, left, top, tor[0], tor[1], tor[12]);
 					}
 				}
@@ -2821,12 +2655,12 @@ void CMFCApplication3View::OnPaint()
 					{
 						if (figure.isClicked)
 						{
-							// ¼±À¸·Î ±×¸®±â
+							// ì„ ìœ¼ë¡œ ê·¸ë¦¬ê¸°
 							DrawTorusLine(memDCPtr, width, height, left, top, tor[i], tor[i - 11], tor[i - 132]);
 						}
 						else
 						{
-							// ¸éÀ¸·Î ±×¸®±â
+							// ë©´ìœ¼ë¡œ ê·¸ë¦¬ê¸°
 							DrawTorusMesh(i, rgbTemp, memDCPtr, width, height, left, top, tor[i], tor[i - 11], tor[i - 132]);
 						}
 					}
@@ -2834,12 +2668,12 @@ void CMFCApplication3View::OnPaint()
 					{
 						if (figure.isClicked)
 						{
-							// ¼±À¸·Î ±×¸®±â
+							// ì„ ìœ¼ë¡œ ê·¸ë¦¬ê¸°
 							DrawTorusLine(memDCPtr, width, height, left, top, tor[i], tor[i - 11], tor[i + 12]);
 						}
 						else
 						{
-							// ¸éÀ¸·Î ±×¸®±â
+							// ë©´ìœ¼ë¡œ ê·¸ë¦¬ê¸°
 							DrawTorusMesh(i, rgbTemp, memDCPtr, width, height, left, top, tor[i], tor[i - 11], tor[i + 12]);
 						}
 					}
@@ -2850,12 +2684,12 @@ void CMFCApplication3View::OnPaint()
 					{
 						if (figure.isClicked)
 						{
-							// ¼±À¸·Î ±×¸®±â
+							// ì„ ìœ¼ë¡œ ê·¸ë¦¬ê¸°
 							DrawTorusLine(memDCPtr, width, height, left, top, tor[i], tor[i + 1], tor[i - 132]);
 						}
 						else
 						{
-							// ¸éÀ¸·Î ±×¸®±â
+							// ë©´ìœ¼ë¡œ ê·¸ë¦¬ê¸°
 							DrawTorusMesh(i, rgbTemp, memDCPtr, width, height, left, top, tor[i], tor[i + 1], tor[i - 132]);
 						}
 					}
@@ -2863,12 +2697,12 @@ void CMFCApplication3View::OnPaint()
 					{
 						if (figure.isClicked)
 						{
-							// ¼±À¸·Î ±×¸®±â
+							// ì„ ìœ¼ë¡œ ê·¸ë¦¬ê¸°
 							DrawTorusLine(memDCPtr, width, height, left, top, tor[i], tor[i + 1], tor[i + 12]);
 						}
 						else
 						{
-							// ¸éÀ¸·Î ±×¸®±â
+							// ë©´ìœ¼ë¡œ ê·¸ë¦¬ê¸°
 							DrawTorusMesh(i, rgbTemp, memDCPtr, width, height, left, top, tor[i], tor[i + 1], tor[i + 12]);
 						}
 					}
@@ -2890,10 +2724,10 @@ void CMFCApplication3View::OnPaint()
 	ReleaseDC(&cdc);
 }
 
-// Å¬¸¯ÇÏ´Â °÷ ÁÂÇ¥¸¦ ¹Ş¾Æ¼­ ±×°÷¿¡ ±×¸² »ı¼ºÇÏ±â
+// í´ë¦­í•˜ëŠ” ê³³ ì¢Œí‘œë¥¼ ë°›ì•„ì„œ ê·¸ê³³ì— ê·¸ë¦¼ ìƒì„±í•˜ê¸°
 void CMFCApplication3View::OnLButtonDown(UINT nFlags, CPoint point)
 {
-	// TODO: ¿©±â¿¡ ¸Ş½ÃÁö Ã³¸®±â ÄÚµå¸¦ Ãß°¡ ¹×/¶Ç´Â ±âº»°ªÀ» È£ÃâÇÕ´Ï´Ù.
+	// TODO: ì—¬ê¸°ì— ë©”ì‹œì§€ ì²˜ë¦¬ê¸° ì½”ë“œë¥¼ ì¶”ê°€ ë°/ë˜ëŠ” ê¸°ë³¸ê°’ì„ í˜¸ì¶œí•©ë‹ˆë‹¤.
 	float az10[4][1];
 	if (projNum == 0)
 	{
@@ -2908,8 +2742,8 @@ void CMFCApplication3View::OnLButtonDown(UINT nFlags, CPoint point)
 		az10[1][0] = (point.y - top - height / 2) * (-1) / (height / 2);
 	}
 
-	az10[3][0] = 1; // È­¸éÀ» Å¬¸¯ÇßÀ» ¶§ ¾ò¾îÁö´Â Åõ¿µ¸é¿¡¼­ÀÇ ÇÑ ÁöÁ¡
-					// ºä Çà·Ä
+	az10[3][0] = 1; // í™”ë©´ì„ í´ë¦­í–ˆì„ ë•Œ ì–»ì–´ì§€ëŠ” íˆ¬ì˜ë©´ì—ì„œì˜ í•œ ì§€ì 
+					// ë·° í–‰ë ¬
 	look[0][0] = lookX; look[1][0] = lookY; look[2][0] = lookZ;
 	float view[4][4] = {};
 	camera[0][0] = cameraX; camera[1][0] = cameraY; camera[2][0] = cameraZ;
@@ -2928,7 +2762,7 @@ void CMFCApplication3View::OnLButtonDown(UINT nFlags, CPoint point)
 	int prjCount;
 	if (projNum == 0)
 	{
-		// Åõ¿µ Çà·Ä
+		// íˆ¬ì˜ í–‰ë ¬
 		pPtr = ProjectionMatrix(width, height, 90);
 	}
 	else
@@ -2945,7 +2779,7 @@ void CMFCApplication3View::OnLButtonDown(UINT nFlags, CPoint point)
 		}
 	}
 
-	// TODO: Åõ¿µ¸éÀÇ Á¡À» Ä«¸Ş¶ó ÁÂÇ¥°è·Î ¿Å±ä´Ù (Åõ¿µ ¿ªÇà·Ä)
+	// TODO: íˆ¬ì˜ë©´ì˜ ì ì„ ì¹´ë©”ë¼ ì¢Œí‘œê³„ë¡œ ì˜®ê¸´ë‹¤ (íˆ¬ì˜ ì—­í–‰ë ¬)
 	float projReverse[4][4] = {};
 	pPtr = MatrixReverse(proj);
 	prjCount = 0;
@@ -2957,7 +2791,7 @@ void CMFCApplication3View::OnLButtonDown(UINT nFlags, CPoint point)
 			prjCount++;
 		}
 	}
-	// ±âÁ¸ Á¡À» ¿ªÇà·Ä°ú ¿¬»ê
+	// ê¸°ì¡´ ì ì„ ì—­í–‰ë ¬ê³¼ ì—°ì‚°
 	pPtr = MatrixMulti(projReverse, az10);
 	prjCount = 0;
 	for (int i = 0; i < 4; i++)
@@ -2966,7 +2800,7 @@ void CMFCApplication3View::OnLButtonDown(UINT nFlags, CPoint point)
 		prjCount++;
 	}
 
-	// Ä«¸Ş¶óÁÂÇ¥°èÀÇ Á¡À» ¿ùµå ÁÂÇ¥°è·Î ¿Å±ä´Ù (ºä ¿ªÇà·Ä)
+	// ì¹´ë©”ë¼ì¢Œí‘œê³„ì˜ ì ì„ ì›”ë“œ ì¢Œí‘œê³„ë¡œ ì˜®ê¸´ë‹¤ (ë·° ì—­í–‰ë ¬)
 	float viewReverse[4][4] = {};
 	viewPtr = MatrixReverse(view);
 	viewCount = 0;
@@ -2979,7 +2813,7 @@ void CMFCApplication3View::OnLButtonDown(UINT nFlags, CPoint point)
 		}
 	}
 
-	// ±âÁ¸ Á¡À» ¿ªÇà·Ä°ú ¿¬»ê
+	// ê¸°ì¡´ ì ì„ ì—­í–‰ë ¬ê³¼ ì—°ì‚°
 	viewPtr = MatrixMulti(viewReverse, az10);
 	viewCount = 0;
 	for (int i = 0; i < 4; i++)
@@ -2987,13 +2821,13 @@ void CMFCApplication3View::OnLButtonDown(UINT nFlags, CPoint point)
 		az10[i][0] = *(viewPtr + viewCount);
 		viewCount++;
 	}
-	// ÀÌÁ¦ ¿ùµå¿¡¼­ÀÇ ÇÑ Á¡ÀÌ ¸¸µé¾îÁ³´Ù.
+	// ì´ì œ ì›”ë“œì—ì„œì˜ í•œ ì ì´ ë§Œë“¤ì–´ì¡Œë‹¤.
 
 	static int cubeCount = 0;
 	static int sphereCount = 0;
 	static int torusCount = 0;
 
-	// TODO: ÇØ´ç Á¡À» ±âÁØÀ¸·Î µµÇüÀ» ¸¸µç´Ù
+	// TODO: í•´ë‹¹ ì ì„ ê¸°ì¤€ìœ¼ë¡œ ë„í˜•ì„ ë§Œë“ ë‹¤
 	switch (figureNum)
 	{
 	case 0:
@@ -3013,7 +2847,7 @@ void CMFCApplication3View::OnLButtonDown(UINT nFlags, CPoint point)
 			count++;
 		}
 
-		// ÇØ´ç Á¡µéÀ» ±¸Á¶Ã¼¿¡ ³Ö¾î¼­ vector array¿¡ º¸°ü
+		// í•´ë‹¹ ì ë“¤ì„ êµ¬ì¡°ì²´ì— ë„£ì–´ì„œ vector arrayì— ë³´ê´€
 		CubeInfo Ci;
 		for (int i = 0; i < 8; i++)
 		{
@@ -3039,7 +2873,7 @@ void CMFCApplication3View::OnLButtonDown(UINT nFlags, CPoint point)
 			count++;
 		}
 
-		// ÇØ´ç Á¡µéÀ» ±¸Á¶Ã¼¿¡ ³Ö¾î¼­ vector array¿¡ º¸°ü
+		// í•´ë‹¹ ì ë“¤ì„ êµ¬ì¡°ì²´ì— ë„£ì–´ì„œ vector arrayì— ë³´ê´€
 		SphereInfo Si;
 		for (int i = 0; i < 230; i++)
 		{
@@ -3055,20 +2889,20 @@ void CMFCApplication3View::OnLButtonDown(UINT nFlags, CPoint point)
 #pragma region case3-Torus
 	case 3:
 	{
-		// ÇØ´ç Á¡À» ³ÖÀ» °Í
+		// í•´ë‹¹ ì ì„ ë„£ì„ ê²ƒ
 		float x = az10[0][0]; float y = az10[1][0]; float z = az10[2][0];
 		MyVertex* vPtr = pTorus(x, y, z, 32, 8);
 		MyVertex tor[144] = {};
 
 		int count = 0;
-		// ¸¸µç Torus Á¤º¸ °¡Á®¿À±â
+		// ë§Œë“  Torus ì •ë³´ ê°€ì ¸ì˜¤ê¸°
 		for (int i = 0; i < 144; i++)
 		{
 			tor[i] = *(vPtr + count);
 			count++;
 		}
 
-		// ÇØ´ç Á¡µéÀ» ±¸Á¶Ã¼¿¡ ³Ö¾î¼­ vector array¿¡ º¸°ü
+		// í•´ë‹¹ ì ë“¤ì„ êµ¬ì¡°ì²´ì— ë„£ì–´ì„œ vector arrayì— ë³´ê´€
 		TorusInfo ti;
 		for (int i = 0; i < 144; i++)
 		{
@@ -3090,7 +2924,7 @@ void CMFCApplication3View::OnLButtonDown(UINT nFlags, CPoint point)
 
 BOOL CMFCApplication3View::OnEraseBkgnd(CDC* pDC)
 {
-	// TODO: ¿©±â¿¡ ¸Ş½ÃÁö Ã³¸®±â ÄÚµå¸¦ Ãß°¡ ¹×/¶Ç´Â ±âº»°ªÀ» È£ÃâÇÕ´Ï´Ù.
+	// TODO: ì—¬ê¸°ì— ë©”ì‹œì§€ ì²˜ë¦¬ê¸° ì½”ë“œë¥¼ ì¶”ê°€ ë°/ë˜ëŠ” ê¸°ë³¸ê°’ì„ í˜¸ì¶œí•©ë‹ˆë‹¤.
 
 	return TRUE;
 
@@ -3099,16 +2933,16 @@ BOOL CMFCApplication3View::OnEraseBkgnd(CDC* pDC)
 
 void CMFCApplication3View::OnRButtonUp(UINT nFlags, CPoint point)
 {
-#pragma region //½ºÅ©¸° ÁÂÇ¥°èÀÇ Á¡À» Åõ¿µ ÁÂÇ¥°è·Î ÀÌµ¿
+#pragma region //ìŠ¤í¬ë¦° ì¢Œí‘œê³„ì˜ ì ì„ íˆ¬ì˜ ì¢Œí‘œê³„ë¡œ ì´ë™
 	float az10[4][1];
 	az10[2][0] = 1;
 	az10[0][0] = point.x;
 	az10[1][0] = point.y;
-	az10[3][0] = 1; // È­¸éÀ» Å¬¸¯ÇßÀ» ¶§ ¾ò¾îÁö´Â ½ºÅ©¸°¿¡¼­ÀÇ ÇÑ ÁöÁ¡
+	az10[3][0] = 1; // í™”ë©´ì„ í´ë¦­í–ˆì„ ë•Œ ì–»ì–´ì§€ëŠ” ìŠ¤í¬ë¦°ì—ì„œì˜ í•œ ì§€ì 
 
 #pragma endregion
 	BOOL oneFigureChecked = FALSE;
-	// az[4][1]ÀÇ ÁÂÇ¥´Â Åõ¿µ ÁÂÇ¥°èÀÇ ÇÑ Á¡ -> °¢ ²ÀÁşÁ¡°ú ¿¬°áÇØ¼­ °¢ ¸éÀÇ º¯µé°ú ¿ÜÀû -> ¿ÜÀû ¹æÇâÀ» Á¤±ÔÈ­ÇØ¼­ ¸ğµÎ °°À¸¸é ³»ºÎ
+	// az[4][1]ì˜ ì¢Œí‘œëŠ” ìŠ¤í¬ë¦° ì¢Œí‘œê³„ì˜ í•œ ì  -> ê° ê¼­ì§“ì ê³¼ ì—°ê²°í•´ì„œ ê° ë©´ì˜ ë³€ë“¤ê³¼ ì™¸ì  -> ì™¸ì  ë°©í–¥ì„ ì •ê·œí™”í•´ì„œ ëª¨ë‘ ê°™ìœ¼ë©´ ë‚´ë¶€
 	for (auto& figure : v_cubeFigure)
 	{
 		figure.isClicked = FALSE;
@@ -3120,7 +2954,7 @@ void CMFCApplication3View::OnRButtonUp(UINT nFlags, CPoint point)
 		int viewCount = 0;
 		float* viewPtr;
 
-		// ±âÁ¸¿¡ ¹Ì¸® ÀúÀåÇØµĞ ½ºÅ©¸° ÁÂÇ¥µéÀ» °¡Á®¿È
+		// ê¸°ì¡´ì— ë¯¸ë¦¬ ì €ì¥í•´ë‘” ìŠ¤í¬ë¦° ì¢Œí‘œë“¤ì„ ê°€ì ¸ì˜´
 		for (int i = 0; i < 8; i++)
 		{
 			cub[i].x = figure.cube_justForClick[i].x;
@@ -3135,163 +2969,19 @@ void CMFCApplication3View::OnRButtonUp(UINT nFlags, CPoint point)
 		MyVertex originVector[12][3] = {};
 
 		/////
-#pragma region °¢ ¸Ş½¬¿¡ ´ëÇÑ ÁÂÇ¥¿Í º¤ÅÍµé
-		/*p1.x = cub[0].x; p1.y = cub[0].y; p1.z = cub[0].z;
-		p2.x = cub[3].x; p2.y = cub[3].y; p2.z = cub[3].z;
-		p3.x = cub[4].x; p3.y = cub[4].y; p3.z = cub[4].z;*/
-		p1.x = cub[0].x; p1.y = cub[0].y; p1.z = 0;
-		p2.x = cub[3].x; p2.y = cub[3].y; p2.z = 0;
-		p3.x = cub[4].x; p3.y = cub[4].y; p3.z = 0;
-
-		planeVector[0][0].x = -p1.x + p2.x; planeVector[0][0].y = -p1.y + p2.y; planeVector[0][0].z = -p1.z + p2.z;
-		planeVector[0][1].x = -p2.x + p3.x; planeVector[0][1].y = -p2.y + p3.y; planeVector[0][1].z = -p2.z + p3.z;
-		planeVector[0][2].x = -p3.x + p1.x; planeVector[0][2].y = -p3.y + p1.y; planeVector[0][2].z = -p3.z + p1.z;
-
-		originVector[0][0] = p1; originVector[0][1] = p2; originVector[0][2] = p3;
-		/////
-		/*p1.x = cub[0].x; p1.y = cub[0].y; p1.z = cub[0].z;
-		p2.x = cub[4].x; p2.y = cub[4].y; p2.z = cub[4].z;
-		p3.x = cub[1].x; p3.y = cub[1].y; p3.z = cub[1].z;*/
-		p1.x = cub[0].x; p1.y = cub[0].y; p1.z = 0;
-		p2.x = cub[4].x; p2.y = cub[4].y; p2.z = 0;
-		p3.x = cub[1].x; p3.y = cub[1].y; p3.z = 0;
-
-		planeVector[1][0].x = -p1.x + p2.x; planeVector[1][0].y = -p1.y + p2.y; planeVector[1][0].z = -p1.z + p2.z;
-		planeVector[1][1].x = -p2.x + p3.x; planeVector[1][1].y = -p2.y + p3.y; planeVector[1][1].z = -p2.z + p3.z;
-		planeVector[1][2].x = -p3.x + p1.x; planeVector[1][2].y = -p3.y + p1.y; planeVector[1][2].z = -p3.z + p1.z;
-
-		originVector[1][0] = p1; originVector[1][1] = p2; originVector[1][2] = p3;
-		/////
-		/*p1.x = cub[0].x; p1.y = cub[0].y; p1.z = cub[0].z;
-		p2.x = cub[1].x; p2.y = cub[1].y; p2.z = cub[1].z;
-		p3.x = cub[3].x; p3.y = cub[3].y; p3.z = cub[3].z;*/
-		p1.x = cub[0].x; p1.y = cub[0].y; p1.z = 0;
-		p2.x = cub[1].x; p2.y = cub[1].y; p2.z = 0;
-		p3.x = cub[3].x; p3.y = cub[3].y; p3.z = 0;
-
-		planeVector[2][0].x = -p1.x + p2.x; planeVector[2][0].y = -p1.y + p2.y; planeVector[2][0].z = -p1.z + p2.z;
-		planeVector[2][1].x = -p2.x + p3.x; planeVector[2][1].y = -p2.y + p3.y; planeVector[2][1].z = -p2.z + p3.z;
-		planeVector[2][2].x = -p3.x + p1.x; planeVector[2][2].y = -p3.y + p1.y; planeVector[2][2].z = -p3.z + p1.z;
-
-		originVector[2][0] = p1; originVector[2][1] = p2; originVector[2][2] = p3;
-		/////
-		/*p1.x = cub[7].x; p1.y = cub[7].y; p1.z = cub[7].z;
-		p2.x = cub[4].x; p2.y = cub[4].y; p2.z = cub[4].z;
-		p3.x = cub[3].x; p3.y = cub[3].y; p3.z = cub[3].z;*/
-		p1.x = cub[7].x; p1.y = cub[7].y; p1.z = 0;
-		p2.x = cub[4].x; p2.y = cub[4].y; p2.z = 0;
-		p3.x = cub[3].x; p3.y = cub[3].y; p3.z = 0;
-
-		planeVector[3][0].x = -p1.x + p2.x; planeVector[3][0].y = -p1.y + p2.y; planeVector[3][0].z = -p1.z + p2.z;
-		planeVector[3][1].x = -p2.x + p3.x; planeVector[3][1].y = -p2.y + p3.y; planeVector[3][1].z = -p2.z + p3.z;
-		planeVector[3][2].x = -p3.x + p1.x; planeVector[3][2].y = -p3.y + p1.y; planeVector[3][2].z = -p3.z + p1.z;
-
-		originVector[3][0] = p1; originVector[3][1] = p2; originVector[3][2] = p3;
-		/////
-		/*p1.x = cub[7].x; p1.y = cub[7].y; p1.z = cub[7].z;
-		p2.x = cub[6].x; p2.y = cub[6].y; p2.z = cub[6].z;
-		p3.x = cub[4].x; p3.y = cub[4].y; p3.z = cub[4].z;*/
-		p1.x = cub[7].x; p1.y = cub[7].y; p1.z = 0;
-		p2.x = cub[6].x; p2.y = cub[6].y; p2.z = 0;
-		p3.x = cub[4].x; p3.y = cub[4].y; p3.z = 0;
-
-		planeVector[4][0].x = -p1.x + p2.x; planeVector[4][0].y = -p1.y + p2.y; planeVector[4][0].z = -p1.z + p2.z;
-		planeVector[4][1].x = -p2.x + p3.x; planeVector[4][1].y = -p2.y + p3.y; planeVector[4][1].z = -p2.z + p3.z;
-		planeVector[4][2].x = -p3.x + p1.x; planeVector[4][2].y = -p3.y + p1.y; planeVector[4][2].z = -p3.z + p1.z;
-
-		originVector[4][0] = p1; originVector[4][1] = p2; originVector[4][2] = p3;
-		/////
-		/*p1.x = cub[7].x; p1.y = cub[7].y; p1.z = cub[7].z;
-		p2.x = cub[3].x; p2.y = cub[3].y; p2.z = cub[3].z;
-		p3.x = cub[6].x; p3.y = cub[6].y; p3.z = cub[6].z;*/
-		p1.x = cub[7].x; p1.y = cub[7].y; p1.z = 0;
-		p2.x = cub[3].x; p2.y = cub[3].y; p2.z = 0;
-		p3.x = cub[6].x; p3.y = cub[6].y; p3.z = 0;
-
-		planeVector[5][0].x = -p1.x + p2.x; planeVector[5][0].y = -p1.y + p2.y; planeVector[5][0].z = -p1.z + p2.z;
-		planeVector[5][1].x = -p2.x + p3.x; planeVector[5][1].y = -p2.y + p3.y; planeVector[5][1].z = -p2.z + p3.z;
-		planeVector[5][2].x = -p3.x + p1.x; planeVector[5][2].y = -p3.y + p1.y; planeVector[5][2].z = -p3.z + p1.z;
-
-		originVector[5][0] = p1; originVector[5][1] = p2; originVector[5][2] = p3;
-		/////
-		/*p1.x = cub[2].x; p1.y = cub[2].y; p1.z = cub[2].z;
-		p2.x = cub[1].x; p2.y = cub[1].y; p2.z = cub[1].z;
-		p3.x = cub[6].x; p3.y = cub[6].y; p3.z = cub[6].z;*/
-		p1.x = cub[2].x; p1.y = cub[2].y; p1.z = 0;
-		p2.x = cub[1].x; p2.y = cub[1].y; p2.z = 0;
-		p3.x = cub[6].x; p3.y = cub[6].y; p3.z = 0;
-
-		planeVector[6][0].x = -p1.x + p2.x; planeVector[6][0].y = -p1.y + p2.y; planeVector[6][0].z = -p1.z + p2.z;
-		planeVector[6][1].x = -p2.x + p3.x; planeVector[6][1].y = -p2.y + p3.y; planeVector[6][1].z = -p2.z + p3.z;
-		planeVector[6][2].x = -p3.x + p1.x; planeVector[6][2].y = -p3.y + p1.y; planeVector[6][2].z = -p3.z + p1.z;
-
-		originVector[6][0] = p1; originVector[6][1] = p2; originVector[6][2] = p3;
-		/////
-		/*p1.x = cub[2].x; p1.y = cub[2].y; p1.z = cub[2].z;
-		p2.x = cub[3].x; p2.y = cub[3].y; p2.z = cub[3].z;
-		p3.x = cub[1].x; p3.y = cub[1].y; p3.z = cub[1].z;*/
-		p1.x = cub[2].x; p1.y = cub[2].y; p1.z = 0;
-		p2.x = cub[3].x; p2.y = cub[3].y; p2.z = 0;
-		p3.x = cub[1].x; p3.y = cub[1].y; p3.z = 0;
-
-		planeVector[7][0].x = -p1.x + p2.x; planeVector[7][0].y = -p1.y + p2.y; planeVector[7][0].z = -p1.z + p2.z;
-		planeVector[7][1].x = -p2.x + p3.x; planeVector[7][1].y = -p2.y + p3.y; planeVector[7][1].z = -p2.z + p3.z;
-		planeVector[7][2].x = -p3.x + p1.x; planeVector[7][2].y = -p3.y + p1.y; planeVector[7][2].z = -p3.z + p1.z;
-
-		originVector[7][0] = p1; originVector[7][1] = p2; originVector[7][2] = p3;
-		/////
-		/*p1.x = cub[2].x; p1.y = cub[2].y; p1.z = cub[2].z;
-		p2.x = cub[6].x; p2.y = cub[6].y; p2.z = cub[6].z;
-		p3.x = cub[3].x; p3.y = cub[3].y; p3.z = cub[3].z;*/
-		p1.x = cub[2].x; p1.y = cub[2].y; p1.z = 0;
-		p2.x = cub[6].x; p2.y = cub[6].y; p2.z = 0;
-		p3.x = cub[3].x; p3.y = cub[3].y; p3.z = 0;
-
-		planeVector[8][0].x = -p1.x + p2.x; planeVector[8][0].y = -p1.y + p2.y; planeVector[8][0].z = -p1.z + p2.z;
-		planeVector[8][1].x = -p2.x + p3.x; planeVector[8][1].y = -p2.y + p3.y; planeVector[8][1].z = -p2.z + p3.z;
-		planeVector[8][2].x = -p3.x + p1.x; planeVector[8][2].y = -p3.y + p1.y; planeVector[8][2].z = -p3.z + p1.z;
-
-		originVector[8][0] = p1; originVector[8][1] = p2; originVector[8][2] = p3;
-		/////
-		/*p1.x = cub[5].x; p1.y = cub[5].y; p1.z = cub[5].z;
-		p2.x = cub[6].x; p2.y = cub[6].y; p2.z = cub[6].z;
-		p3.x = cub[1].x; p3.y = cub[1].y; p3.z = cub[1].z;*/
-		p1.x = cub[5].x; p1.y = cub[5].y; p1.z = 0;
-		p2.x = cub[6].x; p2.y = cub[6].y; p2.z = 0;
-		p3.x = cub[1].x; p3.y = cub[1].y; p3.z = 0;
-
-		planeVector[9][0].x = -p1.x + p2.x; planeVector[9][0].y = -p1.y + p2.y; planeVector[9][0].z = -p1.z + p2.z;
-		planeVector[9][1].x = -p2.x + p3.x; planeVector[9][1].y = -p2.y + p3.y; planeVector[9][1].z = -p2.z + p3.z;
-		planeVector[9][2].x = -p3.x + p1.x; planeVector[9][2].y = -p3.y + p1.y; planeVector[9][2].z = -p3.z + p1.z;
-
-		originVector[9][0] = p1; originVector[9][1] = p2; originVector[9][2] = p3;
-		/////
-		/*p1.x = cub[5].x; p1.y = cub[5].y; p1.z = cub[5].z;
-		p2.x = cub[1].x; p2.y = cub[1].y; p2.z = cub[1].z;
-		p3.x = cub[4].x; p3.y = cub[4].y; p3.z = cub[4].z;*/
-		p1.x = cub[5].x; p1.y = cub[5].y; p1.z = 0;
-		p2.x = cub[1].x; p2.y = cub[1].y; p2.z = 0;
-		p3.x = cub[4].x; p3.y = cub[4].y; p3.z = 0;
-
-		planeVector[10][0].x = -p1.x + p2.x; planeVector[10][0].y = -p1.y + p2.y; planeVector[10][0].z = -p1.z + p2.z;
-		planeVector[10][1].x = -p2.x + p3.x; planeVector[10][1].y = -p2.y + p3.y; planeVector[10][1].z = -p2.z + p3.z;
-		planeVector[10][2].x = -p3.x + p1.x; planeVector[10][2].y = -p3.y + p1.y; planeVector[10][2].z = -p3.z + p1.z;
-
-		originVector[10][0] = p1; originVector[10][1] = p2; originVector[10][2] = p3;
-		/////
-		/*p1.x = cub[5].x; p1.y = cub[5].y; p1.z = cub[5].z;
-		p2.x = cub[4].x; p2.y = cub[4].y; p2.z = cub[4].z;
-		p3.x = cub[6].x; p3.y = cub[6].y; p3.z = cub[6].z;*/
-		p1.x = cub[5].x; p1.y = cub[5].y; p1.z = 0;
-		p2.x = cub[4].x; p2.y = cub[4].y; p2.z = 0;
-		p3.x = cub[6].x; p3.y = cub[6].y; p3.z = 0;
-
-		planeVector[11][0].x = -p1.x + p2.x; planeVector[11][0].y = -p1.y + p2.y; planeVector[11][0].z = -p1.z + p2.z;
-		planeVector[11][1].x = -p2.x + p3.x; planeVector[11][1].y = -p2.y + p3.y; planeVector[11][1].z = -p2.z + p3.z;
-		planeVector[11][2].x = -p3.x + p1.x; planeVector[11][2].y = -p3.y + p1.y; planeVector[11][2].z = -p3.z + p1.z;
-
-		originVector[11][0] = p1; originVector[11][1] = p2; originVector[11][2] = p3;
-		/////
+#pragma region ê° ë©”ì‰¬ì— ëŒ€í•œ ì¢Œí‘œì™€ ë²¡í„°ë“¤
+		MakeMeshVectors(planeVector[0], originVector[0], cub[0], cub[3], cub[4]);
+		MakeMeshVectors(planeVector[1], originVector[1], cub[0], cub[4], cub[1]);
+		MakeMeshVectors(planeVector[2], originVector[2], cub[0], cub[1], cub[3]);
+		MakeMeshVectors(planeVector[3], originVector[3], cub[7], cub[4], cub[3]);
+		MakeMeshVectors(planeVector[4], originVector[4], cub[7], cub[6], cub[4]);
+		MakeMeshVectors(planeVector[5], originVector[5], cub[7], cub[3], cub[6]);
+		MakeMeshVectors(planeVector[6], originVector[6], cub[2], cub[1], cub[6]);
+		MakeMeshVectors(planeVector[7], originVector[7], cub[2], cub[3], cub[1]);
+		MakeMeshVectors(planeVector[8], originVector[8], cub[2], cub[6], cub[3]);
+		MakeMeshVectors(planeVector[9], originVector[9], cub[5], cub[6], cub[1]);
+		MakeMeshVectors(planeVector[10], originVector[10], cub[5], cub[1], cub[4]);
+		MakeMeshVectors(planeVector[11], originVector[11], cub[5], cub[4], cub[6]);
 #pragma endregion
 
 		float vertexToVertex1[2][1] = {};
@@ -3341,7 +3031,7 @@ void CMFCApplication3View::OnRButtonUp(UINT nFlags, CPoint point)
 			}
 			else
 			{
-				if (i == 11) figure.isClicked = FALSE; 
+				if (i == 11) figure.isClicked = FALSE;
 			}
 		}
 	}
@@ -3356,7 +3046,7 @@ void CMFCApplication3View::OnRButtonUp(UINT nFlags, CPoint point)
 		float vertexSample[4][1] = {};
 		int viewCount = 0;
 		float* viewPtr;
-		
+
 		for (int i = 0; i < 230; i++)
 		{
 			sph[i].x = figure.sphere_justForClick[i].x;
@@ -3372,8 +3062,8 @@ void CMFCApplication3View::OnRButtonUp(UINT nFlags, CPoint point)
 		MyVertex originVector3[24][3] = {};
 		MyVertex originVector4[216][4] = {};
 
-#pragma region Á¤Á¡°ú º¤ÅÍµé È®ÀÎ
-		// ³¡Á¡À¸·Î ¸¸µé¾îÁö´Â »ï°¢Çü ¸é
+#pragma region ì •ì ê³¼ ë²¡í„°ë“¤ í™•ì¸
+		// ëì ìœ¼ë¡œ ë§Œë“¤ì–´ì§€ëŠ” ì‚¼ê°í˜• ë©´
 		for (int i = 1; i < 13; i++)
 		{
 			if ((i % 12) == 0)
@@ -3412,7 +3102,7 @@ void CMFCApplication3View::OnRButtonUp(UINT nFlags, CPoint point)
 			planeVector3[i - 205][2].x = -p3.x + p1.x; planeVector3[i - 205][2].y = -p3.y + p1.y; planeVector3[i - 205][2].z = -p3.z + p1.z;
 			originVector3[i - 205][0] = p1; originVector3[i - 205][1] = p2; originVector3[i - 205][2] = p3;
 		}
-		// »ç°¢Çü ¸éµé
+		// ì‚¬ê°í˜• ë©´ë“¤
 		for (int i = 1; i < 217; i++)
 		{
 			if (i % 12 == 0)
@@ -3470,7 +3160,7 @@ void CMFCApplication3View::OnRButtonUp(UINT nFlags, CPoint point)
 				}
 				finalResultTri[k][0] = result1[0][0]; finalResultTri[k][1] = result1[1][0]; finalResultTri[k][2] = result1[2][0];
 			}
-			
+
 			if (finalResultTri[0][2] == 0 || finalResultTri[1][2] == 0 || finalResultTri[2][2] == 0)
 			{
 				figure.isClicked = TRUE;
@@ -3512,7 +3202,7 @@ void CMFCApplication3View::OnRButtonUp(UINT nFlags, CPoint point)
 				}
 				finalResultRec[k][0] = result1[0][0]; finalResultRec[k][1] = result1[1][0]; finalResultRec[k][2] = result1[2][0];
 			}
-			
+
 			if (finalResultRec[0][2] == 0 || finalResultRec[1][2] == 0 || finalResultRec[2][2] == 0 || finalResultRec[3][2] == 0)
 			{
 				figure.isClicked = TRUE;
@@ -3539,7 +3229,7 @@ void CMFCApplication3View::OnRButtonUp(UINT nFlags, CPoint point)
 		float vertexSample[4][1] = {};
 		int viewCount = 0;
 		float* viewPtr;
-		
+
 		for (int i = 0; i < 144; i++)
 		{
 			tor[i].x = figure.torus_justForClick[i].x;
@@ -3553,7 +3243,7 @@ void CMFCApplication3View::OnRButtonUp(UINT nFlags, CPoint point)
 		MyVertex planeVector[144][4] = {};
 		MyVertex originVector[144][4] = {};
 
-#pragma region Á¤Á¡µé°ú º¤ÅÍ
+#pragma region ì •ì ë“¤ê³¼ ë²¡í„°
 		for (int i = 0; i < 144; i++)
 		{
 			if ((i + 1) % 12 == 0)
@@ -3629,7 +3319,7 @@ void CMFCApplication3View::OnRButtonUp(UINT nFlags, CPoint point)
 				}
 				finalResultRec[j][0] = result[0][0]; finalResultRec[j][1] = result[1][0]; finalResultRec[j][2] = result[2][0];
 			}
-			
+
 			if (finalResultRec[0][2] == 0 || finalResultRec[1][2] == 0 || finalResultRec[2][2] == 0 || finalResultRec[3][2] == 0)
 			{
 				figure.isClicked = TRUE;
@@ -3655,7 +3345,7 @@ BOOL CMFCApplication3View::PreTranslateMessage(MSG* pMsg)
 {
 	if (pMsg->message == WM_KEYDOWN)
 	{
-#pragma region cube : ¿øÁ¡À¸·ÎºÎÅÍ °¡Àå ¸Ö¸®ÀÖ´Â µµÇüºÎÅÍ ±×¸± ¼ö ÀÖµµ·Ï °¡Àå °Å¸®°¡ ¸Õ µµÇüÀ» ¾ÕÀ¸·Î ¹èÄ¡ÇÏ±â
+#pragma region cube : ì›ì ìœ¼ë¡œë¶€í„° ê°€ì¥ ë©€ë¦¬ìˆëŠ” ë„í˜•ë¶€í„° ê·¸ë¦´ ìˆ˜ ìˆë„ë¡ ê°€ì¥ ê±°ë¦¬ê°€ ë¨¼ ë„í˜•ì„ ì•ìœ¼ë¡œ ë°°ì¹˜í•˜ê¸°
 		float farFromOrigin_back[3][1] = {};
 		float farFromOrigin_front[3][1] = {};
 		int count = 0;
@@ -3691,7 +3381,7 @@ BOOL CMFCApplication3View::PreTranslateMessage(MSG* pMsg)
 		cube_copy.clear();
 		vector<CubeInfo>().swap(cube_copy);
 #pragma endregion
-#pragma region sphere : ¿øÁ¡À¸·ÎºÎÅÍ °¡Àå ¸Ö¸®ÀÖ´Â µµÇüºÎÅÍ ±×¸± ¼ö ÀÖµµ·Ï °¡Àå °Å¸®°¡ ¸Õ µµÇüÀ» ¾ÕÀ¸·Î ¹èÄ¡ÇÏ±â
+#pragma region sphere : ì›ì ìœ¼ë¡œë¶€í„° ê°€ì¥ ë©€ë¦¬ìˆëŠ” ë„í˜•ë¶€í„° ê·¸ë¦´ ìˆ˜ ìˆë„ë¡ ê°€ì¥ ê±°ë¦¬ê°€ ë¨¼ ë„í˜•ì„ ì•ìœ¼ë¡œ ë°°ì¹˜í•˜ê¸°
 		count = 0;
 		length = 0;
 		vector<SphereInfo> sphere_copy;
@@ -3725,7 +3415,7 @@ BOOL CMFCApplication3View::PreTranslateMessage(MSG* pMsg)
 		sphere_copy.clear();
 		vector<SphereInfo>().swap(sphere_copy);
 #pragma endregion
-#pragma region torus : ¿øÁ¡À¸·ÎºÎÅÍ °¡Àå ¸Ö¸®ÀÖ´Â µµÇüºÎÅÍ ±×¸± ¼ö ÀÖµµ·Ï °¡Àå °Å¸®°¡ ¸Õ µµÇüÀ» ¾ÕÀ¸·Î ¹èÄ¡ÇÏ±â
+#pragma region torus : ì›ì ìœ¼ë¡œë¶€í„° ê°€ì¥ ë©€ë¦¬ìˆëŠ” ë„í˜•ë¶€í„° ê·¸ë¦´ ìˆ˜ ìˆë„ë¡ ê°€ì¥ ê±°ë¦¬ê°€ ë¨¼ ë„í˜•ì„ ì•ìœ¼ë¡œ ë°°ì¹˜í•˜ê¸°
 		count = 0;
 		length = 0;
 		vector<TorusInfo> torus_copy;
@@ -3760,26 +3450,6 @@ BOOL CMFCApplication3View::PreTranslateMessage(MSG* pMsg)
 		vector<TorusInfo>().swap(torus_copy);
 #pragma endregion
 
-		float camAxisX[3][1] = {};
-		float camAxisY[3][1] = {};
-		float camAxisZ[3][1] = {};
-		float* camPtr = MakeNewCoordinate(look);
-		int camCount = 0;
-		for (int i = 0; i < 3; i++)
-		{
-			camAxisX[i][0] = *(camPtr + camCount);
-			camCount++;
-		}
-		for (int i = 0; i < 3; i++)
-		{
-			camAxisY[i][0] = *(camPtr + camCount);
-			camCount++;
-		}
-		for (int i = 0; i < 3; i++)
-		{
-			camAxisZ[i][0] = *(camPtr + camCount);
-			camCount++;
-		}
 		if (pMsg->wParam == VK_RIGHT)
 		{
 			cameraX -= camAxisX[0][0] * 5;
@@ -3804,15 +3474,15 @@ BOOL CMFCApplication3View::PreTranslateMessage(MSG* pMsg)
 			cameraY -= camAxisY[1][0] * 5;
 			cameraZ -= camAxisY[2][0] * 5;
 		}
-		// Ä«¸Ş¶ó ¾Æ·¡·Î ÀÌµ¿½Ã °æ°è¸é¿¡ ÀÖ´Â ¹°Ã¼°¡ Á¶±İ ÀÌ»óÇÏ°Ô ÂïÈû
+
 		float sampleVectorZ[4][1] = {};
 		float sampleVectorY[4][1] = {};
 		float sampleVectorX[4][1] = {};
-		float upVector[3][1] = { {0}, {1}, {0} };
 		float* newAxisPtr;
+		int camCount = 0;
 		if (pMsg->wParam == 'W')
 		{
-			if (rotateXCount < 6)
+			if (rotateXCount < 120)
 			{
 				newAxisPtr = vectorRotation(camAxisZ, camAxisX, -15);
 				camCount = 0;
@@ -3821,27 +3491,21 @@ BOOL CMFCApplication3View::PreTranslateMessage(MSG* pMsg)
 					camAxisZ[i][0] = *(newAxisPtr + camCount);
 					camCount++;
 				}
-				/*for (int i = 0; i < 3; i++)
-					{
-					sampleVectorX[i][0] = camAxisX[i][0];
-					sampleVectorZ[i][0] = camAxisZ[i][0];
-					}
-					sampleVectorX[3][0] = 1; sampleVectorZ[3][0] = 1;
+				lookX = camAxisZ[0][0]; lookY = camAxisZ[1][0]; lookZ = camAxisZ[2][0];
 
-					newAxisPtr = CrossProduct(sampleVectorZ, sampleVectorX);
-					camCount = 0;
-					for (int i = 0; i < 3; i++)
-					{
+				newAxisPtr = vectorRotation(camAxisY, camAxisX, -15);
+				camCount = 0;
+				for (int i = 0; i < 3; i++)
+				{
 					camAxisY[i][0] = *(newAxisPtr + camCount);
 					camCount++;
-					}*/
-				lookX = camAxisZ[0][0]; lookY = camAxisZ[1][0]; lookZ = camAxisZ[2][0];
+				}
 				rotateXCount++;
 			}
 		}
 		if (pMsg->wParam == 'S')
 		{
-			if (rotateXCount > -6)
+			if (rotateXCount > -120)
 			{
 				newAxisPtr = vectorRotation(camAxisZ, camAxisX, 15);
 				camCount = 0;
@@ -3851,6 +3515,14 @@ BOOL CMFCApplication3View::PreTranslateMessage(MSG* pMsg)
 					camCount++;
 				}
 				lookX = camAxisZ[0][0]; lookY = camAxisZ[1][0]; lookZ = camAxisZ[2][0];
+
+				newAxisPtr = vectorRotation(camAxisY, camAxisX, 15);
+				camCount = 0;
+				for (int i = 0; i < 3; i++)
+				{
+					camAxisY[i][0] = *(newAxisPtr + camCount);
+					camCount++;
+				}
 				rotateXCount--;
 			}
 
@@ -3859,7 +3531,7 @@ BOOL CMFCApplication3View::PreTranslateMessage(MSG* pMsg)
 		{
 			if (rotateYCount < 120)
 			{
-				////// Ä«¸Ş¶ó ¹æÇâ È¸Àü
+				////// ì¹´ë©”ë¼ ë°©í–¥ íšŒì „
 				newAxisPtr = vectorRotation(camAxisZ, camAxisY, 15);
 				camCount = 0;
 				for (int i = 0; i < 3; i++)
@@ -3868,6 +3540,14 @@ BOOL CMFCApplication3View::PreTranslateMessage(MSG* pMsg)
 					camCount++;
 				}
 				lookX = camAxisZ[0][0]; lookY = camAxisZ[1][0]; lookZ = camAxisZ[2][0];
+
+				newAxisPtr = vectorRotation(camAxisX, camAxisY, 15);
+				camCount = 0;
+				for (int i = 0; i < 3; i++)
+				{
+					camAxisX[i][0] = *(newAxisPtr + camCount);
+					camCount++;
+				}
 				rotateYCount++;
 			}
 		}
@@ -3875,7 +3555,7 @@ BOOL CMFCApplication3View::PreTranslateMessage(MSG* pMsg)
 		{
 			if (rotateYCount > -120)
 			{
-				////// Ä«¸Ş¶ó ¹æÇâ È¸Àü
+				////// ì¹´ë©”ë¼ ë°©í–¥ íšŒì „
 				newAxisPtr = vectorRotation(camAxisZ, camAxisY, -15);
 				camCount = 0;
 				for (int i = 0; i < 3; i++)
@@ -3884,11 +3564,18 @@ BOOL CMFCApplication3View::PreTranslateMessage(MSG* pMsg)
 					camCount++;
 				}
 				lookX = camAxisZ[0][0]; lookY = camAxisZ[1][0]; lookZ = camAxisZ[2][0];
+
+				newAxisPtr = vectorRotation(camAxisX, camAxisY, -15);
+				camCount = 0;
+				for (int i = 0; i < 3; i++)
+				{
+					camAxisX[i][0] = *(newAxisPtr + camCount);
+					camCount++;
+				}
 				rotateYCount--;
-				//////
 			}
 		}
-		// ¼±ÅÃµÈ ¹°Ã¼ Å©±â º¯È­
+		// ì„ íƒëœ ë¬¼ì²´ í¬ê¸° ë³€í™”
 		if (pMsg->wParam == 'P')
 		{
 			BOOL isChecked = FALSE;
@@ -3949,7 +3636,7 @@ BOOL CMFCApplication3View::PreTranslateMessage(MSG* pMsg)
 				break;
 			}
 		}
-		// ¼±ÅÃµÈ ¹°Ã¼ ÀÌµ¿
+		// ì„ íƒëœ ë¬¼ì²´ ì´ë™
 		if (pMsg->wParam == 'T')
 		{
 			BOOL isChecked = FALSE;
@@ -3957,11 +3644,9 @@ BOOL CMFCApplication3View::PreTranslateMessage(MSG* pMsg)
 			{
 				if (!figure.isClicked) continue;
 				isChecked = TRUE;
-				////////////////////
 				figure.moveX += camAxisY[0][0] * 5;
 				figure.moveY += camAxisY[1][0] * 5;
 				figure.moveZ += camAxisY[2][0] * 5;
-				////////////////////
 				break;
 			}
 			for (auto& figure : v_sphereFigure)
@@ -4084,7 +3769,7 @@ BOOL CMFCApplication3View::PreTranslateMessage(MSG* pMsg)
 				break;
 			}
 		}
-		// ¼±ÅÃµÈ ¹°Ã¼ È¸Àü
+		// ì„ íƒëœ ë¬¼ì²´ íšŒì „
 		if (pMsg->wParam == 'I')
 		{
 			BOOL isChecked = FALSE;

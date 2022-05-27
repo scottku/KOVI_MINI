@@ -3396,9 +3396,9 @@ void CMFCApplication3View::OnRButtonUp(UINT nFlags, CPoint point)
 			vertexSample[3][0] = 1;
 			viewPtr = MatrixMulti(view, vertexSample);
 			viewCount = 0;
-			for (int i = 0; i < 4; i++)
+			for (int j = 0; j < 4; j++)
 			{
-				vertexSample[i][0] = *(viewPtr + viewCount);
+				vertexSample[j][0] = *(viewPtr + viewCount);
 				viewCount++;
 			}
 			cub[i].x = vertexSample[0][0];
@@ -3414,9 +3414,9 @@ void CMFCApplication3View::OnRButtonUp(UINT nFlags, CPoint point)
 			vertexSample[3][0] = 1;
 			viewPtr = MatrixMulti(proj, vertexSample);
 			viewCount = 0;
-			for (int i = 0; i < 4; i++)
+			for (int j = 0; j < 4; j++)
 			{
-				vertexSample[i][0] = *(viewPtr + viewCount);
+				vertexSample[j][0] = *(viewPtr + viewCount);
 				viewCount++;
 			}
 			cub[i].x = vertexSample[0][0];

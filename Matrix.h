@@ -73,3 +73,5 @@ BOOL isItUpperSide(float NormDirectionVector[3][1], float pointOnPlane[3][1], fl
 
 void MakeVertexToVertexVector(float emptyVector[4][1], MyVertex endVertex, MyVertex startVertex);
 void MakeVertexToVertexVector(float emptyVector[3][1], MyVertex endVertex);
+
+void MakeMeshVectors(MyVertex planeVector[3], MyVertex originVector[3], const MyVertex v1, const MyVertex v2, const MyVertex v3);

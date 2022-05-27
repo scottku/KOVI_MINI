@@ -45,7 +45,7 @@ float* MatrixMulti(float x[4][4], float y[4][4])
 			float sum = 0;
 			for (int k = 0; k < 4; k++)
 			{
-				 sum += x[i][k] * y[k][j];
+				sum += x[i][k] * y[k][j];
 			}
 			sampleMatrix[i][j] = sum;
 		}
@@ -72,7 +72,7 @@ float* MatrixMulti(float x[4][4], float y[4][1])
 
 float* MatrixScale(float a[4][1], float x, float y, float z)
 {
-	float sampleMatrix[4][4] = { {x, 0 ,0, 0}, {0, y, 0, 0}, {0,0,z,0}, {0,0,0,1} };
+	float sampleMatrix[4][4] = { { x, 0 ,0, 0 },{ 0, y, 0, 0 },{ 0,0,z,0 },{ 0,0,0,1 } };
 	float resultMatrix[4][1] = {};
 	for (int i = 0; i < 4; i++)
 	{
@@ -96,9 +96,9 @@ float* MatrixRotate(float w[4][1], float a, float b, float c)
 	double sinZ = sin(c * pi / 180);
 	double cosZ = cos(c * pi / 180);
 
-	float xRotate[4][4] = { {1, 0, 0, 0}, {0, cosX, sinX, 0}, {0, -sinX, cosX, 0}, {0, 0, 0, 1} };
-	float yRotate[4][4] = { {cosY, 0, -sinY, 0}, {0, 1, 0, 0}, {sinY, 0, cosY, 0}, {0, 0, 0, 1} };
-	float zRotate[4][4] = { {cosZ, sinZ, 0, 0}, {-sinZ, cosZ, 0, 0}, {0, 0, 1, 0}, {0, 0, 0, 1} };
+	float xRotate[4][4] = { { 1, 0, 0, 0 },{ 0, cosX, sinX, 0 },{ 0, -sinX, cosX, 0 },{ 0, 0, 0, 1 } };
+	float yRotate[4][4] = { { cosY, 0, -sinY, 0 },{ 0, 1, 0, 0 },{ sinY, 0, cosY, 0 },{ 0, 0, 0, 1 } };
+	float zRotate[4][4] = { { cosZ, sinZ, 0, 0 },{ -sinZ, cosZ, 0, 0 },{ 0, 0, 1, 0 },{ 0, 0, 0, 1 } };
 
 	float myArray[4][1] = { { 0 },{ 0 },{ 0 },{ 0 } };
 	float* scaleA = MatrixMulti(xRotate, w);
@@ -192,8 +192,8 @@ float* CrossProduct(float a[4][1], float b[4][1])
 }
 float* CrossProduct2X2(float a[2][1], float b[2][1])
 {
-	float x[3][1] = { {a[0][0]}, {a[1][0]}, {0} };
-	float y[3][1] = { {b[0][0]}, {b[1][0]}, {0} };
+	float x[3][1] = { { a[0][0] },{ a[1][0] },{ 0 } };
+	float y[3][1] = { { b[0][0] },{ b[1][0] },{ 0 } };
 
 	float result[3][1] = {};
 	result[2][0] = a[0][0] * b[1][0] - a[1][0] * b[0][0];
@@ -276,25 +276,25 @@ float* MatrixReverse(float a[4][4]) // TODO : forπÆ¿∏∑Œ πŸ≤‹∏∏«—∞‘ ¿÷¿ª±Ó?
 	//////// «◊µÓ«‡∑ƒ∑Œ ∏∏µÈæ˙¿∏π«∑Œ same «‡∑ƒ¿∫ ±‚¡∏ «‡∑ƒ¿« ø™«‡∑ƒ ∏æÁ¿∏∑Œ ∏∏µÈæÓ¡≥¿ª ∞Õ.
 
 	// ø©¿Œºˆ «‡∑ƒ
-	float C1[3][3] = { {a[1][1], a[1][2], a[1][3]}, {a[2][1], a[2][2], a[2][3]}, {a[3][1], a[3][2], a[3][3]} };
-	float C2[3][3] = { {a[1][0], a[1][2], a[1][3]}, {a[2][0], a[2][2], a[2][3]}, {a[3][0], a[3][2], a[3][3]} };
-	float C3[3][3] = { {a[1][0], a[1][1], a[1][3]}, {a[2][0], a[2][1], a[2][3]}, {a[3][0], a[3][1], a[3][3]} };
-	float C4[3][3] = { {a[1][0], a[1][1], a[1][2]}, {a[2][0], a[2][1], a[2][2]}, {a[3][0], a[3][1], a[3][2]} };
-	float C5[3][3] = { {a[0][1], a[0][2], a[0][3]}, {a[2][1], a[2][2], a[2][3]}, {a[3][1], a[3][2], a[3][3]} };
-	float C6[3][3] = { {a[0][0], a[0][2], a[0][3]}, {a[2][0], a[2][2], a[2][3]}, {a[3][0], a[3][2], a[3][3]} };
-	float C7[3][3] = { {a[0][0], a[0][1], a[0][3]}, {a[2][0], a[2][1], a[2][3]}, {a[3][0], a[3][1], a[3][3]} };
-	float C8[3][3] = { {a[0][0], a[0][1], a[0][2]}, {a[2][0], a[2][1], a[2][2]}, {a[3][0], a[3][1], a[3][2]} };
-	float C9[3][3] = { {a[0][1], a[0][2], a[0][3]}, {a[1][1], a[1][2], a[1][3]}, {a[3][1], a[3][2], a[3][3]} };
-	float C10[3][3] = { {a[0][0], a[0][2], a[0][3]}, {a[1][0], a[1][2], a[1][3]}, {a[3][0], a[3][2], a[3][3]} };
-	float C11[3][3] = { {a[0][0], a[0][1], a[0][3]}, {a[1][0], a[1][1], a[1][3]}, {a[3][0], a[3][1], a[3][3]} };
-	float C12[3][3] = { {a[0][0], a[0][1], a[0][2]}, {a[1][0], a[1][1], a[1][2]}, {a[3][0], a[3][1], a[3][2]} };
-	float C13[3][3] = { {a[0][1], a[0][2], a[0][3]}, {a[1][1], a[1][2], a[1][3]}, {a[2][1], a[2][2], a[2][3]} };
-	float C14[3][3] = { {a[0][0], a[0][2], a[0][3]}, {a[1][0], a[1][2], a[1][3]}, {a[2][0], a[2][2], a[2][3]} };
-	float C15[3][3] = { {a[0][0], a[0][1], a[0][3]}, {a[1][0], a[1][1], a[1][3]}, {a[2][0], a[2][1], a[2][3]} };
-	float C16[3][3] = { {a[0][0], a[0][1], a[0][2]}, {a[1][0], a[1][1], a[1][2]}, {a[2][0], a[2][1], a[2][2]} };
+	float C1[3][3] = { { a[1][1], a[1][2], a[1][3] },{ a[2][1], a[2][2], a[2][3] },{ a[3][1], a[3][2], a[3][3] } };
+	float C2[3][3] = { { a[1][0], a[1][2], a[1][3] },{ a[2][0], a[2][2], a[2][3] },{ a[3][0], a[3][2], a[3][3] } };
+	float C3[3][3] = { { a[1][0], a[1][1], a[1][3] },{ a[2][0], a[2][1], a[2][3] },{ a[3][0], a[3][1], a[3][3] } };
+	float C4[3][3] = { { a[1][0], a[1][1], a[1][2] },{ a[2][0], a[2][1], a[2][2] },{ a[3][0], a[3][1], a[3][2] } };
+	float C5[3][3] = { { a[0][1], a[0][2], a[0][3] },{ a[2][1], a[2][2], a[2][3] },{ a[3][1], a[3][2], a[3][3] } };
+	float C6[3][3] = { { a[0][0], a[0][2], a[0][3] },{ a[2][0], a[2][2], a[2][3] },{ a[3][0], a[3][2], a[3][3] } };
+	float C7[3][3] = { { a[0][0], a[0][1], a[0][3] },{ a[2][0], a[2][1], a[2][3] },{ a[3][0], a[3][1], a[3][3] } };
+	float C8[3][3] = { { a[0][0], a[0][1], a[0][2] },{ a[2][0], a[2][1], a[2][2] },{ a[3][0], a[3][1], a[3][2] } };
+	float C9[3][3] = { { a[0][1], a[0][2], a[0][3] },{ a[1][1], a[1][2], a[1][3] },{ a[3][1], a[3][2], a[3][3] } };
+	float C10[3][3] = { { a[0][0], a[0][2], a[0][3] },{ a[1][0], a[1][2], a[1][3] },{ a[3][0], a[3][2], a[3][3] } };
+	float C11[3][3] = { { a[0][0], a[0][1], a[0][3] },{ a[1][0], a[1][1], a[1][3] },{ a[3][0], a[3][1], a[3][3] } };
+	float C12[3][3] = { { a[0][0], a[0][1], a[0][2] },{ a[1][0], a[1][1], a[1][2] },{ a[3][0], a[3][1], a[3][2] } };
+	float C13[3][3] = { { a[0][1], a[0][2], a[0][3] },{ a[1][1], a[1][2], a[1][3] },{ a[2][1], a[2][2], a[2][3] } };
+	float C14[3][3] = { { a[0][0], a[0][2], a[0][3] },{ a[1][0], a[1][2], a[1][3] },{ a[2][0], a[2][2], a[2][3] } };
+	float C15[3][3] = { { a[0][0], a[0][1], a[0][3] },{ a[1][0], a[1][1], a[1][3] },{ a[2][0], a[2][1], a[2][3] } };
+	float C16[3][3] = { { a[0][0], a[0][1], a[0][2] },{ a[1][0], a[1][1], a[1][2] },{ a[2][0], a[2][1], a[2][2] } };
 	////
 	float detA = a[0][0] * Matrix3x3Calc(C1) - a[0][1] * Matrix3x3Calc(C2) + a[0][2] * Matrix3x3Calc(C3) - a[0][3] * Matrix3x3Calc(C4);
-	
+
 	if (detA == 0) return 0;
 
 	result[0][0] = Matrix3x3Calc(C1) / detA;
@@ -321,7 +321,7 @@ float* MatrixReverse(float a[4][4]) // TODO : forπÆ¿∏∑Œ πŸ≤‹∏∏«—∞‘ ¿÷¿ª±Ó?
 
 float* ViewMatrix(float a[3][1] /*ƒ´∏ﬁ∂Û ¿ßƒ°*/, float c[3][1] /*ƒ´∏ﬁ∂Û Ω√æﬂ πÊ«‚*/) // ¥Á¿Â (x,y,z) ¡§±‘»≠ Ωƒ æ¯¿∏π«∑Œ ¿œ¥‹ 1ø° ∏¬√‚∞Õ
 {
-	float axisZ[4][1] = { {c[0][0]}, {c[1][0]}, {c[2][0]}, {0} }; // ƒ´∏ﬁ∂Û Ω√æﬂ πÊ«‚ -> ªı∑ŒøÓ z√‡
+	float axisZ[4][1] = { { c[0][0] },{ c[1][0] },{ c[2][0] },{ 0 } }; // ƒ´∏ﬁ∂Û Ω√æﬂ πÊ«‚ -> ªı∑ŒøÓ z√‡
 	float* normZ = MatrixNormalize(axisZ); // z√‡ ¡§±‘»≠
 	int count = 0;
 	for (int i = 0; i < 4; i++)
@@ -330,7 +330,7 @@ float* ViewMatrix(float a[3][1] /*ƒ´∏ﬁ∂Û ¿ßƒ°*/, float c[3][1] /*ƒ´∏ﬁ∂Û Ω√æﬂ πÊ«
 		count++;
 	}
 
-	float Up[4][1] = { {0}, {1}, {0}, {1} };
+	float Up[4][1] = { { 0 },{ 1 },{ 0 },{ 1 } };
 	float bParallel[3][1] = {};
 	float* ifParallel = CrossProduct(axisZ, Up);
 	count = 0;
@@ -503,7 +503,7 @@ float* ProjectionMatrix(int width, int height, float angle)
 {
 	//GetClientRect()∑Œ ¡æ»æ∫Ò ±∏«“ ∞Õ
 	float a = (float)width / (float)height;
-	double distance = 1 / tan((angle/2) * pi / 180);
+	double distance = 1 / tan((angle / 2) * pi / 180);
 	float d = (float)distance;
 	float projection[4][4] = {};
 	projection[0][0] = d / a;
@@ -511,7 +511,7 @@ float* ProjectionMatrix(int width, int height, float angle)
 
 	projection[2][2] = -1;
 	projection[3][3] = 1;
-	
+
 	arrayReturnPtr = (float*)projection;
 	return arrayReturnPtr;
 }
@@ -741,20 +741,20 @@ float* MakeNewCoordinate(float c[3][1]) // «ˆ¿Á ƒ´∏ﬁ∂Û∞° ∫∏∞Ì¿÷¥¬ πÊ«‚
 #pragma endregion
 	//axisX, axisY, axisZ
 	float axis[3][3] = { { axisX[0][0], axisX[1][0], axisX[2][0] },
-						{axisY[0][0], axisY[1][0], axisY[2][0]},
-						{axisZ[0][0], axisZ[1][0], axisZ[2][0]} };
+	{ axisY[0][0], axisY[1][0], axisY[2][0] },
+	{ axisZ[0][0], axisZ[1][0], axisZ[2][0] } };
 	return (float*)axis;
 }
 
 float* vectorRotation(float rv[3][1], float sv[3][1], int angle) //(»∏¿¸«“ ∫§≈Õ, »∏¿¸¿« ±‚¡ÿº±, ∞¢µµ)
 {
 	// rv = (0, v1), sv = (0, v2) ->ƒı≈Õ¥œæ
-	float cosAngle = (float)cos((angle/2)*pi/180);
-	float sinAngle = (float)sin((angle/2)*pi/180);
+	float cosAngle = (float)cos((angle / 2)*pi / 180);
+	float sinAngle = (float)sin((angle / 2)*pi / 180);
 
 	float tv[4][1] = {};
-	float rv41[4][1] = { {rv[0][0]}, {rv[1][0]}, {rv[2][0]}, 1 };
-	float sv41[4][1] = { {sv[0][0] * sinAngle}, {sv[1][0] * sinAngle}, {sv[2][0] * sinAngle}, 1 };
+	float rv41[4][1] = { { rv[0][0] },{ rv[1][0] },{ rv[2][0] }, 1 };
+	float sv41[4][1] = { { sv[0][0] * sinAngle },{ sv[1][0] * sinAngle },{ sv[2][0] * sinAngle }, 1 };
 	float* tvPtr = CrossProduct(sv41, rv41);
 	int tvCount = 0;
 	for (int i = 0; i < 4; i++)
@@ -834,7 +834,7 @@ float* Cube_isitFront(MyVertex vertex1, MyVertex vertex2, MyVertex vertex3, floa
 	dotResult2 = DotProduct(brightNorm, originToVertex2);
 	dotResult3 = DotProduct(brightNorm, originToVertex3);
 	dotResultParallel = DotProduct(brightNorm, look) / vectorLength(look);
-	
+
 	float result[5] = { dotProd, dotResult1, dotResult2, dotResult3, dotResultParallel };
 
 	return (float*)result;
@@ -981,8 +981,8 @@ void DrawTorusMesh(int i, int* RGB_array, CDC* memDC, float width, float height,
 
 BOOL isItUpperSide(float NormDirectionVector[3][1], float pointOnPlane[3][1], float point[3][1])
 {
-	float result = NormDirectionVector[0][0] * (point[0][0] - pointOnPlane[0][0]) + 
-		NormDirectionVector[1][0] * (point[1][0] - pointOnPlane[1][0]) + 
+	float result = NormDirectionVector[0][0] * (point[0][0] - pointOnPlane[0][0]) +
+		NormDirectionVector[1][0] * (point[1][0] - pointOnPlane[1][0]) +
 		NormDirectionVector[2][0] * (point[2][0] - pointOnPlane[2][0]);
 
 	if (result >= 0) return TRUE;
@@ -1001,4 +1001,21 @@ void MakeVertexToVertexVector(float emptyVector[3][1], MyVertex endVertex)
 	emptyVector[0][0] = endVertex.x;
 	emptyVector[1][0] = endVertex.y;
 	emptyVector[2][0] = endVertex.z;
+}
+
+void MakeMeshVectors(MyVertex planeVector[3], MyVertex originVector[3], const MyVertex v1, const MyVertex v2, const MyVertex v3)
+{
+	MyVertex p1 = {};
+	MyVertex p2 = {};
+	MyVertex p3 = {};
+
+	p1.x = v1.x; p1.y = v1.y; p1.z = 0;
+	p2.x = v2.x; p2.y = v2.y; p2.z = 0;
+	p3.x = v3.x; p3.y = v3.y; p3.z = 0;
+
+	planeVector[0].x = -p1.x + p2.x; planeVector[0].y = -p1.y + p2.y; planeVector[0].z = -p1.z + p2.z;
+	planeVector[1].x = -p2.x + p3.x; planeVector[1].y = -p2.y + p3.y; planeVector[1].z = -p2.z + p3.z;
+	planeVector[2].x = -p3.x + p1.x; planeVector[2].y = -p3.y + p1.y; planeVector[2].z = -p3.z + p1.z;
+
+	originVector[0] = p1; originVector[1] = p2; originVector[2] = p3;
 }

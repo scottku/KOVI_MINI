@@ -86,6 +86,10 @@ public:
 // 작업입니다.
 public:
 	// 테스트용
+	float camAxisX[3][1];
+	float camAxisY[3][1];
+	float camAxisZ[3][1];
+	///////////
 	float camera[3][1];
 	float cameraX;
 	float cameraY;
