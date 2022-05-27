@@ -2,7 +2,6 @@
 Figure.cpp(49): warning C4244: '인수': 'int'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
 Figure.cpp(87): warning C4244: '인수': 'int'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
 Figure.cpp(116): warning C4244: '인수': 'int'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-  MFCApplication3.cpp
   MFCApplication3View.cpp
 MFCApplication3View.cpp(177): warning C4244: '=': 'LONG'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
 MFCApplication3View.cpp(178): warning C4244: '=': 'LONG'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
@@ -124,84 +123,85 @@ Matrix.cpp(100): warning C4244: '초기화 중': 'double'에서 'float'(으)로 
 Matrix.cpp(101): warning C4838: 'double'에서 'float'(으)로의 변환에는 축소 변환이 필요합니다.
 Matrix.cpp(101): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
 Matrix.cpp(148): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-Matrix.cpp(794): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-Matrix.cpp(795): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-Matrix.cpp(796): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-Matrix.cpp(798): warning C4244: 'return': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-Matrix.cpp(809): warning C4101: 'rgbRate' :참조되지 않은 지역 변수입니다.
-Matrix.cpp(858): warning C4244: '인수': 'float'에서 'long'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-Matrix.cpp(858): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-Matrix.cpp(859): warning C4244: '인수': 'float'에서 'long'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-Matrix.cpp(859): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-Matrix.cpp(860): warning C4244: '인수': 'float'에서 'long'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-Matrix.cpp(860): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-Matrix.cpp(861): warning C4244: '인수': 'float'에서 'long'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-Matrix.cpp(861): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-Matrix.cpp(877): warning C4244: '인수': 'float'에서 'long'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-Matrix.cpp(877): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-Matrix.cpp(878): warning C4244: '인수': 'float'에서 'long'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-Matrix.cpp(878): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-Matrix.cpp(879): warning C4244: '인수': 'float'에서 'long'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-Matrix.cpp(879): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-Matrix.cpp(880): warning C4244: '인수': 'float'에서 'long'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-Matrix.cpp(880): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-Matrix.cpp(846): warning C4101: 'dotProd' :참조되지 않은 지역 변수입니다.
-Matrix.cpp(898): warning C4244: '인수': 'float'에서 'long'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-Matrix.cpp(898): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-Matrix.cpp(899): warning C4244: '인수': 'float'에서 'long'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-Matrix.cpp(899): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-Matrix.cpp(900): warning C4244: '인수': 'float'에서 'long'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-Matrix.cpp(900): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+Matrix.cpp(768): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+Matrix.cpp(769): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+Matrix.cpp(770): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+Matrix.cpp(772): warning C4244: 'return': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+Matrix.cpp(783): warning C4101: 'rgbRate' :참조되지 않은 지역 변수입니다.
+Matrix.cpp(832): warning C4244: '인수': 'float'에서 'long'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+Matrix.cpp(832): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+Matrix.cpp(833): warning C4244: '인수': 'float'에서 'long'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+Matrix.cpp(833): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+Matrix.cpp(834): warning C4244: '인수': 'float'에서 'long'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+Matrix.cpp(834): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+Matrix.cpp(835): warning C4244: '인수': 'float'에서 'long'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+Matrix.cpp(835): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+Matrix.cpp(851): warning C4244: '인수': 'float'에서 'long'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+Matrix.cpp(851): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+Matrix.cpp(852): warning C4244: '인수': 'float'에서 'long'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+Matrix.cpp(852): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+Matrix.cpp(853): warning C4244: '인수': 'float'에서 'long'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+Matrix.cpp(853): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+Matrix.cpp(854): warning C4244: '인수': 'float'에서 'long'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+Matrix.cpp(854): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+Matrix.cpp(820): warning C4101: 'dotProd' :참조되지 않은 지역 변수입니다.
+Matrix.cpp(872): warning C4244: '인수': 'float'에서 'long'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+Matrix.cpp(872): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+Matrix.cpp(873): warning C4244: '인수': 'float'에서 'long'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+Matrix.cpp(873): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+Matrix.cpp(874): warning C4244: '인수': 'float'에서 'long'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+Matrix.cpp(874): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+Matrix.cpp(875): warning C4244: '인수': 'float'에서 'long'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+Matrix.cpp(875): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+Matrix.cpp(883): warning C4244: '인수': 'float'에서 'long'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+Matrix.cpp(883): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+Matrix.cpp(884): warning C4244: '인수': 'float'에서 'long'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+Matrix.cpp(884): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+Matrix.cpp(885): warning C4244: '인수': 'float'에서 'long'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+Matrix.cpp(885): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+Matrix.cpp(886): warning C4244: '인수': 'float'에서 'long'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+Matrix.cpp(886): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+Matrix.cpp(893): warning C4244: '인수': 'float'에서 'long'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+Matrix.cpp(893): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+Matrix.cpp(894): warning C4244: '인수': 'float'에서 'long'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+Matrix.cpp(894): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+Matrix.cpp(897): warning C4244: '인수': 'float'에서 'long'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+Matrix.cpp(897): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
 Matrix.cpp(901): warning C4244: '인수': 'float'에서 'long'(으)로 변환하면서 데이터가 손실될 수 있습니다.
 Matrix.cpp(901): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-Matrix.cpp(909): warning C4244: '인수': 'float'에서 'long'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-Matrix.cpp(909): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-Matrix.cpp(910): warning C4244: '인수': 'float'에서 'long'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-Matrix.cpp(910): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-Matrix.cpp(911): warning C4244: '인수': 'float'에서 'long'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-Matrix.cpp(911): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-Matrix.cpp(912): warning C4244: '인수': 'float'에서 'long'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-Matrix.cpp(912): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-Matrix.cpp(919): warning C4244: '인수': 'float'에서 'long'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-Matrix.cpp(919): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-Matrix.cpp(920): warning C4244: '인수': 'float'에서 'long'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-Matrix.cpp(920): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+Matrix.cpp(903): warning C4244: '인수': 'float'에서 'long'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+Matrix.cpp(903): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+Matrix.cpp(913): warning C4244: '인수': 'float'에서 'long'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+Matrix.cpp(913): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+Matrix.cpp(914): warning C4244: '인수': 'float'에서 'long'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+Matrix.cpp(914): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+Matrix.cpp(917): warning C4244: '인수': 'float'에서 'long'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+Matrix.cpp(917): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+Matrix.cpp(921): warning C4244: '인수': 'float'에서 'long'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+Matrix.cpp(921): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
 Matrix.cpp(923): warning C4244: '인수': 'float'에서 'long'(으)로 변환하면서 데이터가 손실될 수 있습니다.
 Matrix.cpp(923): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-Matrix.cpp(927): warning C4244: '인수': 'float'에서 'long'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-Matrix.cpp(927): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-Matrix.cpp(929): warning C4244: '인수': 'float'에서 'long'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-Matrix.cpp(929): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-Matrix.cpp(939): warning C4244: '인수': 'float'에서 'long'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-Matrix.cpp(939): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-Matrix.cpp(940): warning C4244: '인수': 'float'에서 'long'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-Matrix.cpp(940): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-Matrix.cpp(943): warning C4244: '인수': 'float'에서 'long'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-Matrix.cpp(943): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+Matrix.cpp(932): warning C4244: '인수': 'float'에서 'long'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+Matrix.cpp(932): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+Matrix.cpp(933): warning C4244: '인수': 'float'에서 'long'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+Matrix.cpp(933): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+Matrix.cpp(934): warning C4244: '인수': 'float'에서 'long'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+Matrix.cpp(934): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+Matrix.cpp(935): warning C4244: '인수': 'float'에서 'long'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+Matrix.cpp(935): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+Matrix.cpp(945): warning C4244: '인수': 'float'에서 'long'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+Matrix.cpp(945): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+Matrix.cpp(946): warning C4244: '인수': 'float'에서 'long'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+Matrix.cpp(946): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
 Matrix.cpp(947): warning C4244: '인수': 'float'에서 'long'(으)로 변환하면서 데이터가 손실될 수 있습니다.
 Matrix.cpp(947): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-Matrix.cpp(949): warning C4244: '인수': 'float'에서 'long'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-Matrix.cpp(949): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-Matrix.cpp(958): warning C4244: '인수': 'float'에서 'long'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-Matrix.cpp(958): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-Matrix.cpp(959): warning C4244: '인수': 'float'에서 'long'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-Matrix.cpp(959): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-Matrix.cpp(960): warning C4244: '인수': 'float'에서 'long'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-Matrix.cpp(960): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-Matrix.cpp(961): warning C4244: '인수': 'float'에서 'long'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-Matrix.cpp(961): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-Matrix.cpp(971): warning C4244: '인수': 'float'에서 'long'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-Matrix.cpp(971): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-Matrix.cpp(972): warning C4244: '인수': 'float'에서 'long'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-Matrix.cpp(972): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-Matrix.cpp(973): warning C4244: '인수': 'float'에서 'long'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-Matrix.cpp(973): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-Matrix.cpp(974): warning C4244: '인수': 'float'에서 'long'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-Matrix.cpp(974): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+Matrix.cpp(948): warning C4244: '인수': 'float'에서 'long'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+Matrix.cpp(948): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
   코드를 생성하고 있습니다.
-  51 of 691 functions ( 7.4%) were compiled, the rest were copied from previous compilation.
+d:\vs_project\mfcapplication3\mfcapplication3\matrix.cpp(473): warning C4172: 지역 변수 또는 임시: viewMatrix의 주소를 반환하고 있습니다.
+  7 of 691 functions ( 1.0%) were compiled, the rest were copied from previous compilation.
     1 functions were new in current compilation
-    3 functions had inline decision re-evaluated but remain unchanged
+    4 functions had inline decision re-evaluated but remain unchanged
   코드를 생성했습니다.
   MFCApplication3.vcxproj -> D:\VS_Project\MFCApplication3\Release\MFCApplication3.exe
   MFCApplication3.vcxproj -> D:\VS_Project\MFCApplication3\Release\MFCApplication3.pdb (Full PDB)

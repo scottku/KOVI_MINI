@@ -319,10 +319,13 @@ float* MatrixReverse(float a[4][4]) // TODO : for¹®À¸·Î ¹Ù²Ü¸¸ÇÑ°Ô ÀÖÀ»±î?
 	return arrayReturnPtr;
 }
 
-float* ViewMatrix(float a[3][1] /*Ä«¸Ş¶ó À§Ä¡*/, float c[3][1] /*Ä«¸Ş¶ó ½Ã¾ß ¹æÇâ*/) // ´çÀå (x,y,z) Á¤±ÔÈ­ ½Ä ¾øÀ¸¹Ç·Î ÀÏ´Ü 1¿¡ ¸ÂÃâ°Í
+float* ViewMatrix(float a[3][1] /*Ä«¸Ş¶ó À§Ä¡*/, float c[3][1] /*Ä«¸Ş¶ó ½Ã¾ß ¹æÇâ*/, float X[3][1], float Y[3][1]) // ´çÀå (x,y,z) Á¤±ÔÈ­ ½Ä ¾øÀ¸¹Ç·Î ÀÏ´Ü 1¿¡ ¸ÂÃâ°Í
 {
 	float axisZ[4][1] = { { c[0][0] },{ c[1][0] },{ c[2][0] },{ 0 } }; // Ä«¸Ş¶ó ½Ã¾ß ¹æÇâ -> »õ·Î¿î zÃà
-	float* normZ = MatrixNormalize(axisZ); // zÃà Á¤±ÔÈ­
+	float axisX[4][1] = { {X[0][0]}, {X[1][0]}, {X[2][0]}, {0} };
+	float axisY[4][1] = { { Y[0][0] },{ Y[1][0] },{ Y[2][0] },{ 0 } };
+	int count;
+	/*float* normZ = MatrixNormalize(axisZ); // zÃà Á¤±ÔÈ­
 	int count = 0;
 	for (int i = 0; i < 4; i++)
 	{
@@ -404,13 +407,7 @@ float* ViewMatrix(float a[3][1] /*Ä«¸Ş¶ó À§Ä¡*/, float c[3][1] /*Ä«¸Ş¶ó ½Ã¾ß ¹æÇ
 			axisY[i][0] = *(normY + count);
 			count++;
 		}
-	}
-
-	// ±âº»ÀûÀÎ ºä Çà·Ä ±¸¼º
-	// ( »õ·Î¿îxÃàÀÇ x, »õ·Î¿î xÃàÀÇ y, »õ·Î¿î xÃàÀÇ z, Dot(Ä«¸Ş¶ó À§Ä¡, »õ·Î¿î xÃàÀÇ ¹æÇâ) )
-	// ( »õ·Î¿îyÃàÀÇ x, »õ·Î¿î yÃàÀÇ y, »õ·Î¿î yÃàÀÇ z, Dot(Ä«¸Ş¶ó À§Ä¡, »õ·Î¿î yÃàÀÇ ¹æÇâ) )
-	// ( »õ·Î¿îzÃàÀÇ x, »õ·Î¿î zÃàÀÇ y, »õ·Î¿î zÃàÀÇ z, Dot(Ä«¸Ş¶ó À§Ä¡, »õ·Î¿î zÃàÀÇ ¹æÇâ) )
-	// ( 0, 0, 0, 1)
+	}*/
 
 	//// ¸ÕÀú Ä«¸Ş¶ó°¡ È¸ÀüÇÑ È¸Àü Çà·ÄºÎÅÍ ±¸¼º -> °á±¹ Ä«¸Ş¶óÀÇ À§Ä¡¸¦ ¿øÁ¡À¸·Î ¸¸µå´Â ÀÛ¾÷
 	float cameraRotate[4][4] = {};
@@ -473,30 +470,7 @@ float* ViewMatrix(float a[3][1] /*Ä«¸Ş¶ó À§Ä¡*/, float c[3][1] /*Ä«¸Ş¶ó ½Ã¾ß ¹æÇ
 	//////////////////////////// Ä«¸Ş¶ó¸¦ ±âÁØÀ¸·Î ¸ÂÃèÀ» ¶§ ÇöÀç ¹°Ã¼ À§Ä¡¿¡¼­ Ä«¸Ş¶ó°¡ ÀÌµ¿ÇÑ¸¸Å­ ¹İ´ë·Î ÀÌµ¿ -> Ä«¸Ş¶ó°¡ È¸ÀüÇÑ ¹İ´ë·Î È¸Àü -> Ãà¸ÂÃãÀ¸·Î ÀÎÇÑ ¹İ´ë¸éÀÌ º¸ÀÌ´Â °ÍÀ» ¹æÁöÇÏ°íÀÚ ¹°Ã¼ÀÇ yÃà 180µµ È¸Àü;
 	/// ÃÖÁ¾ ºä Çà·Ä ¿Ï¼º
 
-	//float result[4][4];
-	//float originX[3][1] = { { c[2][0] },{ 0 },{ -c[0][0] } }; //xÃà
-	//result[0][0] = axisX[0][0]; result[0][1] = axisX[1][0]; result[0][2] = axisX[2][0]; result[0][3] = DotProduct(a, originX);
-	//float originY[3][1] = { { -(c[0][0] * c[1][0]) },{ (c[0][0] * c[0][0]) + (c[2][0] * c[2][0]) },{ -(c[1][0] * c[2][0]) } }; //yÃà
-	//result[1][0] = axisY[0][0]; result[1][1] = axisY[1][0]; result[1][2] = axisY[2][0]; result[1][3] = DotProduct(a, originY);
-	//float originZ[3][1] = { { c[0][0] },{ c[1][0] },{ c[2][0] } }; //zÃà
-	//result[2][0] = axisZ[0][0]; result[2][1] = axisZ[1][0]; result[2][2] = axisZ[2][0]; result[2][3] = DotProduct(a, originZ);
-	//result[3][0] = 0; result[3][1] = 0, result[3][2] = 0; result[3][3] = 1;
-
-	//// ÇØ´ç ºä Çà·ÄÀÇ ¿ªÇà·ÄÀ» Â÷ÈÄ ¹°Ã¼¿¡ Àû¿ë½ÃÄÑÁÙ °Í
-	//float viewMatrix[4][4];
-	//float* reverseResult = MatrixReverse(result);
-	//count = 0;
-	//for (int i = 0; i < 4; i++)
-	//{
-	//	for (int j = 0; j < 4; j++)
-	//	{
-	//		viewMatrix[i][j] = *(reverseResult + count);
-	//		count++;
-	//	}
-	//}
-
 	return (float*)viewMatrix;
-	//return (float*)result;
 }
 
 float* ProjectionMatrix(int width, int height, float angle)

@@ -314,7 +314,7 @@ void CMFCApplication3View::OnPaint()
 	look[0][0] = lookX; look[1][0] = lookY; look[2][0] = lookZ;
 	float view[4][4] = {};
 	camera[0][0] = cameraX; camera[1][0] = cameraY; camera[2][0] = cameraZ;
-	float* viewPtr = ViewMatrix(camera, look);
+	float* viewPtr = ViewMatrix(camera, camAxisZ, camAxisX, camAxisY);
 	int viewCount = 0;
 	for (int i = 0; i < 4; i++)
 	{
@@ -2747,7 +2747,7 @@ void CMFCApplication3View::OnLButtonDown(UINT nFlags, CPoint point)
 	look[0][0] = lookX; look[1][0] = lookY; look[2][0] = lookZ;
 	float view[4][4] = {};
 	camera[0][0] = cameraX; camera[1][0] = cameraY; camera[2][0] = cameraZ;
-	float* viewPtr = ViewMatrix(camera, look);
+	float* viewPtr = ViewMatrix(camera, camAxisZ, camAxisX, camAxisY);
 	int viewCount = 0;
 	for (int i = 0; i < 4; i++)
 	{
