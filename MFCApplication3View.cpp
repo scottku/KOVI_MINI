@@ -201,7 +201,7 @@ void CMFCApplication3View::OnPaint()
 	newPen.CreatePen(PS_SOLID, 0.5, RGB(255, 255, 255));
 	CPen* oldPen = memDC.SelectObject(&newPen);
 
-	/////////// 절두체 컬링 준비
+	#pragma region 절두체 컬링 준비
 	// far 평면의 1사분면의 점
 	float farPoint1[4][1] = { { fPlane * (width / height) },{ fPlane },{ -fPlane },{ 1 } };
 	// far 평면의 3사분면의 점
@@ -229,7 +229,7 @@ void CMFCApplication3View::OnPaint()
 	float normOfFrustum9[3][1] = {};
 	float normOfFrustum6[3][1] = {};
 
-#pragma region 3시방향 면 법선방향벡터
+	#pragma region 3시방향 면 법선방향벡터
 	float* frustumPtr = CrossProduct(longVector3AND12, shortVector3);
 	int frustumCount = 0;
 	for (int i = 0; i < 3; i++)
@@ -245,7 +245,7 @@ void CMFCApplication3View::OnPaint()
 		frustumCount++;
 	}
 #pragma endregion
-#pragma region 12시방향 면 법선방향벡터
+	#pragma region 12시방향 면 법선방향벡터
 	frustumPtr = CrossProduct(shortVector12, longVector3AND12);
 	frustumCount = 0;
 	for (int i = 0; i < 3; i++)
@@ -261,7 +261,7 @@ void CMFCApplication3View::OnPaint()
 		frustumCount++;
 	}
 #pragma endregion
-#pragma region 9시방향 면 법선방향벡터
+	#pragma region 9시방향 면 법선방향벡터
 	frustumPtr = CrossProduct(longVector9AND6, shortVector9);
 	frustumCount = 0;
 	for (int i = 0; i < 3; i++)
@@ -277,7 +277,7 @@ void CMFCApplication3View::OnPaint()
 		frustumCount++;
 	}
 #pragma endregion
-#pragma region 6시방향 면 법선방향벡터
+	#pragma region 6시방향 면 법선방향벡터
 	frustumPtr = CrossProduct(shortVector6, longVector9AND6);
 	frustumCount = 0;
 	for (int i = 0; i < 3; i++)
@@ -308,9 +308,9 @@ void CMFCApplication3View::OnPaint()
 	float normOfNear[3][1] = { { 0 },{ 0 },{ -1 } };
 	// 공통으로 사용하는 뒷면의 법선방향벡터
 	float normOfFar[3][1] = { { 0 },{ 0 },{ 1 } };
-	///////////
+	#pragma endregion
 
-#pragma region 뷰 & 투영행렬 만들기 + 역행렬까지
+	#pragma region 연산에 사용할 뷰 & 투영행렬 미리 제작 + 역행렬까지
 	look[0][0] = lookX; look[1][0] = lookY; look[2][0] = lookZ;
 	float view[4][4] = {};
 	camera[0][0] = cameraX; camera[1][0] = cameraY; camera[2][0] = cameraZ;
@@ -378,7 +378,8 @@ void CMFCApplication3View::OnPaint()
 		lightDirection[i][0] = *(lPtr + ldCount);
 		ldCount++;
 	}
-#pragma endregion
+	#pragma endregion
+
 	for (auto& figure : v_cubeFigure)
 	{
 		int count = 0;
@@ -390,6 +391,8 @@ void CMFCApplication3View::OnPaint()
 			cub_original[i] = figure.cube[i];
 			count++;
 		}
+
+		#pragma region 도형의 크기, 회전, 이동
 		if (figure.length != figure.originLength) // 크기 변경이 된 친구라면?
 		{
 			MyVertex* makingCube = pCube(figure.length, figure.cubeOrigin.x, figure.cubeOrigin.y, figure.cubeOrigin.z); // 다시 만들어서 넣어줌
@@ -460,6 +463,7 @@ void CMFCApplication3View::OnPaint()
 				figure.cubeOrigin_moved.z += figure.moveZ;
 			}
 		}
+		#pragma endregion
 
 		MyVertex newCubeWC[8] = {};
 		float tempVertex[4][1] = {};
@@ -487,7 +491,7 @@ void CMFCApplication3View::OnPaint()
 			cubCount++;
 		}
 
-		////// 절두체 컬링
+		#pragma region 절두체 컬링
 		if (projNum == 0)
 		{
 			BOOL isItUpper[8] = {};
@@ -545,7 +549,8 @@ void CMFCApplication3View::OnPaint()
 			}
 		}
 		figure.isFront = TRUE;
-		
+		#pragma endregion
+
 		// sphere 각 점들을 투영 시킴
 		for (int i = 0; i < 8; i++)
 		{
@@ -1068,7 +1073,7 @@ void CMFCApplication3View::OnPaint()
 			sph[i] = figure.sphere[i];
 			count++;
 		}
-
+		#pragma region 도형의 크기, 회전, 이동 변환
 		if (figure.radius != figure.originRadius) // 크기 변경이 된 친구라면?
 		{ // 다시 만들어서 넣어줌
 			MyVertex* makingSphere = pSphere(figure.radius, figure.sphereOrigin.x, figure.sphereOrigin.y, figure.sphereOrigin.z);
@@ -1138,6 +1143,7 @@ void CMFCApplication3View::OnPaint()
 				figure.sphereOrigin_moved.z += figure.moveZ;
 			}
 		}
+		#pragma endregion
 
 		////// 변경된 월드좌표 저장
 		MyVertex newSphereWC[230] = {};
@@ -1167,7 +1173,7 @@ void CMFCApplication3View::OnPaint()
 			sphCount++;
 		}
 
-		////// 절두체 컬링
+		#pragma region 절두체 컬링
 		if (projNum == 0)
 		{
 			BOOL isItUpper[230] = {};
@@ -1225,6 +1231,7 @@ void CMFCApplication3View::OnPaint()
 			}
 		}
 		figure.isFront = TRUE;
+		#pragma endregion
 
 		float deltaArray[230] = {};
 		// sphere 각 점들을 투영 시킴
@@ -1780,7 +1787,7 @@ void CMFCApplication3View::OnPaint()
 			tor[i] = figure.torus[i];
 			count++;
 		}
-
+		#pragma region 도형의 크기, 회전, 이동 변환
 		if (figure.torusRadius != figure.originTorusRadius) // 크기 변경이 된 친구라면?
 		{ // 다시 만들어서 넣어줌
 			MyVertex* makingTorus = pTorus(figure.torusOrigin.x, figure.torusOrigin.y, figure.torusOrigin.z, figure.torusLongRadius, figure.torusRadius);
@@ -1850,6 +1857,7 @@ void CMFCApplication3View::OnPaint()
 				figure.torusOrigin_moved.z += figure.moveZ;
 			}
 		}
+		#pragma endregion
 
 		////// 변경된 월드좌표 저장
 		MyVertex newTorusWC[144] = {};
@@ -1858,8 +1866,6 @@ void CMFCApplication3View::OnPaint()
 		{
 			newTorusWC[i].x = tor[i].x; newTorusWC[i].y = tor[i].y; newTorusWC[i].z = tor[i].z;
 		}
-
-#pragma region 뷰 행렬 변환
 
 		float sample[4][1] = {};
 		// torus 각 점들을 뷰 행렬 변환 시킴
@@ -1879,9 +1885,8 @@ void CMFCApplication3View::OnPaint()
 			tor[i].z = *(fPtr + torCount);
 			torCount++;
 		}
-#pragma endregion
 
-		////// 절두체 컬링
+		#pragma region 절두체 컬링
 		if (projNum == 0)
 		{
 			BOOL isItUpper[144] = {};
@@ -1939,6 +1944,7 @@ void CMFCApplication3View::OnPaint()
 			}
 		}
 		figure.isFront = TRUE;
+		#pragma endregion
 
 		////// 카메라 기준 가장 먼 곳의 정점부터 그림 그리기
 		// 뷰 좌표 기준 원점까지의 거리를 순서대로 
@@ -1970,7 +1976,6 @@ void CMFCApplication3View::OnPaint()
 			fromFarToNear[i] = num;
 		}
 
-#pragma region 투영 행렬 변환
 		// 뷰 변환 한 점들 투영 변환
 		for (int i = 0; i < 144; i++)
 		{
@@ -1993,7 +1998,6 @@ void CMFCApplication3View::OnPaint()
 				tor[i].y /= tor[i].z;
 			}
 		}
-#pragma endregion
 
 		// picking을 위해 미리 스크린 좌표들을 저장
 		for (int i = 0; i < 144; i++)
@@ -2743,7 +2747,8 @@ void CMFCApplication3View::OnLButtonDown(UINT nFlags, CPoint point)
 	}
 
 	az10[3][0] = 1; // 화면을 클릭했을 때 얻어지는 투영면에서의 한 지점
-					// 뷰 행렬
+	
+	#pragma region 연산에 사용할 뷰, 투영행렬 제작
 	look[0][0] = lookX; look[1][0] = lookY; look[2][0] = lookZ;
 	float view[4][4] = {};
 	camera[0][0] = cameraX; camera[1][0] = cameraY; camera[2][0] = cameraZ;
@@ -2778,6 +2783,7 @@ void CMFCApplication3View::OnLButtonDown(UINT nFlags, CPoint point)
 			prjCount++;
 		}
 	}
+	#pragma endregion
 
 	// TODO: 투영면의 점을 카메라 좌표계로 옮긴다 (투영 역행렬)
 	float projReverse[4][4] = {};
@@ -2826,6 +2832,12 @@ void CMFCApplication3View::OnLButtonDown(UINT nFlags, CPoint point)
 	static int cubeCount = 0;
 	static int sphereCount = 0;
 	static int torusCount = 0;
+
+	//
+	//CString str = _T("");
+	//str.Format(_T("%f, %f, %f"), az10[0][0], az10[1][0], az10[2][0]);
+	//AfxMessageBox(str);
+	//
 
 	// TODO: 해당 점을 기준으로 도형을 만든다
 	switch (figureNum)
@@ -3345,7 +3357,7 @@ BOOL CMFCApplication3View::PreTranslateMessage(MSG* pMsg)
 {
 	if (pMsg->message == WM_KEYDOWN)
 	{
-#pragma region cube : 원점으로부터 가장 멀리있는 도형부터 그릴 수 있도록 가장 거리가 먼 도형을 앞으로 배치하기
+		#pragma region cube : 원점으로부터 가장 멀리있는 도형부터 그릴 수 있도록 가장 거리가 먼 도형을 앞으로 배치하기
 		float farFromOrigin_back[3][1] = {};
 		float farFromOrigin_front[3][1] = {};
 		int count = 0;
@@ -3381,7 +3393,7 @@ BOOL CMFCApplication3View::PreTranslateMessage(MSG* pMsg)
 		cube_copy.clear();
 		vector<CubeInfo>().swap(cube_copy);
 #pragma endregion
-#pragma region sphere : 원점으로부터 가장 멀리있는 도형부터 그릴 수 있도록 가장 거리가 먼 도형을 앞으로 배치하기
+		#pragma region sphere : 원점으로부터 가장 멀리있는 도형부터 그릴 수 있도록 가장 거리가 먼 도형을 앞으로 배치하기
 		count = 0;
 		length = 0;
 		vector<SphereInfo> sphere_copy;
@@ -3415,7 +3427,7 @@ BOOL CMFCApplication3View::PreTranslateMessage(MSG* pMsg)
 		sphere_copy.clear();
 		vector<SphereInfo>().swap(sphere_copy);
 #pragma endregion
-#pragma region torus : 원점으로부터 가장 멀리있는 도형부터 그릴 수 있도록 가장 거리가 먼 도형을 앞으로 배치하기
+		#pragma region torus : 원점으로부터 가장 멀리있는 도형부터 그릴 수 있도록 가장 거리가 먼 도형을 앞으로 배치하기
 		count = 0;
 		length = 0;
 		vector<TorusInfo> torus_copy;

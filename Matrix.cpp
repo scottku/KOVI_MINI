@@ -319,95 +319,12 @@ float* MatrixReverse(float a[4][4]) // TODO : for문으로 바꿀만한게 있을까?
 	return arrayReturnPtr;
 }
 
-float* ViewMatrix(float a[3][1] /*카메라 위치*/, float c[3][1] /*카메라 시야 방향*/, float X[3][1], float Y[3][1]) // 당장 (x,y,z) 정규화 식 없으므로 일단 1에 맞출것
+float* ViewMatrix(float a[3][1] /*카메라 위치*/, float c[3][1] /*카메라 시야 방향*/, float X[3][1], float Y[3][1]) 
 {
 	float axisZ[4][1] = { { c[0][0] },{ c[1][0] },{ c[2][0] },{ 0 } }; // 카메라 시야 방향 -> 새로운 z축
 	float axisX[4][1] = { {X[0][0]}, {X[1][0]}, {X[2][0]}, {0} };
 	float axisY[4][1] = { { Y[0][0] },{ Y[1][0] },{ Y[2][0] },{ 0 } };
 	int count;
-	/*float* normZ = MatrixNormalize(axisZ); // z축 정규화
-	int count = 0;
-	for (int i = 0; i < 4; i++)
-	{
-		axisZ[i][0] = *(normZ + count);
-		count++;
-	}
-
-	float Up[4][1] = { { 0 },{ 1 },{ 0 },{ 1 } };
-	float bParallel[3][1] = {};
-	float* ifParallel = CrossProduct(axisZ, Up);
-	count = 0;
-	for (int i = 0; i < 3; i++)
-	{
-		bParallel[i][0] = *(ifParallel + count);
-		count++;
-	}
-
-	float axisX[4][1] = {};
-	float axisY[4][1] = {};
-	if (bParallel[0][0] != 0 || bParallel[1][0] != 0 || bParallel[2][0] != 0) // 만약 카메라 방황과 up벡터가 평행이 아니라면
-	{
-		//axisX[4][1] = { { c[2][0] }, { 0 }, { -c[0][0] }, { 0 } }; // Up 벡터(0,1,0)와 카메라 시야 방향(z')를 외적해 얻은 새로운 x축
-		axisX[0][0] = c[2][0];
-		axisX[1][0] = 0;
-		axisX[2][0] = -c[0][0];
-
-		float* normX = MatrixNormalize(axisX); // x축 정규화
-		count = 0;
-		for (int i = 0; i < 4; i++)
-		{
-			axisX[i][0] = *(normX + count);
-			count++;
-		}
-
-		//axisY[4][1] = { { -(c[0][0] * c[1][0]) }, { (c[0][0] * c[0][0]) + (c[2][0] * c[2][0]) }, { -(c[1][0] * c[2][0]) }, { 0 } }; // x' 축과 z' 축을 외적해 얻은 새로운 y축
-		axisY[0][0] = -(c[0][0] * c[1][0]);
-		axisY[1][0] = (c[0][0] * c[0][0]) + (c[2][0] * c[2][0]);
-		axisY[2][0] = -(c[1][0] * c[2][0]);
-
-		float* normY = MatrixNormalize(axisY); // y축 정규화
-		count = 0;
-		for (int i = 0; i < 4; i++)
-		{
-			axisY[i][0] = *(normY + count);
-			count++;
-		}
-	}
-	else
-	{
-		float newUp[4][1] = { { 0 },{ 0 },{ 1 },{ 1 } };
-		ifParallel = CrossProduct(newUp, axisZ);
-		count = 0;
-		for (int i = 0; i < 4; i++)
-		{
-			axisX[i][0] = *(ifParallel + count);
-			count++;
-		}
-
-		float* normX = MatrixNormalize(axisX); // x축 정규화
-		count = 0;
-		for (int i = 0; i < 4; i++)
-		{
-			axisX[i][0] = *(normX + count);
-			count++;
-		}
-
-		ifParallel = CrossProduct(axisZ, axisX);
-		count = 0;
-		for (int i = 0; i < 4; i++)
-		{
-			axisY[i][0] = *(ifParallel + count);
-			count++;
-		}
-
-		float* normY = MatrixNormalize(axisY); // y축 정규화
-		count = 0;
-		for (int i = 0; i < 4; i++)
-		{
-			axisY[i][0] = *(normY + count);
-			count++;
-		}
-	}*/
 
 	//// 먼저 카메라가 회전한 회전 행렬부터 구성 -> 결국 카메라의 위치를 원점으로 만드는 작업
 	float cameraRotate[4][4] = {};
